@@ -43,19 +43,20 @@ class ExternalController extends Controller
         }
         return $return;
 	}
-    private function validateAuth($Token) {
-        $return = array('status'=>false,'UserID'=>"");
-        $query = "SELECT u.ID, c.ID CustomerID
-                    FROM MS_USER u
-                        JOIN MS_CUSTOMER c ON c.UserID = u.ID
-                    WHERE u.Field2=?";
+
+    private function validateAuth($Token) 
+    {
+        $return = array('status'=>false,'ID'=>"");
+        $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.Email
+                    FROM MsUser
+                    WHERE MsUser.ID=?";
         $checkAuth = DB::select($query,[$Token]);
         if ($checkAuth) {
             $data = $checkAuth[0];
             $return = array(
                 'status' => true,
-                'UserID' => $data->ID,
-                'CustomerID' => $data->CustomerID
+                'UserID' => $data->UserID,
+                'ClientID' => $data->ClientID,
             );
         }
         return $return;
@@ -157,22 +158,22 @@ class ExternalController extends Controller
         $return['message'] = $_message;
         return response()->json($return, 200);
     }
+
     public function doLogin(Request $request)
     {
         $return = array('status'=>false,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT u.ID,u.Status,u.FullName,u.Password,u.Salt,u.IVssl,u.Tagssl
-                    FROM MS_USER u
-                    JOIN MS_CUSTOMER c ON c.UserID = u.ID
-                    WHERE (UPPER(c.Email) = UPPER(?) OR UPPER(c.Phone) = UPPER(?))
-                        AND u.RegisterFrom = 'app'";
-        $data = DB::select($query,[$request->txtUsername,$request->txtUsername]);
+        $query = "SELECT MsUser.ID, MsUser.Name, MsUser.Email, MsUser.Password, u.Salt, u.IVssl, u.Tagssl
+                    FROM MsUser
+                    WHERE (UPPER(MsUser.Email) = UPPER(?))
+                        AND MsUser.RegisterFrom = 'app'";
+        $data = DB::select($query,[$request->txtName,$request->txtName]);
         if ($data) {
             $data = $data[0];
             if ($data->Status==1) {
                 $decrypted = $this->strDecrypt(base64_decode($data->Salt),base64_decode($data->IVssl),base64_decode($data->Tagssl),base64_decode($data->Password));
                 if ($decrypted == $request->txtPassword) {
                     $SessionID = base64_encode($this->randomString(64).base64_encode(md5($data->ID).time()));
-                    $query = "UPDATE MS_USER SET Field2=? WHERE ID=?";
+                    $query = "UPDATE MsUser SET Name=? WHERE ID=?";
                     DB::update($query, [
                         $SessionID,
                         $data->ID
@@ -194,6 +195,7 @@ class ExternalController extends Controller
         }
         return response()->json($return, 200);
     }
+
     public function doAuthGoogle(Request $request)
     {
         $return = array('status'=>false,'message'=>"",'data'=>null,'callback'=>"");
@@ -386,36 +388,13 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testProduct(Request $request)
-    {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT MsProduct.ID, MsProduct.ClientID, MsProduct.Name, MsProduct.Description, MsProduct.Qty, MsProduct.Price, MsProduct.CategoryID, MsCategory.Name, MsProduct.ProductSKU 
-        FROM MsProduct
-        JOIN MsCategory
-        ON MsProduct.CategoryID = MsCategory.ID
-        ORDER BY ProductSKU ASC";
-        $return['data'] = DB::select($query);
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-        return response()->json($return, 200);
-    }
-
-    public function testProductVariant(Request $request)
-    {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT MsProductVariant.ID, MsProductVariant.ClientID, MsProductVariant.ProductID, MsProductVariant.VariantID, MsProductVariant.Label, MsProductVariant.AdditionalPrice
-        FROM MsProductVariant
-        ORDER BY Label ASC";
-        $return['data'] = DB::select($query);
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-        return response()->json($return, 200);
-    }
-
     public function testCategory(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT ID, ClientID, Name 
-        FROM MsCategory
-        ORDER BY Name ASC";
+        $query = "SELECT ID, Name, QtyAlert, BGColor
+            FROM MsCategory
+            WHERE MsCategory.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY Name ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
@@ -424,9 +403,68 @@ if ($getAuth['status']) {
     public function testVariant(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT MsVariant.ID, MsVariant.ClientID, MsVariant.Name, MsVariant.Type
-        FROM MsVariant
-        ORDER BY Name ASC";
+        $query = "SELECT ID, Name, Type
+            FROM MsVariant
+            WHERE MsVariant.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY Name ASC";
+        $return['data'] = DB::select($query);
+        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+        return response()->json($return, 200);
+    }
+
+    public function testVariantOption(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $query = "SELECT ID, Label, Price
+            FROM MsVariantOption
+            WHERE MsVariantOption.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY ID ASC";
+        $return['data'] = DB::select($query);
+        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+        return response()->json($return, 200);
+    }
+    
+    public function testProduct(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $query = "SELECT MsProduct.ID, MsProduct.Name, MsProduct.Notes, MsProduct.Qty, MsProduct.Price, MsCategory.ID CategoryID ,MsCategory.Name Category, MsProduct.ProductSKU, MsProduct.ImgUrl, MsProduct.MimeType 
+            FROM MsProduct
+            JOIN MsCategory
+            ON MsProduct.CategoryID = MsCategory.ID
+            WHERE MsProduct.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY ProductSKU ASC";
+        $return['data'] = DB::select($query);
+        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+        return response()->json($return, 200);
+    }
+
+    public function testProductVariant(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $query = "SELECT MsProductVariant.ID, MsProduct.ID ProductID, MsVariant.ID VariantID, MsVariant.Name
+            FROM MsProductVariant
+            JOIN MsProduct
+            ON MsProduct.ID = MsProductVariant.ProductID
+            JOIN MsVariant
+            ON MsVariant.ID = MsProductVariant.VariantID
+            WHERE MsProductVariant.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY ID ASC";
+        $return['data'] = DB::select($query);
+        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+        return response()->json($return, 200);
+    }
+
+    public function testProductVariantOption(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $query = "SELECT MsProductVariantOption.ID, MsProduct.ID ProductID, MsVariantOption.ID VariantOptionID, MsVariantOption.Label, MsVariantOption.Price
+            FROM MsProductVariantOption
+            JOIN MsProduct
+            ON MsProduct.ID = MsProductVariantOption.ProductID
+            JOIN MsVariantOption
+            ON MsVariantOption.ID = MsProductVariantOption.VariantOptionID
+            WHERE MsProductVariantOption.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY ID ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
@@ -435,9 +473,12 @@ if ($getAuth['status']) {
     public function testTransaction(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT TrTransaction.ID, TrTransaction.ClientID, TrTransaction.TransactionDate, TrTransaction.PaidDate, TrTransaction.CustomerName, TrTransaction.HandphoneNumber, TrTransaction.SubTotal, TrTransaction.Discount, TrTransaction.Tax, TrTransaction.TotalPayment, TrTransaction.PaymentAmount, TrTransaction.Changes, TrTransaction.Status, TrTransaction.Notes
-        FROM TrTransaction
-        ORDER BY DateIn ASC";
+        $query = "SELECT TrTransaction.ID, TrTransaction.TransactionNumber, MsPayment.ID PaymentID, MsPayment.PaymentCash, MsPayment.PaymentCredit, MsPayment.PaymentDebit, MsPayment.PaymentQRIS, MsPayment.PaymentTransfer, MsPayment.PaymentEWallet, TrTransaction.TransactionDate, TrTransaction.PaidDate, TrTransaction.CustomerName, TrTransaction.SubTotal, TrTransaction.Discount, TrTransaction.Tax, TrTransaction.TotalPayment, TrTransaction.PaymentAmount, TrTransaction.Changes, TrTransaction.Status, TrTransaction.Notes
+            FROM TrTransaction
+            JOIN MsPayment
+            ON MsPayment.ID = TrTransaction.PaymentID
+            WHERE TrTransaction.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY TransactionDate ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
@@ -446,22 +487,28 @@ if ($getAuth['status']) {
     public function testTransactionProduct(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT TrTransactionProduct.ID, TrTransactionProduct.ClientID, TrTransactionProduct.ProductID, TrTransactionProduct.TransactionID, TrTransactionProduct.Qty, TrTransactionProduct.UnitPrice,TrTransactionProduct.Discount, TrTransactionProduct.UnitPriceAfterDiscount, TrTransactionProduct.Notes
-        FROM TrTransactionProduct
-        JOIN TrTransaction
-        ON TrTransactionProduct.TransactionID = TrTransaction.ID
-        ORDER BY DateIn ASC";
+        $query = "SELECT TrTransactionProduct.ID, MsProduct.ID ProductID, MsProduct.Name, MsProduct.Price UnitPrice, TrTransactionProduct.Qty, TrTransactionProduct.UnitPrice, TrTransactionProduct.Discount, TrTransactionProduct.UnitPriceAfterDiscount, TrTransactionProduct.Notes
+            FROM TrTransactionProduct
+            JOIN MsProduct
+            ON MsProduct.ID = TrTransactionProduct.ProductID
+            WHERE TrTransactionProduct.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY ID ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
     }
 
-    public function testTransactionPayment(Request $request)
+    public function testTransactionProductVariant(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT TrTransactionPayment.ID, TrTransactionPayment.ClientID, TrTransactionPayment.TransactionID, TrTransactionPayment.PaymentID, TrTransactionPayment.Amount
-        FROM TrTransactionPayment
-        ORDER BY DateIn ASC";
+        $query = "SELECT TrTransactionProductVariant.ID, MsProduct.ID ProductID, MsVariantOption.ID VariantOptionID, MsVariantOption.VariantID, MsVariantOption.Label, MsVariantOption.Price
+            FROM TrTransactionProductVariant
+            JOIN MsProduct
+            ON MsProduct.ID = TrTransactionProductVariant.ProductID
+            JOIN MsVariantOption
+            ON MsVariantOption.ID = TrTransactionProductVariant.VariantOptionID
+            WHERE TrTransactionProductVariant.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY ID ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
@@ -470,9 +517,11 @@ if ($getAuth['status']) {
     public function testClient(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT ID, Name 
-        from MsClient
-        ORDER BY Name ASC;";
+        $query = "SELECT MsClient.ID, MsClient.StoreName, MsClient.Address, MsClient.Name, MsClient.PhoneNumber, MsClient.Message, MsClient.ImgUrl, MsClient.MimeType, MsOutlet.ID OutletID, MsOutlet.Name OutlateName, MsOutlet.DetailsAddress, MsOutlet.IsPrimary
+            FROM MsClient
+            JOIN MsOutlet
+            ON MsOutlet.ID = MsClient.OutletID
+            ORDER BY ID ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
@@ -481,9 +530,10 @@ if ($getAuth['status']) {
     public function testCustomer(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT MsCustomer.ID, MsCustomer.ClientID, MsCustomer.Name, MsCustomer.HandphoneNumber, MsCustomer.Address, MsCustomer.Gender
-        FROM MsCustomer
-        ORDER BY Name ASC";
+        $query = "SELECT ID, Name, HandphoneNumber, Address, Gender
+            FROM MsCustomer
+            WHERE MsCustomer.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY Name ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
@@ -492,13 +542,41 @@ if ($getAuth['status']) {
     public function testPayment(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT MsPayment.ID, MsPayment.ClientID, MsPayment.PaymentCash, MsPayment.PaymentCash, MsPayment.PaymentCredit, MsPayment.PaymentDebit, MsPayment.PaymentQRIS, MsPayment.PaymentTransfer, MsPayment.PaymentEWallet
-        FROM MsPayment
-        ORDER BY ID DESC";
+        $query = "SELECT MsPayment.ID, MsPayment.PaymentCash, MsPayment.PaymentCredit, MsPayment.PaymentDebit, MsPayment.PaymentQRIS,  MsPayment.PaymentTransfer, MsPayment.PaymentEWallet
+            FROM MsPayment
+            WHERE MsPayment.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY ID DESC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
     }
+
+    public function testOutlet(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $query = "SELECT MsOutlet.ID, MsOutlet.Name, MsOutlet.PhoneNumber, MsOutlet.PlanType, MsOutlet.IsPrimary, MsOutlet.DetailsAddress
+            FROM MsOutlet
+            WHERE MsOutlet.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY ID ASC";
+        $return['data'] = DB::select($query);
+        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+        return response()->json($return, 200);
+    }
+
+    public function testUser(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $query = "SELECT MsUser.ID, MsOutlet.ID OutletID, MsOutlet.Name OutletName, MsUser.Name, MsUser.Email, MsUser.Password
+            FROM MsUser
+            JOIN MsOutlet
+            ON MsOutlet.ID = MsUser.OutletID
+            WHERE MsUser.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            ORDER BY ID ASC";
+        $return['data'] = DB::select($query);
+        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+        return response()->json($return, 200);
+    }
+
 
     /* START: PRODUCT */
     public function getCategory(Request $request)
@@ -806,6 +884,189 @@ if ($getAuth['status']) {
         } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
         return response()->json($return, 200);
     }
+
+    public function doSaveCategory(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO MsCategory
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, Name, QtyAlert, BGColor)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmCategoryName,
+                    $request->txtFrmQtyAlert,
+                    $request->txtFrmBGColor,
+                ]);
+                $return['message'] = "Category berhasil Dibuat";
+            } 
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE MsCategory
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    Name=?,
+                    QtyAlert=?,
+                    BGColor=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmCategoryName,
+                    $request->txtFrmQtyAlert,
+                    $request->txtFrmBGColor,
+                    $request->hdnFrmID
+                ]);
+                $return['message'] = "Category berhasil Diubah";
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE FROM MsCategory
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "Category berhasil dihapus";
+            }
+        } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveVariant(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO MsVariant
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Type)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmVariantName,
+                    $request->txtFrmVariantType,
+                ]);
+                $return['message'] = "Variant berhasil dibuat";
+            }
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE MsVariant
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    Name=?,
+                    Type=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmVariantName,
+                    $request->txtFrmVariantType,
+                    $request->hdnFrmID
+                ]);
+                $return['message'] = "Variant berhasil diubah";
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE FROM MsVariant
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "Variant berhasil dihapus";
+            }
+        } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveVariantOption(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO MsVariantOption
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
+                        VALUES
+                        (UUID(), ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $request->txtFrmVariantID,
+                    $request->SelFrmLabel,
+                    $request->SelFrmPrice,
+                    $getAuth["UserID"]
+                ]);
+            } 
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE MS_VARIANT_OPTION
+                SET Label=?,
+                    Price=?,
+                    WHERE ID=?";
+                DB::update($query, [
+                    $request->txtFrmVariantName,
+                    $request->SelFrmVariantType,
+                    $getAuth['UserID'],
+                    $request->hdnFrmID
+                ]);
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE FROM MS_VARIANT_OPTION 
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+            }
+            $return['message'] = "";
+            $return['callback'] = "doHandlerRemoveVariantOption()";
+        } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveOutlet(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO MS_OUTLET
+                        (ID, Name, PhoneNumber, PlanType, DetailsAddress)
+                        VALUES
+                        (UUID(), ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $request->txtFrmOutletName,
+                    $request->SelFrmPhoneNumber,
+                    $request->SelFrmPlanType,
+                    $request->SelFrmDetailsAddress,
+                    $getAuth["UserID"]
+                ]);
+            } 
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE MS_OUTLET
+                SET Name=?,
+                    PhoneNumber=?,
+                    PlanType=?,
+                    DetailsAddress=?,
+                    WHERE ID=?";
+                DB::update($query, [
+                    $request->txtFrmVariantName,
+                    $request->SelFrmPhoneNumber,
+                    $request->SelFrmPlanType,
+                    $request->SelFrmDetailsAddress,
+                    $getAuth['UserID'],
+                    $request->hdnFrmID
+                ]);
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE MS_OUTLET
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+            }
+            $return['message'] = "";
+            $return['callback'] = "doHandlerRemoveVariantOption()";
+        } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
+        return response()->json($return, 200);
+    }
+
     public function doSetPrimaryAddress(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
@@ -930,7 +1191,6 @@ if ($getAuth['status']) {
         } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
         return response()->json($return, 200);
     }
-
 
     public function doSaveCart(Request $request)
     {
