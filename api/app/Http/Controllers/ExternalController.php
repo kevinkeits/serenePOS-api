@@ -44,7 +44,7 @@ class ExternalController extends Controller
         return $return;
 	}
 
-    private function validateAuth($Token) 
+    private function validateAuth($Token)
     {
         $return = array('status'=>false,'ID'=>"");
         $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.Email
@@ -989,34 +989,40 @@ if ($getAuth['status']) {
                 $query = "INSERT INTO MsVariantOption
                         (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
                         VALUES
-                        (UUID(), ?, ?, ?, ?)";
+                        (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
+                    $getAuth['ClientID'],
                     $request->txtFrmVariantID,
-                    $request->SelFrmLabel,
-                    $request->SelFrmPrice,
-                    $getAuth["UserID"]
+                    $request->txtFrmLabel,
+                    $request->txtFrmPrice,
                 ]);
-            } 
+                $return['message'] = "Variant Option berhasil dibuat";
+            }
             if ($request->hdnAction == "edit") {
-                $query = "UPDATE MS_VARIANT_OPTION
-                SET Label=?,
+                $query = "UPDATE MsVariantOption
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    Label=?,
                     Price=?,
                     WHERE ID=?";
                 DB::update($query, [
-                    $request->txtFrmVariantName,
-                    $request->SelFrmVariantType,
                     $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmLabel,
+                    $request->txtFrmPrice,
                     $request->hdnFrmID
                 ]);
+                $return['message'] = "Variant Option berhasil diubah";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE FROM MS_VARIANT_OPTION 
+                $query = "DELETE FROM MsVariantOption
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "";
             }
-            $return['message'] = "";
-            $return['callback'] = "doHandlerRemoveVariantOption()";
         } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
         return response()->json($return, 200);
     }
@@ -1027,43 +1033,300 @@ if ($getAuth['status']) {
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
             if ($request->hdnAction == "add") {
-                $query = "INSERT INTO MS_OUTLET
-                        (ID, Name, PhoneNumber, PlanType, DetailsAddress)
+                $query = "INSERT INTO MsOutlet
+                        (IsDeleted, UserIn, DateIn, ID, Name, PhoneNumber, PlanType, IsPrimary, DetailsAddress)
                         VALUES
-                        (UUID(), ?, ?, ?, ?)";
+                        (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $request->txtFrmOutletName,
-                    $request->SelFrmPhoneNumber,
-                    $request->SelFrmPlanType,
-                    $request->SelFrmDetailsAddress,
-                    $getAuth["UserID"]
+                    $request->txtFrmPhoneNumber,
+                    $request->txtFrmPlanType,
+                    $request->txtFrmIsPrimary,
+                    $request->txtFrmDetailsAddress,
                 ]);
+                $return['message'] = "";
             } 
             if ($request->hdnAction == "edit") {
-                $query = "UPDATE MS_OUTLET
-                SET Name=?,
+                $query = "UPDATE MsOutlet
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    Name=?,
                     PhoneNumber=?,
                     PlanType=?,
                     DetailsAddress=?,
                     WHERE ID=?";
                 DB::update($query, [
-                    $request->txtFrmVariantName,
-                    $request->SelFrmPhoneNumber,
-                    $request->SelFrmPlanType,
-                    $request->SelFrmDetailsAddress,
                     $getAuth['UserID'],
+                    $request->txtFrmOutletName,
+                    $request->txtFrmPhoneNumber,
+                    $request->txtFrmPlanType,
+                    $request->txtFrmIsPrimary,
+                    $request->txtFrmDetailsAddress,
                     $request->hdnFrmID
                 ]);
+                $return['message'] = "";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE MS_OUTLET
+                $query = "DELETE MsOutlet
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "";
             }
-            $return['message'] = "";
-            $return['callback'] = "doHandlerRemoveVariantOption()";
-        } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
+            
+        } else $return = array('status'=>false,'message'=>"");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveCustomer(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO MsCustomer
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, Name, HandphoneNumber, Address, Gender)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmCustomerName,
+                    $request->txtFrmPhoneNumber,
+                    $request->txtFrmAddress,
+                    $request->txtFrmGender,
+                ]);
+                $return['message'] = "";
+            } 
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE MsCustomer
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    Name=?,
+                    HandphoneNumber=?,
+                    Address=?,
+                    Gender=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmCustomerName,
+                    $request->txtFrmPhoneNumber,
+                    $request->txtFrmAddress,
+                    $request->txtFrmGender,
+                    $request->hdnFrmID
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE MsCustomer
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "";
+            }
+            
+        } else $return = array('status'=>false,'message'=>"");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveProduct(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO MsProduct
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Notes, Qty, Price, CategoryID, ProductSKU, ImgUrl, MimeType)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmProductName,
+                    $request->txtFrmNotes,
+                    $request->txtFrmQty,
+                    $request->txtFrmIsPrimary,
+                    $request->txtFrmCategoryID,
+                    $request->txtFrmProductSKU,
+                    $request->txtFrmImgUrl,
+                    $request->txtFrmMimeType,
+                ]);
+                $return['message'] = "";
+            } 
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE MsProduct
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    Name=?,
+                    PhoneNumber=?,
+                    PlanType=?,
+                    DetailsAddress=?,
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmProductName,
+                    $request->txtFrmNotes,
+                    $request->txtFrmQty,
+                    $request->txtFrmIsPrimary,
+                    $request->txtFrmCategoryID,
+                    $request->txtFrmProductSKU,
+                    $request->txtFrmImgUrl,
+                    $request->txtFrmMimeType,
+                    $request->hdnFrmID
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE MsProduct
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "";
+            }
+        } else $return = array('status'=>false,'message'=>"");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveProductVariant(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO MsProductVariant
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantID)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmProductID,
+                    $request->txtFrmVariantID,
+                ]);
+                $return['message'] = "";
+            } 
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE MsProductVariant
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    ProductID=?,
+                    VariantID=?,
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmProductID,
+                    $request->txtFrmVariantID,
+                    $request->hdnFrmID
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE MsProductVariant
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "";
+            }
+        } else $return = array('status'=>false,'message'=>"");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveProductVariantOption(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO MsProductVariantOption
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmProductID,
+                    $request->txtFrmVariantOptionID,
+                ]);
+                $return['message'] = "";
+            } 
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE MsProductVariantOption
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    ProductID=?,
+                    VariantOptionID=?,
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmProductID,
+                    $request->txtFrmVariantOptionID,
+                    $request->hdnFrmID
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE MsProductVariantOption
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "";
+            }
+        } else $return = array('status'=>false,'message'=>"");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveTransaction(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO MsProductVariantOption
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmProductID,
+                    $request->txtFrmVariantOptionID,
+                ]);
+                $return['message'] = "";
+            } 
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE MsProductVariantOption
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    ProductID=?,
+                    VariantOptionID=?,
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmProductID,
+                    $request->txtFrmVariantOptionID,
+                    $request->hdnFrmID
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE MsProductVariantOption
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "";
+            }
+        } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
     }
 
