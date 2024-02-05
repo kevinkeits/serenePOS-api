@@ -47,7 +47,7 @@ class ExternalController extends Controller
     private function validateAuth($Token)
     {
         $return = array('status'=>false,'ID'=>"");
-        $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.Email
+        $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
                     FROM MsUser
                     WHERE MsUser.ID=?";
         $checkAuth = DB::select($query,[$Token]);
@@ -105,15 +105,15 @@ class ExternalController extends Controller
         $return = array('status'=>false,'message'=>"",'data'=>null,'callback'=>"");
         $isValid = true;
         $_message = "";
-        if (strpos($request->txtUsername, '@') && !filter_var($request->txtUsername, FILTER_VALIDATE_EMAIL)) {
-            $_message = "Mohon isi dengan Email atau No. Telepon yang benar";
+        if (strpos($request->txtName, '@') && !filter_var($request->txtName, FILTER_VALIDATE_EMAIL)) {
+            $_message = "Please fill in with the correct email address.";
             $isValid = false;
         }
         if ($isValid) {
-            $query = "SELECT ID,Status FROM MS_CUSTOMER WHERE IsB2B = 0 AND (UPPER(Phone) = UPPER(?) OR UPPER(Email) = UPPER(?))";
-            $data = DB::select($query,[$request->txtUsername,$request->txtUsername]);
+            $query = "SELECT ID,Status FROM MsUser WHERE (UPPER(Phone) = UPPER(?) OR UPPER(Email) = UPPER(?))";
+            $data = DB::select($query,[$request->txtName,$request->txtName]);
             if ($data) {
-                $_message = (strpos($request->txtUsername, '@') ? "Email" : "No. Telepon"). " ini sudah terdaftar";
+                $_message = (strpos($request->txtName, '@') ? "Email" : "Number Phone"). " has been registered";
                 $isValid = false;
             }
         }
@@ -122,36 +122,25 @@ class ExternalController extends Controller
             $encrypt = $this->strEncrypt($key,$request->txtPassword);
             $query = "SELECT UUID() GenID";
             $ID = DB::select($query)[0]->GenID;
-            $query = "INSERT INTO MS_USER
-                            (ID, UserName, FullName, Email, RegisterFrom, AccountType, Password, Salt, IVssl, Tagssl, Status, CreatedDate, CreatedBy)
-                        VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, NOW(), ?)";
+            $query = "INSERT INTO MsUser
+                            (IsDeleted, UserIn, DateIn, ID, ClientID, OutletID, RegisterFrom, Name, Email, PhoneNumber, Password, Salt, IVssl, Tagssl)
+                        VALUES(0, ?, NOW(), ?, ClientID, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
             DB::insert($query, [
+                $getAuth['UserID'],
                 $ID,
-                $request->txtUsername,
-                $request->txtName,
-                (strpos($request->txtUsername, '@') ? $request->txtUsername : ""),
+                $getAuth['ClientID'],
+                $request->txtOutletID,
                 "app",
-                2,
+                (strpos($request->txtName, '@') ? $request->txtName : ""),
+                $request->txtPhoneNumber,
                 base64_encode($encrypt['result']),
                 base64_encode($key),
                 base64_encode($encrypt['iv']),
                 base64_encode($encrypt['tag']),
                 "SYSTEM"
             ]);
-            $query = "INSERT INTO MS_CUSTOMER
-                    (ID, UserID, Code, Name, Email, Phone, IsB2B, Status, CreatedDate, CreatedBy)
-                    VALUES
-                    (UUID(), ?, ?, ?, ?, ?, 0, 1, NOW(), ?)";
-                DB::insert($query, [
-                    $ID,
-                    $this->randomString(10),
-                    $request->txtName,
-                    (strpos($request->txtUsername, '@') ? $request->txtUsername : ""),
-                    (strpos($request->txtUsername, '@') ? "" : $request->txtUsername),
-                    "SYSTEM"
-                ]);
             $isValid = true;
-            $_message = "Pendaftaran Sukses, silahkan Login!";
+            $_message = "Registration successful, please log in.!";
             if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
         }
         $return['status'] = $isValid;
@@ -162,7 +151,7 @@ class ExternalController extends Controller
     public function doLogin(Request $request)
     {
         $return = array('status'=>false,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT MsUser.ID, MsUser.Name, MsUser.Email, MsUser.Password, u.Salt, u.IVssl, u.Tagssl
+        $query = "SELECT MsUser.ID, MsUser.Name, MsUser.Email, MsUser.PhoneNumber, MsUser.Password, u.Salt, u.IVssl, u.Tagssl
                     FROM MsUser
                     WHERE (UPPER(MsUser.Email) = UPPER(?))
                         AND MsUser.RegisterFrom = 'app'";
@@ -180,18 +169,18 @@ class ExternalController extends Controller
                     ]);
                     $return['data'] = array( 
                         'Token' => $SessionID,
-                        'Name' => $data->FullName
+                        'Name' => $data->Name
                     );
                     $return['status'] = true;
                     $return['callback'] = "doHandlerLogin(e.data)";
                 } else {
-                    $return['message'] = "Username atau Password salah";
+                    $return['message'] = "Name and password you entered are incorrect.";
                 }
             } else {
-                $return['message'] = "User tidak aktif";
+                $return['message'] = "User is not active.";
             }
         } else {
-            $return['message'] = "Username atau Password salah";
+            $return['message'] = "Name and password you entered are incorrect.";
         }
         return response()->json($return, 200);
     }
@@ -1290,8 +1279,80 @@ if ($getAuth['status']) {
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
             if ($request->hdnAction == "add") {
+                $query = "INSERT INTO TrTransaction
+                        (IsDeleted, UserIn, DateIn, ID, TransactionNumber, ClientID, PaymentID, TransactionDate, PaidDate, CustomerName, SubTotal, Discount, Tax, TotalPayment, PaymentAmount, Changes, Status, Notes)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmPaymentID,
+                    $request->txtFrmCustomerName,
+                    $request->txtFrmSubTotal,
+                    $request->txtFrmDiscount,
+                    $request->txtFrmTax,
+                    $request->txtFrmTotalPayment,
+                    $request->txtFrmPaymentAmount,
+                    $request->txtFrmChanges,
+                    $request->txtFrmStatus,
+                    $request->txtFrmNotes,
+                ]);
+                $return['message'] = "";
+            } 
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE TrTransaction
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    TransactionNumber=?,
+                    ClientID=?,
+                    PaymentID=?,
+                    TransactionDate=NOW(),
+                    PaidDate=NOW(),
+                    CustomerName=?,
+                    SubTotal=?,
+                    Discount=?,
+                    TotalPayment=?,
+                    PaymentAmount=?,
+                    Changes=?,
+                    Status=?,
+                    Notes=?,
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $request->txtFrmTransactionNumber,
+                    $getAuth['ClientID'],
+                    $request->txtFrmPaymentID,
+                    $request->txtCustomerName,
+                    $request->txtSubTotal,
+                    $request->txtDiscount,
+                    $request->txtTotalPayment,
+                    $request->txtPaymentAmount,
+                    $request->txtChanges,
+                    $request->txtStatus,
+                    $request->txtNotes,
+                    $request->hdnFrmID
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE TrTransaction
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "";
+            }
+        } else $return = array('status'=>false,'message'=>"");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveTransactionProduct(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
                 $query = "INSERT INTO MsProductVariantOption
-                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID)
+                        (IsDeleted, UserIn, DateIn, ID, TransactionNumber, ClientID, PaymentID, TransactionDate, PaidDate, CustomerName, SubTotal, Discount, Tax, TotalPayment, PaymentAmount, Changes, Status, Notes)
                         VALUES
                         (0, ?, NOW(), UUID(), ?, ?, ?)";
                 DB::insert($query, [
@@ -1308,7 +1369,7 @@ if ($getAuth['status']) {
                     UserUp=?,
                     DateUp=NOW(),
                     ClientID=?,
-                    ProductID=?,
+                    PaymentID=?,
                     VariantOptionID=?,
                     WHERE ID=?";
                 DB::update($query, [
@@ -1329,7 +1390,7 @@ if ($getAuth['status']) {
         } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
     }
-
+    
     public function doSetPrimaryAddress(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
