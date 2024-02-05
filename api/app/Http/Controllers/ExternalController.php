@@ -1447,6 +1447,123 @@ if ($getAuth['status']) {
         } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
     }
+
+    public function doSavePayment(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO MsPayment
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, PaymentCash, PaymentCredit, PaymentDebit, PaymentQRIS, PaymentTransfer, PaymentEWallet)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ClientID, ?, ?, ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmPaymentCash,
+                    $request->txtFrmPaymentCredit,
+                    $request->txtFrmPaymentDebit,
+                    $request->txtFrmPaymentQRIS,
+                    $request->txtFrmPaymentTransfer,
+                    $request->txtFrmPaymentEWallet,
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE MsPayment
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    PaymentCash=?,
+                    PaymentCredit=?,
+                    PaymentDebit=?,
+                    PaymentQRIS=?,
+                    PaymentTransfer=?,
+                    PaymentEWallet=?,
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmProductID,
+                    $request->txtFrmPaymentCash,
+                    $request->txtFrmPaymentCredit,
+                    $request->txtFrmPaymentDebit,
+                    $request->txtFrmPaymentQRIS,
+                    $request->txtFrmPaymentTransfer,
+                    $request->txtFrmPaymentEWallet,
+                    $request->hdnFrmID
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE MsPayment
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "";
+            }
+        } else $return = array('status'=>false,'message'=>"");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveClient(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO MsClient
+                        (IsDeleted, UserIn, DateIn, ID, OutletID, StoreName, Address, Name, PhoneNumber, Message, ImgUrl, MimeType)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $request->txtFrmOutletID,
+                    $request->txtFrmStoreName,
+                    $request->txtFrmClientAddress,
+                    $request->txtFrmClientName,
+                    $request->txtFrmClientPhoneNumber,
+                    $request->txtFrmMessage,
+                    $request->txtFrmImgUrl,
+                    $request->txtFrmMimeType,
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE MsClient
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    StoreName=?,
+                    Name=?,
+                    PhoneNumber=?,
+                    Message=?,
+                    ImgUrl=?,
+                    MimeType=?,
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $request->txtFrmStoreName,
+                    $request->txtFrmClientAddress,
+                    $request->txtFrmClientName,
+                    $request->txtFrmClientPhoneNumber,
+                    $request->txtFrmMessage,
+                    $request->txtFrmImgUrl,
+                    $request->txtFrmMimeType,
+                    $request->hdnFrmID
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE MsClient
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "";
+            }
+        } else $return = array('status'=>false,'message'=>"");
+        return response()->json($return, 200);
+    }
     
     public function doSetPrimaryAddress(Request $request)
     {
