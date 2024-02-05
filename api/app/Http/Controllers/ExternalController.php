@@ -1152,9 +1152,12 @@ if ($getAuth['status']) {
                     DateUp=NOW(),
                     ClientID=?,
                     Name=?,
-                    PhoneNumber=?,
-                    PlanType=?,
-                    DetailsAddress=?,
+                    Notes=?,
+                    Qty=?,
+                    Price=?,
+                    CategoryID=?,
+                    ImgUrl=?,
+                    MimeType=?,
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
@@ -1162,9 +1165,8 @@ if ($getAuth['status']) {
                     $request->txtFrmProductName,
                     $request->txtFrmNotes,
                     $request->txtFrmQty,
-                    $request->txtFrmIsPrimary,
+                    $request->txtFrmPrice,
                     $request->txtFrmCategoryID,
-                    $request->txtFrmProductSKU,
                     $request->txtFrmImgUrl,
                     $request->txtFrmMimeType,
                     $request->hdnFrmID
@@ -1205,14 +1207,10 @@ if ($getAuth['status']) {
                     UserUp=?,
                     DateUp=NOW(),
                     ClientID=?,
-                    ProductID=?,
-                    VariantID=?,
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductID,
-                    $request->txtFrmVariantID,
                     $request->hdnFrmID
                 ]);
                 $return['message'] = "";
@@ -1251,8 +1249,6 @@ if ($getAuth['status']) {
                     UserUp=?,
                     DateUp=NOW(),
                     ClientID=?,
-                    ProductID=?,
-                    VariantOptionID=?,
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
@@ -1351,10 +1347,71 @@ if ($getAuth['status']) {
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
             if ($request->hdnAction == "add") {
-                $query = "INSERT INTO MsProductVariantOption
-                        (IsDeleted, UserIn, DateIn, ID, TransactionNumber, ClientID, PaymentID, TransactionDate, PaidDate, CustomerName, SubTotal, Discount, Tax, TotalPayment, PaymentAmount, Changes, Status, Notes)
+                $query = "INSERT INTO TrTransactionProduct
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, TransactionID, Qty, UnitPrice, Discount, UnitPriceAfterDiscount, Notes)
                         VALUES
-                        (0, ?, NOW(), UUID(), ?, ?, ?)";
+                        (0, ?, NOW(), UUID(), ClientID, ?, ?, ?, ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmProductID,
+                    $request->txtFrmTransactionID,
+                    $request->txtFrmQty,
+                    $request->txtFrmUnitPrice,
+                    $request->txtFrmDiscount,
+                    $request->txtFrmUnitPriceAfterDiscount,
+                    $request->txtFrmUnitNotes,
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "edit") {
+                $query = "UPDATE TrTransactionProduct
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    ProductID=?,
+                    TransactionID=?,
+                    Qty=?,
+                    UnitPrice=?,
+                    Discount=?,
+                    UnitPriceAfterDiscount=?,
+                    Notes=?,
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->txtFrmProductID,
+                    $request->txtFrmTransactionID,
+                    $request->txtFrmQty,
+                    $request->txtFrmUnitPrice,
+                    $request->txtFrmDiscount,
+                    $request->txtFrmUnitPriceAfterDiscount,
+                    $request->txtFrmNotes,
+                    $request->hdnFrmID
+                ]);
+                $return['message'] = "";
+            }
+            if ($request->hdnAction == "delete") {
+                $query = "DELETE TrTransactionProduct
+                WHERE ID=?";
+                DB::delete($query, [$request->hdnFrmID]);
+                $return['message'] = "";
+            }
+        } else $return = array('status'=>false,'message'=>"");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveTransactionProductVariant(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->hdnAction == "add") {
+                $query = "INSERT INTO TrTransactionProductVariant
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ClientID, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
@@ -1362,14 +1419,14 @@ if ($getAuth['status']) {
                     $request->txtFrmVariantOptionID,
                 ]);
                 $return['message'] = "";
-            } 
+            }
             if ($request->hdnAction == "edit") {
-                $query = "UPDATE MsProductVariantOption
+                $query = "UPDATE TrTransactionProductVariant
                 SET IsDeleted=0,
                     UserUp=?,
                     DateUp=NOW(),
                     ClientID=?,
-                    PaymentID=?,
+                    ProductID=?,
                     VariantOptionID=?,
                     WHERE ID=?";
                 DB::update($query, [
@@ -1382,7 +1439,7 @@ if ($getAuth['status']) {
                 $return['message'] = "";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE MsProductVariantOption
+                $query = "DELETE TrTransactionProductVariant
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
                 $return['message'] = "";
