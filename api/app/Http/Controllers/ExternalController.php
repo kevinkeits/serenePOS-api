@@ -377,7 +377,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testCategory(Request $request)
+    public function getPosCategory(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT ID, Name, QtyAlert, BGColor
@@ -389,7 +389,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testVariant(Request $request)
+    public function getPosVariant(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT ID, Name, Type
@@ -401,7 +401,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testVariantOption(Request $request)
+    public function getPosVariantOption(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT ID, Label, Price
@@ -413,7 +413,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
     
-    public function testProduct(Request $request)
+    public function getPosProduct(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT MsProduct.ID, MsProduct.Name, MsProduct.Notes, MsProduct.Qty, MsProduct.Price, MsCategory.ID CategoryID ,MsCategory.Name Category, MsProduct.ProductSKU, MsProduct.ImgUrl, MsProduct.MimeType 
@@ -427,7 +427,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testProductVariant(Request $request)
+    public function getPosProductVariant(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT MsProductVariant.ID, MsProduct.ID ProductID, MsVariant.ID VariantID, MsVariant.Name
@@ -443,7 +443,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testProductVariantOption(Request $request)
+    public function getPosProductVariantOption(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT MsProductVariantOption.ID, MsProduct.ID ProductID, MsVariantOption.ID VariantOptionID, MsVariantOption.Label, MsVariantOption.Price
@@ -459,7 +459,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testTransaction(Request $request)
+    public function getPosTransaction(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT TrTransaction.ID, TrTransaction.TransactionNumber, MsPayment.ID PaymentID, MsPayment.PaymentCash, MsPayment.PaymentCredit, MsPayment.PaymentDebit, MsPayment.PaymentQRIS, MsPayment.PaymentTransfer, MsPayment.PaymentEWallet, TrTransaction.TransactionDate, TrTransaction.PaidDate, TrTransaction.CustomerName, TrTransaction.SubTotal, TrTransaction.Discount, TrTransaction.Tax, TrTransaction.TotalPayment, TrTransaction.PaymentAmount, TrTransaction.Changes, TrTransaction.Status, TrTransaction.Notes
@@ -473,7 +473,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testTransactionProduct(Request $request)
+    public function getPosTransactionProduct(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT TrTransactionProduct.ID, MsProduct.ID ProductID, MsProduct.Name, MsProduct.Price UnitPrice, TrTransactionProduct.Qty, TrTransactionProduct.UnitPrice, TrTransactionProduct.Discount, TrTransactionProduct.UnitPriceAfterDiscount, TrTransactionProduct.Notes
@@ -487,7 +487,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testTransactionProductVariant(Request $request)
+    public function getPosTransactionProductVariant(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT TrTransactionProductVariant.ID, MsProduct.ID ProductID, MsVariantOption.ID VariantOptionID, MsVariantOption.VariantID, MsVariantOption.Label, MsVariantOption.Price
@@ -503,7 +503,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testClient(Request $request)
+    public function getPosClient(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT MsClient.ID, MsClient.StoreName, MsClient.Address, MsClient.Name, MsClient.PhoneNumber, MsClient.Message, MsClient.ImgUrl, MsClient.MimeType, MsOutlet.ID OutletID, MsOutlet.Name OutlateName, MsOutlet.DetailsAddress, MsOutlet.IsPrimary
@@ -516,7 +516,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testCustomer(Request $request)
+    public function getPosCustomer(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT ID, Name, HandphoneNumber, Address, Gender
@@ -528,7 +528,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testPayment(Request $request)
+    public function getPosPayment(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT MsPayment.ID, MsPayment.PaymentCash, MsPayment.PaymentCredit, MsPayment.PaymentDebit, MsPayment.PaymentQRIS,  MsPayment.PaymentTransfer, MsPayment.PaymentEWallet
@@ -540,7 +540,7 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testOutlet(Request $request)
+    public function getPosOutlet(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $query = "SELECT MsOutlet.ID, MsOutlet.Name, MsOutlet.PhoneNumber, MsOutlet.PlanType, MsOutlet.IsPrimary, MsOutlet.DetailsAddress
@@ -552,10 +552,10 @@ if ($getAuth['status']) {
         return response()->json($return, 200);
     }
 
-    public function testUser(Request $request)
+    public function getPosUser(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT MsUser.ID, MsOutlet.ID OutletID, MsOutlet.Name OutletName, MsUser.Name, MsUser.Email, MsUser.Password
+        $query = "SELECT MsUser.ID, MsOutlet.ID OutletID, MsOutlet.Name OutletName, MsUser.Name, MsUser.PhoneNumber, MsUser.Email, MsUser.Password
             FROM MsUser
             JOIN MsOutlet
             ON MsOutlet.ID = MsUser.OutletID
@@ -870,7 +870,7 @@ if ($getAuth['status']) {
             DB::delete($query, [$request->hdnFrmID]);
             $return['message'] = "Alamat berhasil dihapus";
             $return['callback'] = "doHandlerRemoveAddress()";
-        } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
+        } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login.");
         return response()->json($return, 200);
     }
 
@@ -891,7 +891,7 @@ if ($getAuth['status']) {
                     $request->txtFrmQtyAlert,
                     $request->txtFrmBGColor,
                 ]);
-                $return['message'] = "Category berhasil Dibuat";
+                $return['message'] = "Category successfully created.";
             } 
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE MsCategory
@@ -911,15 +911,15 @@ if ($getAuth['status']) {
                     $request->txtFrmBGColor,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "Category berhasil Diubah";
+                $return['message'] = "Category successfully modified.";
             }
             if ($request->hdnAction == "delete") {
                 $query = "DELETE FROM MsCategory
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "Category berhasil dihapus";
+                $return['message'] = "Category successfully deleted.";
             }
-        } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
 
@@ -939,7 +939,7 @@ if ($getAuth['status']) {
                     $request->txtFrmVariantName,
                     $request->txtFrmVariantType,
                 ]);
-                $return['message'] = "Variant berhasil dibuat";
+                $return['message'] = "Variant successfully created.";
             }
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE MsVariant
@@ -957,15 +957,15 @@ if ($getAuth['status']) {
                     $request->txtFrmVariantType,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "Variant berhasil diubah";
+                $return['message'] = "Variant successfully modified.";
             }
             if ($request->hdnAction == "delete") {
                 $query = "DELETE FROM MsVariant
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "Variant berhasil dihapus";
+                $return['message'] = "Variant successfully deleted.";
             }
-        } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
 
@@ -986,7 +986,7 @@ if ($getAuth['status']) {
                     $request->txtFrmLabel,
                     $request->txtFrmPrice,
                 ]);
-                $return['message'] = "Variant Option berhasil dibuat";
+                $return['message'] = "Variant Option successfully created.";
             }
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE MsVariantOption
@@ -994,25 +994,27 @@ if ($getAuth['status']) {
                     UserUp=?,
                     DateUp=NOW(),
                     ClientID=?,
+                    VariantID=?,
                     Label=?,
-                    Price=?,
+                    Price=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
+                    $request->txtFrmVariantID,
                     $request->txtFrmLabel,
                     $request->txtFrmPrice,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "Variant Option berhasil diubah";
+                $return['message'] = "Variant Option successfully modified.";
             }
             if ($request->hdnAction == "delete") {
                 $query = "DELETE FROM MsVariantOption
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "";
+                $return['message'] = "Variant Option successfully deleted.";
             }
-        } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
 
@@ -1034,7 +1036,7 @@ if ($getAuth['status']) {
                     $request->txtFrmIsPrimary,
                     $request->txtFrmDetailsAddress,
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Outlet successfully created.";
             } 
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE MsOutlet
@@ -1044,7 +1046,8 @@ if ($getAuth['status']) {
                     Name=?,
                     PhoneNumber=?,
                     PlanType=?,
-                    DetailsAddress=?,
+                    IsPrimary=?,
+                    DetailsAddress=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
@@ -1055,16 +1058,16 @@ if ($getAuth['status']) {
                     $request->txtFrmDetailsAddress,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Outlet successfully modified.";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE MsOutlet
+                $query = "DELETE FROM MsOutlet
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "";
+                $return['message'] = "Outlet successfully deleted.";
             }
             
-        } else $return = array('status'=>false,'message'=>"");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
 
@@ -1086,7 +1089,7 @@ if ($getAuth['status']) {
                     $request->txtFrmAddress,
                     $request->txtFrmGender,
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Customer successfully created.";
             } 
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE MsCustomer
@@ -1108,16 +1111,16 @@ if ($getAuth['status']) {
                     $request->txtFrmGender,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Customer successfully modified.";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE MsCustomer
+                $query = "DELETE FROM MsCustomer
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "";
+                $return['message'] = "Customer successfully deleted.";
             }
             
-        } else $return = array('status'=>false,'message'=>"");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
 
@@ -1128,22 +1131,22 @@ if ($getAuth['status']) {
         if ($getAuth['status']) {
             if ($request->hdnAction == "add") {
                 $query = "INSERT INTO MsProduct
-                        (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Notes, Qty, Price, CategoryID, ProductSKU, ImgUrl, MimeType)
-                        VALUES
-                        (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?)";
+                    (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Notes, Qty, Price, CategoryID, ProductSKU, ImgUrl, MimeType)
+                    VALUES
+                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
                     $request->txtFrmProductName,
                     $request->txtFrmNotes,
                     $request->txtFrmQty,
-                    $request->txtFrmIsPrimary,
+                    $request->txtFrmPrice,
                     $request->txtFrmCategoryID,
                     $request->txtFrmProductSKU,
                     $request->txtFrmImgUrl,
                     $request->txtFrmMimeType,
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Product successfully created.";
             } 
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE MsProduct
@@ -1157,7 +1160,7 @@ if ($getAuth['status']) {
                     Price=?,
                     CategoryID=?,
                     ImgUrl=?,
-                    MimeType=?,
+                    MimeType=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
@@ -1171,15 +1174,15 @@ if ($getAuth['status']) {
                     $request->txtFrmMimeType,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Product successfully modified.";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE MsProduct
+                $query = "DELETE FROM MsProduct
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "";
+                $return['message'] = "Product successfully deleted.";
             }
-        } else $return = array('status'=>false,'message'=>"");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
 
@@ -1199,7 +1202,7 @@ if ($getAuth['status']) {
                     $request->txtFrmProductID,
                     $request->txtFrmVariantID,
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Product Variant successfully created.";
             } 
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE MsProductVariant
@@ -1213,15 +1216,15 @@ if ($getAuth['status']) {
                     $getAuth['ClientID'],
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Product Variant successfully modified.";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE MsProductVariant
+                $query = "DELETE FROM MsProductVariant
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "";
+                $return['message'] = "Product Variant successfully deleted.";
             }
-        } else $return = array('status'=>false,'message'=>"");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
 
@@ -1241,7 +1244,7 @@ if ($getAuth['status']) {
                     $request->txtFrmProductID,
                     $request->txtFrmVariantOptionID,
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Product Variant Option successfully created.";
             } 
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE MsProductVariantOption
@@ -1257,15 +1260,15 @@ if ($getAuth['status']) {
                     $request->txtFrmVariantOptionID,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Product Variant Option successfully modified.";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE MsProductVariantOption
+                $query = "DELETE FROM MsProductVariantOption
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "";
+                $return['message'] = "Product Variant Option successfully deleted.";
             }
-        } else $return = array('status'=>false,'message'=>"");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
 
@@ -1293,7 +1296,7 @@ if ($getAuth['status']) {
                     $request->txtFrmStatus,
                     $request->txtFrmNotes,
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Transaction successfully created.";
             } 
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE TrTransaction
@@ -1329,15 +1332,15 @@ if ($getAuth['status']) {
                     $request->txtNotes,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Transaction successfully modified.";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE TrTransaction
+                $query = "DELETE FROM TrTransaction
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "";
+                $return['message'] = "Transaction successfully deleted.";
             }
-        } else $return = array('status'=>false,'message'=>"");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
 
@@ -1362,7 +1365,7 @@ if ($getAuth['status']) {
                     $request->txtFrmUnitPriceAfterDiscount,
                     $request->txtFrmUnitNotes,
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Transaction Product successfully created.";
             }
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE TrTransactionProduct
@@ -1390,15 +1393,15 @@ if ($getAuth['status']) {
                     $request->txtFrmNotes,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Transaction Product successfully modified.";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE TrTransactionProduct
+                $query = "DELETE FROM TrTransactionProduct
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "";
+                $return['message'] = "Transaction Product successfully deleted.";
             }
-        } else $return = array('status'=>false,'message'=>"");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
 
@@ -1418,7 +1421,7 @@ if ($getAuth['status']) {
                     $request->txtFrmProductID,
                     $request->txtFrmVariantOptionID,
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Transaction Product Variant successfully created.";
             }
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE TrTransactionProductVariant
@@ -1436,13 +1439,13 @@ if ($getAuth['status']) {
                     $request->txtFrmVariantOptionID,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Transaction Product Variant successfully modified.";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE TrTransactionProductVariant
+                $query = "DELETE FROM TrTransactionProductVariant
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "";
+                $return['message'] = "Transaction Product Variant successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
@@ -1468,7 +1471,7 @@ if ($getAuth['status']) {
                     $request->txtFrmPaymentTransfer,
                     $request->txtFrmPaymentEWallet,
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Payment successfully created.";
             }
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE MsPayment
@@ -1495,15 +1498,15 @@ if ($getAuth['status']) {
                     $request->txtFrmPaymentEWallet,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Payment successfully modified.";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE MsPayment
+                $query = "DELETE FROM MsPayment
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "";
+                $return['message'] = "Payment successfully deleted.";
             }
-        } else $return = array('status'=>false,'message'=>"");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
 
@@ -1528,7 +1531,7 @@ if ($getAuth['status']) {
                     $request->txtFrmImgUrl,
                     $request->txtFrmMimeType,
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Client successfully created.";
             }
             if ($request->hdnAction == "edit") {
                 $query = "UPDATE MsClient
@@ -1553,15 +1556,15 @@ if ($getAuth['status']) {
                     $request->txtFrmMimeType,
                     $request->hdnFrmID
                 ]);
-                $return['message'] = "";
+                $return['message'] = "Client successfully modified.";
             }
             if ($request->hdnAction == "delete") {
-                $query = "DELETE MsClient
+                $query = "DELETE FROM MsClient
                 WHERE ID=?";
                 DB::delete($query, [$request->hdnFrmID]);
-                $return['message'] = "";
+                $return['message'] = "Client successfully deleted.";
             }
-        } else $return = array('status'=>false,'message'=>"");
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
         return response()->json($return, 200);
     }
     
