@@ -350,8 +350,7 @@ if ($getAuth['status']) {
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
 } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
-
-        return response()->json($return, 200); 
+    return response()->json($return, 200); 
     }
 
     public function getNotification(Request $request)
@@ -380,50 +379,122 @@ if ($getAuth['status']) {
     public function getPosCategory(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT ID, Name, QtyAlert, BGColor
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+        $query = "SELECT ID, ClientID, Name, QtyAlert, BGColor
             FROM MsCategory
-            WHERE MsCategory.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
-            ORDER BY Name ASC";
-        $return['data'] = DB::select($query);
+            WHERE MsCategory.ClientID = ?"; 
+            $data = DB::select($query,[$getAuth['ClientID']]);
+        $return['data'] = $data[0];
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-        return response()->json($return, 200);
+    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+    return response()->json($return, 200);
     }
 
     public function getPosVariant(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT ID, Name, Type
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+        $query = "SELECT ID, Name, Type, (SELECT COUNT(ProductID)
+        FROM MsVariantProduct
+        WHERE MsVariantProduct.VariantID =  '') Count
             FROM MsVariant
-            WHERE MsVariant.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
-            ORDER BY Name ASC";
-        $return['data'] = DB::select($query);
+            WHERE MsVariant.ClientID = ?";
+            $data = DB::select($query,[$getAuth['ClientID']]);
+         $return['data'] = $data[0];
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-        return response()->json($return, 200);
+    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+    return response()->json($return, 200);
     }
 
     public function getPosVariantOption(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT ID, Label, Price
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+        $query = "SELECT ID, VariantID, Label, Price
             FROM MsVariantOption
-            WHERE MsVariantOption.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
-            ORDER BY ID ASC";
-        $return['data'] = DB::select($query);
+            WHERE MsVariantOption.ClientID = ?";
+            $data = DB::select($query,[$getAuth['ClientID']]);
+         $return['data'] = $data[0];
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-        return response()->json($return, 200);
+    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+    return response()->json($return, 200);
     }
     
+    // public function getPosProduct(Request $request)
+    // {
+    //     $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+    //     $getAuth = $this->validateAuth($request->_s);
+    //     if ($getAuth['status']) {
+    //     $query = "SELECT MsProduct.ID, MsProduct.Name, MsProduct.Notes, MsProduct.Qty, MsProduct.Price, MsCategory.ID CategoryID ,MsCategory.Name Category, MsProduct.ProductSKU, MsProduct.ImgUrl, MsProduct.MimeType 
+    //         FROM MsProduct
+    //         JOIN MsCategory
+    //         ON MsProduct.CategoryID = MsCategory.ID
+    //         WHERE MsProduct.ClientID = ?";
+    //         $data = DB::select($query,[$getAuth['ClientID']]);
+    //     $return['data'] = $data[0];
+    //     if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+    // } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+    // return response()->json($return, 200);
+    // }
+
     public function getPosProduct(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT MsProduct.ID, MsProduct.Name, MsProduct.Notes, MsProduct.Qty, MsProduct.Price, MsCategory.ID CategoryID ,MsCategory.Name Category, MsProduct.ProductSKU, MsProduct.ImgUrl, MsProduct.MimeType 
-            FROM MsProduct
-            JOIN MsCategory
-            ON MsProduct.CategoryID = MsCategory.ID
-            WHERE MsProduct.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
-            ORDER BY ProductSKU ASC";
-        $return['data'] = DB::select($query);
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+        $return = array('status'=>true,'message'=>"",'data'=>array(),'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            $mainQuery = "  SELECT 
+                                    MsProduct.ID,
+                                    MsProduct.ClientID,
+                                    MsProduct.Name, 
+                                    MsProduct.Notes, 
+                                    MsProduct.Qty, 
+                                    MsProduct.Price, 
+                                    MsCategory.ID CategoryID,
+                                    MsCategory.Name Category, 
+                                    MsProduct.ProductSKU, 
+                                    MsProduct.ImgUrl, 
+                                    MsProduct.MimeType 
+                            FROM    MsProduct
+                            JOIN    MsCategory ON MsProduct.CategoryID = MsCategory.ID
+                            WHERE   {definedFilter}
+                            ORDER BY MsProduct.Name ASC";
+                            $definedFilter = "1=1";
+            if ($getAuth['ClientID'] != "") $definedFilter = "MsProduct.ClientID = '".$getAuth['ClientID']."'";
+            if ($request->_i) {
+                $definedFilter = "MsProduct.ID=?";
+                $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
+                $data = DB::select($query,[$request->_i]);
+                if ($data) {
+                    $query = "SELECT    MsVariant.ID,
+                                        MsVariant.Name,
+                                        MsVariant.Type,
+                                        MsVariantOption.ID VariantOptionID,
+                                        MsVariantOption.Label,
+                                        MsVariantOption.Price
+                                FROM    MsVariant
+                                JOIN    MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
+                                JOIN    MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
+                                WHERE   MsVariantProduct.ProductID = ?
+                                ORDER BY  MsVariant.Name ASC";
+                    $selVariant = DB::select($query,[$request->_i]);
+                    $arrData = [];
+                    if ($selVariant) {
+                        foreach ($selVariant as $key => $value) {
+                            array_push($arrData,$value->ID);
+                        }
+                    }
+                    $return['data'] = array('header'=>$data[0], 'selVariant'=> $selVariant);
+                    $return['callback'] = "onCompleteFetch(e.data)";
+                }
+            } else {
+                $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
+                $data = DB::select($query);
+                if ($data) $return['data'] = $data;
+            }
+        } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
         return response()->json($return, 200);
     }
 
@@ -436,7 +507,7 @@ if ($getAuth['status']) {
             ON MsProduct.ID = MsProductVariant.ProductID
             JOIN MsVariant
             ON MsVariant.ID = MsProductVariant.VariantID
-            WHERE MsProductVariant.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            WHERE MsProductVariant.ClientID = ''
             ORDER BY ID ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
@@ -452,7 +523,7 @@ if ($getAuth['status']) {
             ON MsProduct.ID = MsProductVariantOption.ProductID
             JOIN MsVariantOption
             ON MsVariantOption.ID = MsProductVariantOption.VariantOptionID
-            WHERE MsProductVariantOption.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            WHERE MsProductVariantOption.ClientID = ''
             ORDER BY ID ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
@@ -461,17 +532,91 @@ if ($getAuth['status']) {
 
     public function getPosTransaction(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT TrTransaction.ID, TrTransaction.TransactionNumber, MsPayment.ID PaymentID, MsPayment.PaymentCash, MsPayment.PaymentCredit, MsPayment.PaymentDebit, MsPayment.PaymentQRIS, MsPayment.PaymentTransfer, MsPayment.PaymentEWallet, TrTransaction.TransactionDate, TrTransaction.PaidDate, TrTransaction.CustomerName, TrTransaction.SubTotal, TrTransaction.Discount, TrTransaction.Tax, TrTransaction.TotalPayment, TrTransaction.PaymentAmount, TrTransaction.Changes, TrTransaction.Status, TrTransaction.Notes
-            FROM TrTransaction
-            JOIN MsPayment
-            ON MsPayment.ID = TrTransaction.PaymentID
-            WHERE TrTransaction.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
-            ORDER BY TransactionDate ASC";
-        $return['data'] = DB::select($query);
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+        $return = array('status'=>true,'message'=>"",'data'=>array(),'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            $mainQuery = "  SELECT  TrTransaction.ID, 
+                                    TrTransaction.ClientID, 
+                                    TrTransaction.TransactionNumber, 
+                                    MsPayment.ID PaymentID, 
+                                    MsPayment.PaymentCash, 
+                                    MsPayment.PaymentCredit, 
+                                    MsPayment.PaymentDebit, 
+                                    MsPayment.PaymentQRIS, 
+                                    MsPayment.PaymentTransfer, 
+                                    MsPayment.PaymentEWallet, 
+                                    TrTransaction.TransactionDate, 
+                                    TrTransaction.PaidDate, 
+                                    TrTransaction.CustomerName, 
+                                    TrTransaction.SubTotal, 
+                                    TrTransaction.Discount, 
+                                    TrTransaction.Tax, 
+                                    TrTransaction.TotalPayment, 
+                                    TrTransaction.PaymentAmount, 
+                                    TrTransaction.Changes, 
+                                    TrTransaction.Status, 
+                                    TrTransaction.Notes
+                            FROM    TrTransaction
+                            JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
+                            WHERE   {definedFilter}
+                            ORDER BY TransactionDate ASC";
+                            $definedFilter = "1=1";
+            if ($getAuth['ClientID'] != "") $definedFilter = "TrTransaction.ClientID = '".$getAuth['ClientID']."'";
+            if ($request->_i) {
+                $definedFilter = "TrTransaction.ID=?";
+                $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
+                $data = DB::select($query,[$request->_i]);
+                if ($data) {
+                    $query = "SELECT    TrTransactionProduct.ID,
+                                        TrTransactionProduct.ClientID,
+                                        TrTransactionProduct.ProductID,
+                                        TrTransactionProduct.TransactionID,
+                                        TrTransactionProduct.Qty,
+                                        TrTransactionProduct.UnitPrice,
+                                        TrTransactionProduct.Discount,
+                                        TrTransactionProduct.UnitPriceAfterDiscount,
+                                        TrTransactionProduct.Notes,
+                                        TrTransactionProductVariant.VariantOptionID,
+                                        MsVariantOption.Label,
+                                        MsVariantOption.Price
+                                FROM    TrTransactionProduct
+                                JOIN    TrTransactionProductVariant on TrTransactionProductVariant.TransactionProductID = TrTransactionProduct.ID
+                                FROM    TrTransactionProductVariant
+                                JOIN    MsVariantOption on MsVariantOption.ID = TrTransactionProductVariant.VariantOptionID
+                                WHERE   TrTransactionProduct.TransactionID = ?
+                                ORDER BY DateIn ASC";
+                    $selVariant = DB::select($query,[$request->_i]);
+                    $arrData = [];
+                    if ($selVariant) {
+                        foreach ($selVariant as $key => $value) {
+                            array_push($arrData,$value->ID);
+                        }
+                    }
+                    $return['data'] = array('header'=>$data[0], 'selVariant'=> $selVariant);
+                    $return['callback'] = "onCompleteFetch(e.data)";
+                }
+            } else {
+                $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
+                $data = DB::select($query);
+                if ($data) $return['data'] = $data;
+            }
+        } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
         return response()->json($return, 200);
     }
+
+    // public function getPosTransaction(Request $request)
+    // {
+    //     $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+    //     $query = "SELECT TrTransaction.ID, TrTransaction.TransactionNumber, MsPayment.ID PaymentID, MsPayment.PaymentCash, MsPayment.PaymentCredit, MsPayment.PaymentDebit, MsPayment.PaymentQRIS, MsPayment.PaymentTransfer, MsPayment.PaymentEWallet, TrTransaction.TransactionDate, TrTransaction.PaidDate, TrTransaction.CustomerName, TrTransaction.SubTotal, TrTransaction.Discount, TrTransaction.Tax, TrTransaction.TotalPayment, TrTransaction.PaymentAmount, TrTransaction.Changes, TrTransaction.Status, TrTransaction.Notes
+    //         FROM TrTransaction
+    //         JOIN MsPayment
+    //         ON MsPayment.ID = TrTransaction.PaymentID
+    //         WHERE TrTransaction.ClientID = ''
+    //         ORDER BY TransactionDate ASC";
+    //     $return['data'] = DB::select($query);
+    //     if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+    //     return response()->json($return, 200);
+    // }
 
     public function getPosTransactionProduct(Request $request)
     {
@@ -480,7 +625,7 @@ if ($getAuth['status']) {
             FROM TrTransactionProduct
             JOIN MsProduct
             ON MsProduct.ID = TrTransactionProduct.ProductID
-            WHERE TrTransactionProduct.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            WHERE TrTransactionProduct.ClientID = ''
             ORDER BY ID ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
@@ -496,7 +641,7 @@ if ($getAuth['status']) {
             ON MsProduct.ID = TrTransactionProductVariant.ProductID
             JOIN MsVariantOption
             ON MsVariantOption.ID = TrTransactionProductVariant.VariantOptionID
-            WHERE TrTransactionProductVariant.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            WHERE TrTransactionProductVariant.ClientID = ''
             ORDER BY ID ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
@@ -519,37 +664,46 @@ if ($getAuth['status']) {
     public function getPosCustomer(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT ID, Name, HandphoneNumber, Address, Gender
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+        $query = "SELECT ID, ClientID, Name, HandphoneNumber, Address, Gender
             FROM MsCustomer
-            WHERE MsCustomer.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
-            ORDER BY Name ASC";
-        $return['data'] = DB::select($query);
+            WHERE MsCustomer.ClientID = ?";
+            $data = DB::select($query,[$getAuth['ClientID']]);
+        $return['data'] = $data[0];
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-        return response()->json($return, 200);
+    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+    return response()->json($return, 200);
     }
 
     public function getPosPayment(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT MsPayment.ID, MsPayment.PaymentCash, MsPayment.PaymentCredit, MsPayment.PaymentDebit, MsPayment.PaymentQRIS,  MsPayment.PaymentTransfer, MsPayment.PaymentEWallet
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+        $query = "SELECT MsPayment.ID, MsPayment.ClientID, MsPayment.PaymentCash, MsPayment.PaymentCredit, MsPayment.PaymentDebit, MsPayment.PaymentQRIS,  MsPayment.PaymentTransfer, MsPayment.PaymentEWallet
             FROM MsPayment
-            WHERE MsPayment.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
-            ORDER BY ID DESC";
-        $return['data'] = DB::select($query);
+            WHERE MsPayment.ClientID = ?";
+            $data = DB::select($query,[$getAuth['ClientID']]);
+        $return['data'] = $data[0];
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-        return response()->json($return, 200);
+    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+    return response()->json($return, 200);
     }
 
     public function getPosOutlet(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "SELECT MsOutlet.ID, MsOutlet.Name, MsOutlet.PhoneNumber, MsOutlet.PlanType, MsOutlet.IsPrimary, MsOutlet.DetailsAddress
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+        $query = "SELECT MsOutlet.ID, MsOutlet.ClientID, MsOutlet.Name, MsOutlet.PhoneNumber, MsOutlet.PlanType, MsOutlet.IsPrimary, MsOutlet.DetailsAddress
             FROM MsOutlet
-            WHERE MsOutlet.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
-            ORDER BY ID ASC";
-        $return['data'] = DB::select($query);
+            WHERE MsOutlet.ClientID = ?";
+            $data = DB::select($query,[$getAuth['ClientID']]);
+            $return['data'] = $data[0];
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-        return response()->json($return, 200);
+    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+    return response()->json($return, 200);
     }
 
     public function getPosUser(Request $request)
@@ -559,7 +713,7 @@ if ($getAuth['status']) {
             FROM MsUser
             JOIN MsOutlet
             ON MsOutlet.ID = MsUser.OutletID
-            WHERE MsUser.ClientID = 'f95c6b7c-0fbe-421d-a3b1-a695861d74f5'
+            WHERE MsUser.ClientID = ''
             ORDER BY ID ASC";
         $return['data'] = DB::select($query);
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
@@ -683,15 +837,16 @@ if ($getAuth['status']) {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            $query = "SELECT Name, Phone, Email 
-                    FROM MS_CUSTOMER c
-                    WHERE ID=?";
-            $data = DB::select($query,[$getAuth['CustomerID']]);
+            $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
+                FROM MsUser
+                WHERE MsUser.ID=?";
+            $data = DB::select($query,[$getAuth['UserID']]);
             $return['data'] = $data[0];
             if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
         } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
         return response()->json($return, 200);
     }
+
     public function doUpdateDeviceID(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
@@ -1209,11 +1364,13 @@ if ($getAuth['status']) {
                 SET IsDeleted=0,
                     UserUp=?,
                     DateUp=NOW(),
-                    ClientID=?,
+                    ClientID=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
+                    $request->txtFrmProductID,
+                    $request->txtFrmVariantID,
                     $request->hdnFrmID
                 ]);
                 $return['message'] = "Product Variant successfully modified.";
@@ -1252,6 +1409,8 @@ if ($getAuth['status']) {
                     UserUp=?,
                     DateUp=NOW(),
                     ClientID=?,
+                    ProductID=?,
+                    VariantOptionID=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
@@ -1281,9 +1440,10 @@ if ($getAuth['status']) {
                 $query = "INSERT INTO TrTransaction
                         (IsDeleted, UserIn, DateIn, ID, TransactionNumber, ClientID, PaymentID, TransactionDate, PaidDate, CustomerName, SubTotal, Discount, Tax, TotalPayment, PaymentAmount, Changes, Status, Notes)
                         VALUES
-                        (0, ?, NOW(), UUID(), ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                        (0, ?, NOW(), UUID(), ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
+                    $request->txtFrmTransactionNumber,
                     $getAuth['ClientID'],
                     $request->txtFrmPaymentID,
                     $request->txtFrmCustomerName,
@@ -1315,21 +1475,21 @@ if ($getAuth['status']) {
                     PaymentAmount=?,
                     Changes=?,
                     Status=?,
-                    Notes=?,
+                    Notes=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
                     $request->txtFrmTransactionNumber,
                     $getAuth['ClientID'],
                     $request->txtFrmPaymentID,
-                    $request->txtCustomerName,
-                    $request->txtSubTotal,
-                    $request->txtDiscount,
-                    $request->txtTotalPayment,
-                    $request->txtPaymentAmount,
-                    $request->txtChanges,
-                    $request->txtStatus,
-                    $request->txtNotes,
+                    $request->txtFrmCustomerName,
+                    $request->txtFrmSubTotal,
+                    $request->txtFrmDiscount,
+                    $request->txtFrmTotalPayment,
+                    $request->txtFrmPaymentAmount,
+                    $request->txtFrmChanges,
+                    $request->txtFrmStatus,
+                    $request->txtFrmNotes,
                     $request->hdnFrmID
                 ]);
                 $return['message'] = "Transaction successfully modified.";
@@ -1353,7 +1513,7 @@ if ($getAuth['status']) {
                 $query = "INSERT INTO TrTransactionProduct
                         (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, TransactionID, Qty, UnitPrice, Discount, UnitPriceAfterDiscount, Notes)
                         VALUES
-                        (0, ?, NOW(), UUID(), ClientID, ?, ?, ?, ?, ?, ?, ?)";
+                        (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
@@ -1379,7 +1539,7 @@ if ($getAuth['status']) {
                     UnitPrice=?,
                     Discount=?,
                     UnitPriceAfterDiscount=?,
-                    Notes=?,
+                    Notes=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
@@ -1414,7 +1574,7 @@ if ($getAuth['status']) {
                 $query = "INSERT INTO TrTransactionProductVariant
                         (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID)
                         VALUES
-                        (0, ?, NOW(), UUID(), ClientID, ?, ?)";
+                        (0, ?, NOW(), UUID(), ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
@@ -1430,7 +1590,7 @@ if ($getAuth['status']) {
                     DateUp=NOW(),
                     ClientID=?,
                     ProductID=?,
-                    VariantOptionID=?,
+                    VariantOptionID=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
@@ -1460,7 +1620,7 @@ if ($getAuth['status']) {
                 $query = "INSERT INTO MsPayment
                         (IsDeleted, UserIn, DateIn, ID, ClientID, PaymentCash, PaymentCredit, PaymentDebit, PaymentQRIS, PaymentTransfer, PaymentEWallet)
                         VALUES
-                        (0, ?, NOW(), UUID(), ClientID, ?, ?, ?, ?, ?, ?)";
+                        (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
@@ -1484,12 +1644,11 @@ if ($getAuth['status']) {
                     PaymentDebit=?,
                     PaymentQRIS=?,
                     PaymentTransfer=?,
-                    PaymentEWallet=?,
+                    PaymentEWallet=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductID,
                     $request->txtFrmPaymentCash,
                     $request->txtFrmPaymentCredit,
                     $request->txtFrmPaymentDebit,
@@ -1539,11 +1698,12 @@ if ($getAuth['status']) {
                     UserUp=?,
                     DateUp=NOW(),
                     StoreName=?,
+                    Address=?,
                     Name=?,
                     PhoneNumber=?,
                     Message=?,
                     ImgUrl=?,
-                    MimeType=?,
+                    MimeType=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
