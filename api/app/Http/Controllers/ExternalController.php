@@ -671,44 +671,120 @@ if ($getAuth['status']) {
 
     public function getPosTransactionHistory(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>array(),'callback'=>"");
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-        $query = "SELECT    TrTransaction.ID, 
-                            TrTransaction.ClientID, 
-                            TrTransaction.TransactionNumber, 
-                            MsPayment.ID PaymentID, 
-                            MsPayment.PaymentCash Cash, 
-                            MsPayment.PaymentCredit Credit, 
-                            MsPayment.PaymentDebit Debit, 
-                            MsPayment.PaymentQRIS QRIS, 
-                            MsPayment.PaymentTransfer Transfer, 
-                            MsPayment.PaymentEWallet EWallet, 
-                            TrTransaction.TransactionDate, 
-                            TrTransaction.PaidDate, 
-                            TrTransaction.CustomerName, 
-                            TrTransaction.SubTotal, 
-                            TrTransaction.Discount, 
-                            TrTransaction.Tax, 
-                            TrTransaction.TotalPayment, 
-                            TrTransaction.PaymentAmount, 
-                            TrTransaction.Changes, 
-                            TrTransaction.Status, 
-                            TrTransaction.Notes,
-                            MsClient.Name CashierName,
-                            MsClient.OutletID,
-                            MsOutlet.Name Outlet
-                    FROM    TrTransaction
-                    JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
-                    JOIN    MsClient ON MsClient.ID = TrTransaction.ClientID
-                    JOIN    MsOutlet ON MsOutlet.ID = MsClient.OutletID
-                    WHERE   TrTransaction.ClientID = ?";
-                    $data = DB::select($query,[$getAuth['ClientID']]);
-                    $return['data'] = $data;
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
-    return response()->json($return, 200);
+            $mainQuery = "  SELECT      TrTransaction.TransactionNumber, 
+                                        MsPayment.ID PaymentID, 
+                                        MsPayment.PaymentCash Cash, 
+                                        MsPayment.PaymentCredit Credit, 
+                                        MsPayment.PaymentDebit Debit, 
+                                        MsPayment.PaymentQRIS QRIS, 
+                                        MsPayment.PaymentTransfer Transfer, 
+                                        MsPayment.PaymentEWallet EWallet, 
+                                        TrTransaction.TransactionDate, 
+                                        TrTransaction.PaidDate, 
+                                        TrTransaction.CustomerName, 
+                                        TrTransaction.SubTotal, 
+                                        TrTransaction.Discount, 
+                                        TrTransaction.Tax, 
+                                        TrTransaction.TotalPayment, 
+                                        TrTransaction.PaymentAmount, 
+                                        TrTransaction.Changes, 
+                                        TrTransaction.Status, 
+                                        TrTransaction.Notes,
+                                        MsClient.Name CashierName,
+                                        MsClient.OutletID,
+                                        MsOutlet.Name Outlet
+                                FROM    TrTransaction
+                                JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
+                                JOIN    MsClient ON MsClient.ID = TrTransaction.ClientID
+                                JOIN    MsOutlet ON MsOutlet.ID = MsClient.OutletID
+                                WHERE   {definedFilter}
+                                ORDER BY TransactionDate ASC";
+                                $definedFilter = "1=1";
+            if ($getAuth['ClientID'] != "") $definedFilter = "TrTransaction.ClientID = '".$getAuth['ClientID']."'";
+            if ($request->_i) {
+                $definedFilter = "TrTransaction.ID=?";
+                $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
+                $data = DB::select($query,[$request->_i]);
+                if ($data) {
+                    $query = "SELECT    TrTransactionProduct.ID,
+                                        TrTransactionProduct.ProductID,
+                                        MsProduct.Name ProductName,
+                                        TrTransactionProduct.Qty,
+                                        TrTransactionProduct.UnitPrice,
+                                        TrTransactionProduct.Discount,
+                                        TrTransactionProduct.UnitPriceAfterDiscount,
+                                        TrTransactionProduct.Notes,
+                                        TrTransactionProductVariant.VariantOptionID,
+                                        MsVariantOption.Label,
+                                        MsVariantOption.Price
+                                FROM    TrTransactionProduct
+                                JOIN    MsProduct on MsProduct.ID = TrTransactionProduct.ProductID
+                                JOIN    TrTransactionProductVariant on TrTransactionProductVariant.TransactionProductID = TrTransactionProduct.ID
+                                JOIN    MsVariantOption on MsVariantOption.ID = TrTransactionProductVariant.VariantOptionID
+                                WHERE   TrTransactionProduct.TransactionID = ?
+                                ORDER BY  TrTransactionProduct.TransactionID ASC";
+                    $selVariant = DB::select($query,[$request->_i]);
+                    $arrData = [];
+                    if ($selVariant) {
+                        foreach ($selVariant as $key => $value) {
+                            array_push($arrData,$value->ID);
+                        }
+                    }
+                    $return['data'] = array('header'=>$data[0], 'selVariant'=> $selVariant);
+                    $return['callback'] = "onCompleteFetch(e.data)";
+                }
+            } else {
+                $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
+                $data = DB::select($query);
+                if ($data) $return['data'] = $data;
+            }
+        } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+        return response()->json($return, 200);
     }
+
+    // public function getPosTransactionHistory(Request $request)
+    // {
+    //     $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+    //     $getAuth = $this->validateAuth($request->_s);
+    //     if ($getAuth['status']) {
+    //     $query = "SELECT    TrTransaction.ID, 
+    //                         TrTransaction.ClientID, 
+    //                         TrTransaction.TransactionNumber, 
+    //                         MsPayment.ID PaymentID, 
+    //                         MsPayment.PaymentCash Cash, 
+    //                         MsPayment.PaymentCredit Credit, 
+    //                         MsPayment.PaymentDebit Debit, 
+    //                         MsPayment.PaymentQRIS QRIS, 
+    //                         MsPayment.PaymentTransfer Transfer, 
+    //                         MsPayment.PaymentEWallet EWallet, 
+    //                         TrTransaction.TransactionDate, 
+    //                         TrTransaction.PaidDate, 
+    //                         TrTransaction.CustomerName, 
+    //                         TrTransaction.SubTotal, 
+    //                         TrTransaction.Discount, 
+    //                         TrTransaction.Tax, 
+    //                         TrTransaction.TotalPayment, 
+    //                         TrTransaction.PaymentAmount, 
+    //                         TrTransaction.Changes, 
+    //                         TrTransaction.Status, 
+    //                         TrTransaction.Notes,
+    //                         MsClient.Name CashierName,
+    //                         MsClient.OutletID,
+    //                         MsOutlet.Name Outlet
+    //                 FROM    TrTransaction
+    //                 JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
+    //                 JOIN    MsClient ON MsClient.ID = TrTransaction.ClientID
+    //                 JOIN    MsOutlet ON MsOutlet.ID = MsClient.OutletID
+    //                 WHERE   TrTransaction.ClientID = ?";
+    //                 $data = DB::select($query,[$getAuth['ClientID']]);
+    //                 $return['data'] = $data;
+    //     if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+    // } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+    // return response()->json($return, 200);
+    // }
 
     // public function getPosTransactionProduct(Request $request)
     // {
