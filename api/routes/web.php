@@ -200,6 +200,7 @@ $router->group(['prefix' => 'external'], function () use ($router) {
     $router->get('getPosVariant',  ['uses' => 'ExternalController@getPosVariant']);
     $router->get('getPosVariantOption',  ['uses' => 'ExternalController@getPosVariantOption']);
     $router->get('getPosTransaction',  ['uses' => 'ExternalController@getPosTransaction']);
+    $router->get('getPosTransactionHistory',  ['uses' => 'ExternalController@getPosTransactionHistory']);
     $router->get('getPosTransactionProduct',  ['uses' => 'ExternalController@getPosTransactionProduct']);
     $router->get('getPosTransactionProductVariant',  ['uses' => 'ExternalController@getPosTransactionProductVariant']);
     $router->get('getPosClient',  ['uses' => 'ExternalController@getPosClient']);
