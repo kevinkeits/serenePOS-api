@@ -391,68 +391,74 @@ if ($getAuth['status']) {
     return response()->json($return, 200);
     }
 
-    public function getPosVariant(Request $request)
-    {
-        $return = array('status'=>true,'message'=>"",'data'=>array(),'callback'=>"");
-        $getAuth = $this->validateAuth($request->_s);
-        if ($getAuth['status']) {
-            $mainQuery = "SELECT    MsVariantProduct.ID,
-                                    MsVariantProduct.ClientID, 
-                                    MsVariantProduct.Name, 
-                                    MsVariantProduct.Type,
-                                    (SELECT COUNT(ProductID)
-                            FROM    MsVariantProduct
-                            WHERE   MsVariantProduct.VariantID =  '') Count
-                            FROM    MsVariant
-                            WHERE   {definedFilter}
-                            ORDER BY MsVariantProduct.Name ASC";
-                            $definedFilter = "1=1";
-            if ($getAuth['ClientID'] != "") $definedFilter = "MsVariant.ClientID = '".$getAuth['ClientID']."'";
-            if ($request->_i) {
-                $definedFilter = "MsVariant.ID=?";
-                $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
-                $data = DB::select($query,[$request->_i]);
-                if ($data) {
-                    $query = "SELECT    MsVariantOption.ID,
-                                        MsVariantOption.Label
-                                FROM    MsVariantOption
-                                WHERE   MsVariantOption.VariantID = ?
-                                ORDER BY MsVariantOption.ID, ASC";
-                    $selVariant = DB::select($query,[$request->_i]);
-                    $arrData = [];
-                    if ($selVariant) {
-                        foreach ($selVariant as $key => $value) {
-                            array_push($arrData,$value->ID);
-                        }
-                    }
-                    $return['data'] = array('header'=>$data[0], 'selVariant'=> $selVariant);
-                    $return['callback'] = "onCompleteFetch(e.data)";
-                }
-            } else {
-                $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
-                $data = DB::select($query);
-                if ($data) $return['data'] = $data;
-            }
-        } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
-        return response()->json($return, 200);
-    }
-
     // public function getPosVariant(Request $request)
     // {
-    //     $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+    //     $return = array('status'=>true,'message'=>"",'data'=>array(),'callback'=>"");
     //     $getAuth = $this->validateAuth($request->_s);
     //     if ($getAuth['status']) {
-    //     $query = "SELECT ID, Name, Type, (SELECT COUNT(ProductID)
-    //     FROM MsVariantProduct
-    //     WHERE MsVariantProduct.VariantID =  '') Count
-    //         FROM MsVariant
-    //         WHERE MsVariant.ClientID = ?";
-    //         $data = DB::select($query,[$getAuth['ClientID']]);
-    //      $return['data'] = $data[0];
-    //     if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-    // } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
-    // return response()->json($return, 200);
+    //         $mainQuery = "SELECT    MsVariant.ID,
+    //                                 MsVariant.ClientID, 
+    //                                 MsVariant.Name, 
+    //                                 MsVariant.Type,
+    //                                 (SELECT COUNT(ProductID),
+    //                                 (SELECT    GROUP_CONCAT(Label SEPARATOR ', ')
+    //                         FROM    MsVariantOption
+    //                         GROUP BY    MsVariantOption.VariantID
+    //                         FROM    MsVariantProduct
+    //                         WHERE   MsVariantProduct.VariantID =  '') Count
+    //                         FROM    MsVariant
+    //                         WHERE   {definedFilter}
+    //                         ORDER BY MsVariant.Name ASC";
+    //                         $definedFilter = "1=1";
+    //         if ($getAuth['ClientID'] != "") $definedFilter = "MsVariant.ClientID = '".$getAuth['ClientID']."'";
+    //         if ($request->_i) {
+    //             $definedFilter = "MsVariant.ID=?";
+    //             $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
+    //             $data = DB::select($query,[$request->_i]);
+    //             if ($data) {
+    //                 $query = "SELECT    GROUP_CONCAT(Label SEPARATOR ', ') ListLabel
+    //                             FROM    MsVariantOption
+    //                         GROUP BY    MsVariantOption.VariantID";
+    //                 $selVariant = DB::select($query,[$request->_i]);
+    //                 $arrData = [];
+    //                 if ($selVariant) {
+    //                     foreach ($selVariant as $key => $value) {
+    //                         array_push($arrData,$value->ID);
+    //                     }
+    //                 }
+    //                 $return['data'] = array('header'=>$data[0], 'selVariant'=> $selVariant);
+    //                 $return['callback'] = "onCompleteFetch(e.data)";
+    //             }
+    //         } else {
+    //             $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
+    //             $data = DB::select($query);
+    //             if ($data) $return['data'] = $data;
+    //         }
+    //     } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+    //     return response()->json($return, 200);
     // }
+
+    public function getPosVariant(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+        $query = "SELECT ID, Name, Type, 
+        (SELECT COUNT(ProductID)
+            FROM MsVariantProduct
+            WHERE MsVariantProduct.VariantID = MsVariant.ID) Count,
+            (SELECT GROUP_CONCAT(Label SEPARATOR ', ')
+                    FROM MsVariantOption
+                    WHERE MsVariantOption.VariantID = MsVariant.ID 
+                    GROUP BY VariantID) ListLabel
+            FROM MsVariant
+            WHERE MsVariant.ClientID = ?";
+            $data = DB::select($query,[$getAuth['ClientID']]);
+         $return['data'] = $data[0];
+        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+    return response()->json($return, 200);
+    }
 
     public function getPosVariantOption(Request $request)
     {
