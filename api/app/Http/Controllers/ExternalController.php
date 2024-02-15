@@ -770,9 +770,9 @@ if ($getAuth['status']) {
     //                         TrTransaction.PaymentAmount, 
     //                         TrTransaction.Changes, 
     //                         TrTransaction.Status, 
-    //                         TrTransaction.Notes,
-    //                         MsClient.Name CashierName,
-    //                         MsClient.OutletID,
+    //                         TrTransaction.Notes, 
+    //                         MsClient.Name CashierName, 
+    //                         MsClient.OutletID, 
     //                         MsOutlet.Name Outlet
     //                 FROM    TrTransaction
     //                 JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
@@ -891,7 +891,6 @@ if ($getAuth['status']) {
     return response()->json($return, 200);
     }
 
-
     /* START: PRODUCT */
     public function getCategory(Request $request)
     {
@@ -999,8 +998,6 @@ if ($getAuth['status']) {
         if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
     }
-
-
 
     /* START : PROFILE */
     public function getUser(Request $request)
@@ -2839,5 +2836,4 @@ if ($getAuth['status']) {
         </html>';
         return response($result);
     }
-
 }
