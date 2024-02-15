@@ -419,12 +419,14 @@ if ($getAuth['status']) {
                                         MsVariant.Type,
                                         MsVariantOption.ID VariantOptionID,
                                         MsVariantOption.Label,
-                                        MsVariantOption.Price
+                                        MsVariantOption.Price,
+                                        MsVariantProduct.ProductID
                                 FROM    MsVariant
                                 JOIN    MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
-                                WHERE   MsVariantOption.VariantID = ?
+                                JOIN    MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
+                                WHERE   MsVariantOption.VariantID = ? 
                                 ORDER BY  MsVariant.Name ASC";
-                    $selVariant = DB::select($query,[$request->_i]);
+                    $selVariant = DB::select($query,[$request->_r]);
                     $arrData = [];
                     if ($selVariant) {
                         foreach ($selVariant as $key => $value) {
@@ -459,7 +461,7 @@ if ($getAuth['status']) {
     //         FROM MsVariant
     //         WHERE MsVariant.ClientID = ?";
     //         $data = DB::select($query,[$getAuth['ClientID']]);
-    //      $return['data'] = $data[0];
+    //      $return['data'] = $data;
     //     if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
     // } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
     // return response()->json($return, 200);
