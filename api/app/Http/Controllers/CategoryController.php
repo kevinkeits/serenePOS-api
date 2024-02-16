@@ -45,7 +45,7 @@ class CategoryController extends Controller
                 $query .= " ORDER BY Name ASC";
                 $return['data'] = DB::select($query,[$getAuth['ClientID']]);
             }
-        } else $return = array('status'=>false,'message'=>"Not Authorized!",'data'=>null);
+        } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
         return response()->json($return, 200);
    }
    // END GET CATEGORY
@@ -69,7 +69,7 @@ class CategoryController extends Controller
                     $request->QtyAlert,
                     $request->BGColor,
                 ]);
-                $return['message'] = "Category successfully created.";
+                $return['message'] = "Category successfully created";
             } 
             if ($request->Action == "edit") {
                 $query = "UPDATE MsCategory
@@ -86,14 +86,14 @@ class CategoryController extends Controller
                     $request->BGColor,
                     $request->ID
                 ]);
-                $return['message'] = "Category successfully modified.";
+                $return['message'] = "Category successfully modified";
             }
             if ($request->Action == "delete") {
                 $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
                 DB::update($query, [$getAuth['UserID'],$request->ID]);
-                $return['message'] = "Category successfully deleted.";
+                $return['message'] = "Category successfully deleted";
             }
-        } else $return = array('status'=>false,'message'=>"Not Authorized!",'data'=>null);
+        } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
         return response()->json($return, 200);
     }
     // END POST CATEGORY

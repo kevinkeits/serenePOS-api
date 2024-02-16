@@ -20,7 +20,7 @@ $router->get('/', function () use ($router) {
 $router->group(['prefix' => 'auth'], function () use ($router) {
     $router->post('doRegister',  ['uses' => 'AuthController@doRegister']);
     $router->post('doLogin',  ['uses' => 'AuthController@doLogin']);
-    $router->post('doLogout',  ['uses' => 'AuthController@doLogout']);
+    $router->get('doLogout',  ['uses' => 'AuthController@doLogout']);
     $router->get('doAuth',  ['uses' => 'AuthController@doAuth']);
     $router->post('doReset',  ['uses' => 'AuthController@doReset']);
 });
