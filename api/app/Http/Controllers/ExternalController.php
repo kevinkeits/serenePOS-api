@@ -206,7 +206,7 @@ class ExternalController extends Controller
 
     public function doAuthGoogle(Request $request)
     {
-        $return = array('status'=>false,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>false,'message'=>"",'data'=>null);
         $query = "SELECT ID,Status,FullName FROM MS_USER WHERE UPPER(Email) = UPPER(?) AND RegisterFrom = 'google'";
         $data = DB::select($query,[$request->Email]);
         $_status = false;
@@ -259,7 +259,6 @@ class ExternalController extends Controller
                 'Token' => $SessionID,
                 'Name' => $request->Name
             );
-            $return['callback'] = "doHandlerLogin(e.data)";
         }
         $return['status'] = $_status;
         $return['message'] = $_message;
@@ -268,7 +267,7 @@ class ExternalController extends Controller
     
     public function doLogout(Request $request)
     {
-        $return = array('status'=>false,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>false,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
             $query = "SELECT ID,RegisterFrom
@@ -281,15 +280,15 @@ class ExternalController extends Controller
                     $getAuth['UserID']
                 ]);
                 $return['status'] = true;
-                $return['callback'] = "doHandlerLogout('".$data[0]->RegisterFrom."')";
             }
         } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
         return response()->json($return, 200);
     }
 
+    // GET CATEGORY
     public function getCategory(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
         $query = "SELECT ID, ClientID, Name, QtyAlert, BGColor
@@ -297,14 +296,16 @@ class ExternalController extends Controller
             WHERE MsCategory.ClientID = ?"; 
             $data = DB::select($query,[$getAuth['ClientID']]);
         $return['data'] = $data[0];
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
+    } else $return = array('status'=>false,'message'=>"");
     return response()->json($return, 200);
     }
+    // END GET CATEGORY
 
+    // GET VARIANT
     public function getVariant(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>array(),'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>array());
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
             $mainQuery = "  SELECT ID, Name, Type, 
@@ -345,20 +346,21 @@ class ExternalController extends Controller
                         }
                     }
                     $return['data'] = array('header'=>$data[0], 'selVariant'=> $selVariant);
-                    $return['callback'] = "onCompleteFetch(e.data)";
                 }
             } else {
                 $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
                 $data = DB::select($query);
                 if ($data) $return['data'] = $data;
             }
-        } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+        } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
     }
+    // END GET VARIANT
 
+    // GET VARIANT OPTION
     public function getVariantOption(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
         $query = "SELECT ID, VariantID, Label, Price
@@ -366,14 +368,15 @@ class ExternalController extends Controller
             WHERE MsVariantOption.ClientID = ?";
             $data = DB::select($query,[$getAuth['ClientID']]);
          $return['data'] = $data[0];
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
+    } else $return = array('status'=>false,'message'=>"");
     return response()->json($return, 200);
     }
+    // END GET VARIANT OPTION
     
     public function getProduct(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>array(),'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>array());
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
             $mainQuery = "  SELECT 
@@ -418,20 +421,19 @@ class ExternalController extends Controller
                         }
                     }
                     $return['data'] = array('header'=>$data[0], 'selVariant'=> $selVariant);
-                    $return['callback'] = "onCompleteFetch(e.data)";
                 }
             } else {
                 $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
                 $data = DB::select($query);
                 if ($data) $return['data'] = $data;
             }
-        } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+        } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
     }
 
     public function getProductVariant(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $query = "SELECT MsProductVariant.ID, MsProduct.ID ProductID, MsVariant.ID VariantID, MsVariant.Name
             FROM MsProductVariant
             JOIN MsProduct
@@ -441,13 +443,13 @@ class ExternalController extends Controller
             WHERE MsProductVariant.ClientID = ''
             ORDER BY ID ASC";
         $return['data'] = DB::select($query);
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
     }
 
     public function getProductVariantOption(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $query = "SELECT MsProductVariantOption.ID, MsProduct.ID ProductID, MsVariantOption.ID VariantOptionID, MsVariantOption.Label, MsVariantOption.Price
             FROM MsProductVariantOption
             JOIN MsProduct
@@ -457,13 +459,13 @@ class ExternalController extends Controller
             WHERE MsProductVariantOption.ClientID = ''
             ORDER BY ID ASC";
         $return['data'] = DB::select($query);
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
     }
 
     public function getTransaction(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>array(),'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>array());
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
             $mainQuery = "  SELECT  TrTransaction.ID, 
@@ -523,20 +525,19 @@ class ExternalController extends Controller
                         }
                     }
                     $return['data'] = array('header'=>$data[0], 'selVariant'=> $selVariant);
-                    $return['callback'] = "onCompleteFetch(e.data)";
                 }
             } else {
                 $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
                 $data = DB::select($query);
                 if ($data) $return['data'] = $data;
             }
-        } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+        } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
     }
 
     public function getTransactionHistory(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>array(),'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>array());
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
             $mainQuery = "  SELECT      TrTransaction.TransactionNumber, 
@@ -599,33 +600,32 @@ class ExternalController extends Controller
                         }
                     }
                     $return['data'] = array('header'=>$data[0], 'selVariant'=> $selVariant);
-                    $return['callback'] = "onCompleteFetch(e.data)";
                 }
             } else {
                 $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
                 $data = DB::select($query);
                 if ($data) $return['data'] = $data;
             }
-        } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+        } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
     }
 
     public function getClient(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $query = "SELECT MsClient.ID, MsClient.StoreName, MsClient.Address, MsClient.Name, MsClient.PhoneNumber, MsClient.Message, MsClient.ImgUrl, MsClient.MimeType, MsOutlet.ID OutletID, MsOutlet.Name OutlateName, MsOutlet.DetailsAddress, MsOutlet.IsPrimary
             FROM MsClient
             JOIN MsOutlet
             ON MsOutlet.ID = MsClient.OutletID
             ORDER BY ID ASC";
         $return['data'] = DB::select($query);
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
+        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
     }
 
     public function getCustomer(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
         $query = "SELECT ID, ClientID, Name, HandphoneNumber, Address, Gender
@@ -633,14 +633,14 @@ class ExternalController extends Controller
             WHERE MsCustomer.ClientID = ?";
             $data = DB::select($query,[$getAuth['ClientID']]);
         $return['data'] = $data[0];
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
+    } else $return = array('status'=>false,'message'=>"");
     return response()->json($return, 200);
     }
 
     public function getPayment(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
         $query = "SELECT MsPayment.ID, MsPayment.ClientID, MsPayment.PaymentCash, MsPayment.PaymentCredit, MsPayment.PaymentDebit, MsPayment.PaymentQRIS,  MsPayment.PaymentTransfer, MsPayment.PaymentEWallet
@@ -648,14 +648,14 @@ class ExternalController extends Controller
             WHERE MsPayment.ClientID = ?";
             $data = DB::select($query,[$getAuth['ClientID']]);
         $return['data'] = $data[0];
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
+    } else $return = array('status'=>false,'message'=>"");
     return response()->json($return, 200);
     }
 
     public function getOutlet(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
         $query = "SELECT MsOutlet.ID, MsOutlet.ClientID, MsOutlet.Name, MsOutlet.PhoneNumber, MsOutlet.PlanType, MsOutlet.IsPrimary, MsOutlet.DetailsAddress
@@ -663,14 +663,14 @@ class ExternalController extends Controller
             WHERE MsOutlet.ClientID = ?";
             $data = DB::select($query,[$getAuth['ClientID']]);
             $return['data'] = $data[0];
-        if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-    } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
+    } else $return = array('status'=>false,'message'=>"");
     return response()->json($return, 200);
     }
 
     // public function getUser(Request $request)
     // {
-    //     $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+    //     $return = array('status'=>true,'message'=>"",'data'=>null,''=>"");
     //     $getAuth = $this->validateAuth($request->_s);
     //     if ($getAuth['status']) {
     //     $query = "SELECT MsUser.ID, MsOutlet.ID OutletID, MsOutlet.Name OutletName, MsUser.Name, MsUser.PhoneNumber, MsUser.Email, MsUser.Password
@@ -680,15 +680,15 @@ class ExternalController extends Controller
     //         WHERE MsOutlet.ClientID = ?";
     //         $data = DB::select($query,[$getAuth['ClientID']]);
     //       $return['data'] = $data[0];
-    //     if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-    // } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+    //     if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
+    // } else $return = array('status'=>false,'message'=>"",''=>"doHandlerNotAuthorized()");
     // return response()->json($return, 200);
     // }
 
     /* START : PROFILE */
     public function getUser(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
             $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
@@ -696,17 +696,17 @@ class ExternalController extends Controller
                 WHERE MsUser.ID=?";
             $data = DB::select($query,[$getAuth['UserID']]);
             $return['data'] = $data[0];
-            if ($request->_cb) $return['callback'] = $request->_cb."(e.data,'".$request->_p."')";
-        } else $return = array('status'=>false,'message'=>"",'callback'=>"doHandlerNotAuthorized()");
+            if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
+        } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
     }
 
     public function doSaveCategory(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO MsCategory
                         (IsDeleted, UserIn, DateIn, ID, ClientID, Name, QtyAlert, BGColor)
                         VALUES
@@ -714,13 +714,13 @@ class ExternalController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmCategoryName,
-                    $request->txtFrmQtyAlert,
-                    $request->txtFrmBGColor,
+                    $request->CategoryName,
+                    $request->tyAlert,
+                    $request->BGColor,
                 ]);
                 $return['message'] = "Category successfully created.";
             } 
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE MsCategory
                 SET IsDeleted=0,
                     UserUp=?,
@@ -733,17 +733,17 @@ class ExternalController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmCategoryName,
-                    $request->txtFrmQtyAlert,
-                    $request->txtFrmBGColor,
-                    $request->hdnFrmID
+                    $request->CategoryName,
+                    $request->QtyAlert,
+                    $request->BGColor,
+                    $request->ID
                 ]);
                 $return['message'] = "Category successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM MsCategory
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Category successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
@@ -752,10 +752,10 @@ class ExternalController extends Controller
 
     public function doSaveVariant(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO MsVariant
                         (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Type)
                         VALUES
@@ -763,12 +763,12 @@ class ExternalController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmVariantName,
-                    $request->txtFrmVariantType,
+                    $request->VariantName,
+                    $request->VariantType,
                 ]);
                 $return['message'] = "Variant successfully created.";
             }
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE MsVariant
                 SET IsDeleted=0,
                     UserUp=?,
@@ -780,16 +780,16 @@ class ExternalController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmVariantName,
-                    $request->txtFrmVariantType,
-                    $request->hdnFrmID
+                    $request->VariantName,
+                    $request->ariantType,
+                    $request->ID
                 ]);
                 $return['message'] = "Variant successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM MsVariant
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Variant successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
@@ -798,10 +798,10 @@ class ExternalController extends Controller
 
     public function doSaveVariantOption(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO MsVariantOption
                         (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
                         VALUES
@@ -809,13 +809,13 @@ class ExternalController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmVariantID,
-                    $request->txtFrmLabel,
-                    $request->txtFrmPrice,
+                    $request->VariantID,
+                    $request->Label,
+                    $request->Price,
                 ]);
                 $return['message'] = "Variant Option successfully created.";
             }
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE MsVariantOption
                 SET IsDeleted=0,
                     UserUp=?,
@@ -828,17 +828,17 @@ class ExternalController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmVariantID,
-                    $request->txtFrmLabel,
-                    $request->txtFrmPrice,
-                    $request->hdnFrmID
+                    $request->VariantID,
+                    $request->Label,
+                    $request->Price,
+                    $request->ID
                 ]);
                 $return['message'] = "Variant Option successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM MsVariantOption
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Variant Option successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
@@ -847,25 +847,25 @@ class ExternalController extends Controller
 
     public function doSaveOutlet(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO MsOutlet
                         (IsDeleted, UserIn, DateIn, ID, Name, PhoneNumber, PlanType, IsPrimary, DetailsAddress)
                         VALUES
                         (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
-                    $request->txtFrmOutletName,
-                    $request->txtFrmPhoneNumber,
-                    $request->txtFrmPlanType,
-                    $request->txtFrmIsPrimary,
-                    $request->txtFrmDetailsAddress,
+                    $request->OutletName,
+                    $request->PhoneNumber,
+                    $request->PlanType,
+                    $request->IsPrimary,
+                    $request->DetailsAddress,
                 ]);
                 $return['message'] = "Outlet successfully created.";
             } 
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE MsOutlet
                 SET IsDeleted=0,
                     UserUp=?,
@@ -878,19 +878,19 @@ class ExternalController extends Controller
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
-                    $request->txtFrmOutletName,
-                    $request->txtFrmPhoneNumber,
-                    $request->txtFrmPlanType,
-                    $request->txtFrmIsPrimary,
-                    $request->txtFrmDetailsAddress,
-                    $request->hdnFrmID
+                    $request->OutletName,
+                    $request->PhoneNumber,
+                    $request->PlanType,
+                    $request->IsPrimary,
+                    $request->DetailsAddress,
+                    $request->ID
                 ]);
                 $return['message'] = "Outlet successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM MsOutlet
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Outlet successfully deleted.";
             }
             
@@ -900,10 +900,10 @@ class ExternalController extends Controller
 
     public function doSaveCustomer(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO MsCustomer
                         (IsDeleted, UserIn, DateIn, ID, ClientID, Name, HandphoneNumber, Address, Gender)
                         VALUES
@@ -911,14 +911,14 @@ class ExternalController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmCustomerName,
-                    $request->txtFrmPhoneNumber,
-                    $request->txtFrmAddress,
-                    $request->txtFrmGender,
+                    $request->CustomerName,
+                    $request->PhoneNumber,
+                    $request->Address,
+                    $request->Gender,
                 ]);
                 $return['message'] = "Customer successfully created.";
             } 
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE MsCustomer
                 SET IsDeleted=0,
                     UserUp=?,
@@ -932,18 +932,18 @@ class ExternalController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmCustomerName,
-                    $request->txtFrmPhoneNumber,
-                    $request->txtFrmAddress,
-                    $request->txtFrmGender,
-                    $request->hdnFrmID
+                    $request->CustomerName,
+                    $request->PhoneNumber,
+                    $request->Address,
+                    $request->Gender,
+                    $request->ID
                 ]);
                 $return['message'] = "Customer successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM MsCustomer
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Customer successfully deleted.";
             }
             
@@ -953,10 +953,10 @@ class ExternalController extends Controller
 
     public function doSaveProduct(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO MsProduct
                     (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Notes, Qty, Price, CategoryID, ProductSKU, ImgUrl, MimeType)
                     VALUES
@@ -964,18 +964,18 @@ class ExternalController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductName,
-                    $request->txtFrmNotes,
-                    $request->txtFrmQty,
-                    $request->txtFrmPrice,
-                    $request->txtFrmCategoryID,
-                    $request->txtFrmProductSKU,
-                    $request->txtFrmImgUrl,
-                    $request->txtFrmMimeType,
+                    $request->ProductName,
+                    $request->Notes,
+                    $request->Qty,
+                    $request->Price,
+                    $request->CategoryID,
+                    $request->ProductSKU,
+                    $request->ImgUrl,
+                    $request->MimeType,
                 ]);
                 $return['message'] = "Product successfully created.";
             } 
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE MsProduct
                 SET IsDeleted=0,
                     UserUp=?,
@@ -992,21 +992,21 @@ class ExternalController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductName,
-                    $request->txtFrmNotes,
-                    $request->txtFrmQty,
-                    $request->txtFrmPrice,
-                    $request->txtFrmCategoryID,
-                    $request->txtFrmImgUrl,
-                    $request->txtFrmMimeType,
-                    $request->hdnFrmID
+                    $request->ProductName,
+                    $request->Notes,
+                    $request->Qty,
+                    $request->Price,
+                    $request->CategoryID,
+                    $request->ImgUrl,
+                    $request->MimeType,
+                    $request->ID
                 ]);
                 $return['message'] = "Product successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM MsProduct
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Product successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
@@ -1015,10 +1015,10 @@ class ExternalController extends Controller
 
     public function doSaveProductVariant(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO MsProductVariant
                         (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantID)
                         VALUES
@@ -1026,12 +1026,12 @@ class ExternalController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductID,
-                    $request->txtFrmVariantID,
+                    $request->ProductID,
+                    $request->VariantID,
                 ]);
                 $return['message'] = "Product Variant successfully created.";
             } 
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE MsProductVariant
                 SET IsDeleted=0,
                     UserUp=?,
@@ -1041,16 +1041,16 @@ class ExternalController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductID,
-                    $request->txtFrmVariantID,
-                    $request->hdnFrmID
+                    $request->ProductID,
+                    $request->VariantID,
+                    $request->ID
                 ]);
                 $return['message'] = "Product Variant successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM MsProductVariant
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Product Variant successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
@@ -1059,10 +1059,10 @@ class ExternalController extends Controller
 
     public function doSaveProductVariantOption(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO MsProductVariantOption
                         (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID)
                         VALUES
@@ -1070,12 +1070,12 @@ class ExternalController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductID,
-                    $request->txtFrmVariantOptionID,
+                    $request->ProductID,
+                    $request->VariantOptionID,
                 ]);
                 $return['message'] = "Product Variant Option successfully created.";
             } 
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE MsProductVariantOption
                 SET IsDeleted=0,
                     UserUp=?,
@@ -1087,16 +1087,16 @@ class ExternalController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductID,
-                    $request->txtFrmVariantOptionID,
-                    $request->hdnFrmID
+                    $request->ProductID,
+                    $request->VariantOptionID,
+                    $request->ID
                 ]);
                 $return['message'] = "Product Variant Option successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM MsProductVariantOption
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Product Variant Option successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
@@ -1105,32 +1105,32 @@ class ExternalController extends Controller
 
     public function doSaveTransaction(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO TrTransaction
                         (IsDeleted, UserIn, DateIn, ID, TransactionNumber, ClientID, PaymentID, TransactionDate, PaidDate, CustomerName, SubTotal, Discount, Tax, TotalPayment, PaymentAmount, Changes, Status, Notes)
                         VALUES
                         (0, ?, NOW(), UUID(), ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
-                    $request->txtFrmTransactionNumber,
+                    $request->TransactionNumber,
                     $getAuth['ClientID'],
-                    $request->txtFrmPaymentID,
-                    $request->txtFrmCustomerName,
-                    $request->txtFrmSubTotal,
-                    $request->txtFrmDiscount,
-                    $request->txtFrmTax,
-                    $request->txtFrmTotalPayment,
-                    $request->txtFrmPaymentAmount,
-                    $request->txtFrmChanges,
-                    $request->txtFrmStatus,
-                    $request->txtFrmNotes,
+                    $request->PaymentID,
+                    $request->CustomerName,
+                    $request->SubTotal,
+                    $request->Discount,
+                    $request->Tax,
+                    $request->TotalPayment,
+                    $request->PaymentAmount,
+                    $request->Changes,
+                    $request->Status,
+                    $request->Notes,
                 ]);
                 $return['message'] = "Transaction successfully created.";
             } 
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE TrTransaction
                 SET IsDeleted=0,
                     UserUp=?,
@@ -1151,25 +1151,25 @@ class ExternalController extends Controller
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
-                    $request->txtFrmTransactionNumber,
+                    $request->TransactionNumber,
                     $getAuth['ClientID'],
-                    $request->txtFrmPaymentID,
-                    $request->txtFrmCustomerName,
-                    $request->txtFrmSubTotal,
-                    $request->txtFrmDiscount,
-                    $request->txtFrmTotalPayment,
-                    $request->txtFrmPaymentAmount,
-                    $request->txtFrmChanges,
-                    $request->txtFrmStatus,
-                    $request->txtFrmNotes,
-                    $request->hdnFrmID
+                    $request->PaymentID,
+                    $request->CustomerName,
+                    $request->SubTotal,
+                    $request->Discount,
+                    $request->TotalPayment,
+                    $request->PaymentAmount,
+                    $request->Changes,
+                    $request->Status,
+                    $request->Notes,
+                    $request->ID
                 ]);
                 $return['message'] = "Transaction successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM TrTransaction
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Transaction successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
@@ -1178,10 +1178,10 @@ class ExternalController extends Controller
 
     public function doSaveTransactionProduct(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO TrTransactionProduct
                         (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, TransactionID, Qty, UnitPrice, Discount, UnitPriceAfterDiscount, Notes)
                         VALUES
@@ -1189,17 +1189,17 @@ class ExternalController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductID,
-                    $request->txtFrmTransactionID,
-                    $request->txtFrmQty,
-                    $request->txtFrmUnitPrice,
-                    $request->txtFrmDiscount,
-                    $request->txtFrmUnitPriceAfterDiscount,
-                    $request->txtFrmUnitNotes,
+                    $request->ProductID,
+                    $request->TransactionID,
+                    $request->Qty,
+                    $request->UnitPrice,
+                    $request->Discount,
+                    $request->UnitPriceAfterDiscount,
+                    $request->UnitNotes,
                 ]);
                 $return['message'] = "Transaction Product successfully created.";
             }
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE TrTransactionProduct
                 SET IsDeleted=0,
                     UserUp=?,
@@ -1216,21 +1216,21 @@ class ExternalController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductID,
-                    $request->txtFrmTransactionID,
-                    $request->txtFrmQty,
-                    $request->txtFrmUnitPrice,
-                    $request->txtFrmDiscount,
-                    $request->txtFrmUnitPriceAfterDiscount,
-                    $request->txtFrmNotes,
-                    $request->hdnFrmID
+                    $request->ProductID,
+                    $request->TransactionID,
+                    $request->Qty,
+                    $request->UnitPrice,
+                    $request->Discount,
+                    $request->UnitPriceAfterDiscount,
+                    $request->Notes,
+                    $request->ID
                 ]);
                 $return['message'] = "Transaction Product successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM TrTransactionProduct
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Transaction Product successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
@@ -1239,10 +1239,10 @@ class ExternalController extends Controller
 
     public function doSaveTransactionProductVariant(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO TrTransactionProductVariant
                         (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID)
                         VALUES
@@ -1250,12 +1250,12 @@ class ExternalController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductID,
-                    $request->txtFrmVariantOptionID,
+                    $request->ProductID,
+                    $request->VariantOptionID,
                 ]);
                 $return['message'] = "Transaction Product Variant successfully created.";
             }
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE TrTransactionProductVariant
                 SET IsDeleted=0,
                     UserUp=?,
@@ -1267,16 +1267,16 @@ class ExternalController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmProductID,
-                    $request->txtFrmVariantOptionID,
-                    $request->hdnFrmID
+                    $request->ProductID,
+                    $request->VariantOptionID,
+                    $request->ID
                 ]);
                 $return['message'] = "Transaction Product Variant successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM TrTransactionProductVariant
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Transaction Product Variant successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"");
@@ -1285,10 +1285,10 @@ class ExternalController extends Controller
 
     public function doSavePayment(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO MsPayment
                         (IsDeleted, UserIn, DateIn, ID, ClientID, PaymentCash, PaymentCredit, PaymentDebit, PaymentQRIS, PaymentTransfer, PaymentEWallet)
                         VALUES
@@ -1296,16 +1296,16 @@ class ExternalController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmPaymentCash,
-                    $request->txtFrmPaymentCredit,
-                    $request->txtFrmPaymentDebit,
-                    $request->txtFrmPaymentQRIS,
-                    $request->txtFrmPaymentTransfer,
-                    $request->txtFrmPaymentEWallet,
+                    $request->PaymentCash,
+                    $request->PaymentCredit,
+                    $request->PaymentDebit,
+                    $request->PaymentQRIS,
+                    $request->PaymentTransfer,
+                    $request->PaymentEWallet,
                 ]);
                 $return['message'] = "Payment successfully created.";
             }
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE MsPayment
                 SET IsDeleted=0,
                     UserUp=?,
@@ -1321,20 +1321,20 @@ class ExternalController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->txtFrmPaymentCash,
-                    $request->txtFrmPaymentCredit,
-                    $request->txtFrmPaymentDebit,
-                    $request->txtFrmPaymentQRIS,
-                    $request->txtFrmPaymentTransfer,
-                    $request->txtFrmPaymentEWallet,
-                    $request->hdnFrmID
+                    $request->PaymentCash,
+                    $request->PaymentCredit,
+                    $request->PaymentDebit,
+                    $request->PaymentQRIS,
+                    $request->PaymentTransfer,
+                    $request->PaymentEWallet,
+                    $request->ID
                 ]);
                 $return['message'] = "Payment successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM MsPayment
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Payment successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
@@ -1343,28 +1343,28 @@ class ExternalController extends Controller
 
     public function doSaveClient(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null,'callback'=>"");
+        $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-            if ($request->hdnAction == "add") {
+            if ($request->Action == "add") {
                 $query = "INSERT INTO MsClient
                         (IsDeleted, UserIn, DateIn, ID, OutletID, StoreName, Address, Name, PhoneNumber, Message, ImgUrl, MimeType)
                         VALUES
                         (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
-                    $request->txtFrmOutletID,
-                    $request->txtFrmStoreName,
-                    $request->txtFrmClientAddress,
-                    $request->txtFrmClientName,
-                    $request->txtFrmClientPhoneNumber,
-                    $request->txtFrmMessage,
-                    $request->txtFrmImgUrl,
-                    $request->txtFrmMimeType,
+                    $request->OutletID,
+                    $request->StoreName,
+                    $request->ClientAddress,
+                    $request->ClientName,
+                    $request->ClientPhoneNumber,
+                    $request->Message,
+                    $request->ImgUrl,
+                    $request->MimeType,
                 ]);
                 $return['message'] = "Client successfully created.";
             }
-            if ($request->hdnAction == "edit") {
+            if ($request->Action == "edit") {
                 $query = "UPDATE MsClient
                 SET IsDeleted=0,
                     UserUp=?,
@@ -1379,21 +1379,21 @@ class ExternalController extends Controller
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
-                    $request->txtFrmStoreName,
-                    $request->txtFrmClientAddress,
-                    $request->txtFrmClientName,
-                    $request->txtFrmClientPhoneNumber,
-                    $request->txtFrmMessage,
-                    $request->txtFrmImgUrl,
-                    $request->txtFrmMimeType,
-                    $request->hdnFrmID
+                    $request->StoreName,
+                    $request->ClientAddress,
+                    $request->ClientName,
+                    $request->ClientPhoneNumber,
+                    $request->Message,
+                    $request->ImgUrl,
+                    $request->MimeType,
+                    $request->ID
                 ]);
                 $return['message'] = "Client successfully modified.";
             }
-            if ($request->hdnAction == "delete") {
+            if ($request->Action == "delete") {
                 $query = "DELETE FROM MsClient
                 WHERE ID=?";
-                DB::delete($query, [$request->hdnFrmID]);
+                DB::delete($query, [$request->ID]);
                 $return['message'] = "Client successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
