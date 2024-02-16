@@ -112,7 +112,7 @@ class ExternalController extends Controller
             $isValid = false;
         }
         if ($isValid) {
-            $query = "SELECT ID,Status FROM MsUser WHERE UPPER(Email) = UPPER(?)";
+            $query = "SELECT ID FROM MsUser WHERE UPPER(Email) = UPPER(?)";
             $data = DB::select($query,[$request->Email]);
             if ($data) {
                 $_message = "This email has been registered";
@@ -122,8 +122,8 @@ class ExternalController extends Controller
         if ($isValid) {
             $query = "SELECT UUID() GenID";
             $ClientID = DB::select($query)[0]->GenID;
-            $query = "INSERT INTO MsClient (IsDeleted, UserIn, DateIn, ID, Name)
-                    VALUES (0, 'SYSTEM', NOW(), ?, ?)";
+            $query = "INSERT INTO MsClient (IsDeleted, UserIn, DateIn, ID, Name, PlanType)
+                    VALUES (0, 'SYSTEM', NOW(), ?, ?, '1')";
             DB::insert($query, [
                 $ClientID,
                 $request->StoreName,
@@ -132,12 +132,11 @@ class ExternalController extends Controller
             $query = "SELECT UUID() GenID";
             $OutletID = DB::select($query)[0]->GenID;
             $query = "INSERT INTO MsOutlet (IsDeleted, UserIn, DateIn, ClientID, ID, Name, IsPrimary)
-                    VALUES (0, 'SYSTEM', NOW(), ?, ?, ?, ?)";
+                    VALUES (0, 'SYSTEM', NOW(), ?, ?, ?, 1)";
             DB::insert($query, [
                 $ClientID,
                 $OutletID,
                 $request->StoreName,
-                $request->Name,
             ]);
             
             $key = $this->randomString(10);
@@ -170,7 +169,7 @@ class ExternalController extends Controller
     public function doLogin(Request $request)
     {
         $return = array('status'=>false,'message'=>"",'data'=>null);
-        $query = "SELECT IsDeleted, ID, Name, Email, Password, u.Salt, u.IVssl, u.Tagssl
+        $query = "SELECT IsDeleted, ID, Name, Email, Password, Salt, IVssl, Tagssl
                     FROM MsUser
                     WHERE (UPPER(Email) = UPPER(?))
                         AND RegisterFrom = 'app'";
@@ -181,12 +180,6 @@ class ExternalController extends Controller
                 $decrypted = $this->strDecrypt(base64_decode($data->Salt),base64_decode($data->IVssl),base64_decode($data->Tagssl),base64_decode($data->Password));
                 if ($decrypted == $request->Password) {
                     $SessionID = base64_encode($this->randomString(64).base64_encode(md5($data->ID).time()));
-                    $query = "UPDATE MsUser SET Name=? WHERE ID=?";
-                    DB::update($query, [
-                        $SessionID,
-                        $data->ID
-                    ]);
-
                     $query = "INSERT INTO TrSession (IsDeleted, UserIn, DateIn, ID, UserID, IsLoggedOut)
                             VALUES (0, 'SYSTEM', NOW(), ?, ?, 0)";
                     DB::insert($query, [
