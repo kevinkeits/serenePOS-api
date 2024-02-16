@@ -45,57 +45,146 @@ class AuthController extends Controller
         return $return;
 	}
 
-    public function doLogin(Request $request)
+    private function validateAuth($Token)
     {
-        $return = array('status'=>false,'message'=>"",'data'=>null,'callback'=>"");
-        $return['message'] = "Username atau Password salah!";
-        $query = "SELECT ID,FullName,RoleID,Status,Password,Salt,IVssl,Tagssl
-                    FROM MS_USER
-                    WHERE UPPER(UserName) = UPPER(?) AND RegisterFrom = 'manual'";
-        $data = DB::select($query,[$request->txtUserName]);
-        if ($data) {
-            $data = $data[0];
-            if ($data->Status==1) {
-                $decrypted = $this->strDecrypt(base64_decode($data->Salt),base64_decode($data->IVssl),base64_decode($data->Tagssl),base64_decode($data->Password));
-                if ($decrypted == $request->txtPassword) {
-                    $SessionID = base64_encode($this->randomString(64).base64_encode(md5($data->ID).time()));
-                    $IP = getenv('REMOTE_ADDR');
-                    $query = "INSERT INTO TR_SESSION (ID, UserID, Token, LoginDate, LogoutDate, IPAddress, LastActive)
-                                VALUES (UUID(), ?, ?, NOW(), NULL, ?, NOW())";
-                    DB::insert($query,[$data->ID,$SessionID,$IP]);
+        $return = array('status'=>false,'ID'=>"");
+        $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
+                    FROM MsUser
+                    JOIN TrSession ON TrSession.UserID = MsUser.ID
+                    WHERE TrSession.ID=?
+                        AND TrSession.IsLoggedOut=0";
+        $checkAuth = DB::select($query,[$Token]);
+        if ($checkAuth) {
+            $data = $checkAuth[0];
+            $return = array(
+                'status' => true,
+                'UserID' => $data->UserID,
+                'ClientID' => $data->ClientID,
+            );
+        }
+        return $return;
+    }
 
-                    $arrBranch = "";
-                    $query = "SELECT u.ID, u.AccountType, b.BranchID
-                                FROM MS_USER u
-                                    JOIN TR_SESSION s ON s.UserID = u.ID 
-                                    LEFT JOIN MS_BRANCH_ADMIN b ON b.UserID = u.ID
-                                WHERE s.Token=?
-                                    AND s.LogoutDate IS NULL";
-                    $checkAuth = DB::select($query,[$SessionID]);
-                    if ($checkAuth) {
-                        $data = $checkAuth[0];
-                        if ($data->BranchID) {
-                            foreach ($checkAuth as $key => $value) {
-                                if ($arrBranch != "") $arrBranch .= ",";
-                                $arrBranch .= "'".$value->BranchID."'";
-                            }
-                        }
-                    }
-                    $return = array(
-                        'status' => true,
-                        'message' => "",
-                        'data' => array(
-                            'Token' => $SessionID,
-                            'RememberLogin' => $request->chkRemember ? true : false,
-                            'IsBranchAdmin' => $arrBranch == "" ? false : true
-                        ),
-                        'callback' => "app.auth.loginHandler(e.data)"
-                    );
-                }
-            } else {
-                $return['message'] = "User tidak aktif";
+    public function doRegister(Request $request)
+    {
+        $return = array('status'=>false,'message'=>"",'data'=>null);
+        $isValid = true;
+        $_message = "";
+        if (!filter_var($request->Email, FILTER_VALIDATE_EMAIL)) {
+            $_message = "Please fill in with the correct email address.";
+            $isValid = false;
+        }
+        if ($isValid) {
+            $query = "SELECT ID FROM MsUser WHERE UPPER(Email) = UPPER(?)";
+            $data = DB::select($query,[$request->Email]);
+            if ($data) {
+                $_message = "This email has been registered";
+                $isValid = false;
             }
         }
+        if ($isValid) {
+            $query = "SELECT UUID() GenID";
+            $ClientID = DB::select($query)[0]->GenID;
+            $query = "INSERT INTO MsClient (IsDeleted, UserIn, DateIn, ID, Name, PlanType)
+                    VALUES (0, 'SYSTEM', NOW(), ?, ?, '1')";
+            DB::insert($query, [
+                $ClientID,
+                $request->StoreName,
+            ]);
+
+            $query = "SELECT UUID() GenID";
+            $OutletID = DB::select($query)[0]->GenID;
+            $query = "INSERT INTO MsOutlet (IsDeleted, UserIn, DateIn, ClientID, ID, Name, IsPrimary)
+                    VALUES (0, 'SYSTEM', NOW(), ?, ?, ?, 1)";
+            DB::insert($query, [
+                $ClientID,
+                $OutletID,
+                $request->StoreName,
+            ]);
+            
+            $key = $this->randomString(10);
+            $encrypt = $this->strEncrypt($key,$request->Password);
+            $query = "SELECT UUID() GenID";
+            $UserID = DB::select($query)[0]->GenID;
+            $query = "INSERT INTO MsUser
+                            (IsDeleted, UserIn, DateIn, ID, ClientID, OutletID, RegisterFrom, Name, Email, Password, Salt, IVssl, Tagssl)
+                        VALUES(0, 'SYSTEM', NOW(), ?, ?, ?, 'App', ?, ?, ?, ?, ?, ?)";
+            DB::insert($query, [
+                $UserID,
+                $ClientID,
+                $OutletID,
+                
+                $request->Name,
+                $request->Email,
+                base64_encode($encrypt['result']),
+                base64_encode($key),
+                base64_encode($encrypt['iv']),
+                base64_encode($encrypt['tag']),
+            ]);
+            $isValid = true;
+            $_message = "Registration successful, please log in!";
+        }
+        $return['status'] = $isValid;
+        $return['message'] = $_message;
+        return response()->json($return, 200);
+    }
+
+    public function doLogin(Request $request)
+    {
+        $return = array('status'=>false,'message'=>"",'data'=>null);
+        $query = "SELECT IsDeleted, ID, Name, Email, Password, Salt, IVssl, Tagssl
+                    FROM MsUser
+                    WHERE (UPPER(Email) = UPPER(?))
+                        AND RegisterFrom = 'app'";
+        $data = DB::select($query,[$request->Email]);
+        if ($data) {
+            $data = $data[0];
+            if ($data->IsDeleted==0) {
+                $decrypted = $this->strDecrypt(base64_decode($data->Salt),base64_decode($data->IVssl),base64_decode($data->Tagssl),base64_decode($data->Password));
+                if ($decrypted == $request->Password) {
+                    $SessionID = base64_encode($this->randomString(64).base64_encode(md5($data->ID).time()));
+                    $query = "INSERT INTO TrSession (IsDeleted, UserIn, DateIn, ID, UserID, IsLoggedOut)
+                            VALUES (0, 'SYSTEM', NOW(), ?, ?, 0)";
+                    DB::insert($query, [
+                        $SessionID,
+                        $data->ID,
+                    ]);
+                    
+                    $return['data'] = array( 
+                        'Token' => $SessionID,
+                        'UserID' => $data->ID,
+                        'Name' => $data->Name
+                    );
+                    $return['status'] = true;
+                } else {
+                    $return['message'] = "Incorrect Username or Password.";
+                }
+            } else {
+                $return['message'] = "User is not active.";
+            }
+        } else {
+            $return['message'] = "Incorrect Username or Password.";
+        }
+        return response()->json($return, 200);
+    }
+
+    public function doLogout(Request $request)
+    {
+        $return = array('status'=>false,'message'=>"",'data'=>null);
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            $query = "SELECT ID, RegisterFrom
+                        FROM MsUser
+                        WHERE ID = UPPER(?)";
+            $data = DB::select($query,[$getAuth['UserID']]);
+            if ($data) {
+                $query = "UPDATE MsUser WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID']
+                ]);
+                $return['status'] = true;
+            }
+        } else $return = array('status'=>false,'message'=>"Oops! sepertinya kamu belum Login");
         return response()->json($return, 200);
     }
 
@@ -132,21 +221,6 @@ class AuthController extends Controller
                 'callback' => "app.init(e.data)"
             );
         } else $return = array('status'=>false,'message'=>"Not Authorized",'callback'=>"app.auth.notAuthorizedHandler(e.message)");
-        return response()->json($return, 200);
-    }
-
-    public function doLogout(Request $request)
-    {
-        $return = array('status'=>false,'message'=>"",'data'=>null,'callback'=>"");
-        $query = "UPDATE TR_SESSION
-                    SET LogoutDate = NOW()
-                    WHERE Token = ?";
-        DB::insert($query,[$request->Token]);
-        $return = array(
-            'status' => true,
-            'message' => "Berhasil logout!",
-            'callback' => "app.auth.clearSession()"
-        );
         return response()->json($return, 200);
     }
 

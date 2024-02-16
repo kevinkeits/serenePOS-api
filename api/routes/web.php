@@ -17,37 +17,34 @@ $router->get('/', function () use ($router) {
     return $router->app->version();
 });
 
-
 $router->group(['prefix' => 'auth'], function () use ($router) {
+    $router->post('doRegister',  ['uses' => 'AuthController@doRegister']);
     $router->post('doLogin',  ['uses' => 'AuthController@doLogin']);
     $router->post('doLogout',  ['uses' => 'AuthController@doLogout']);
     $router->get('doAuth',  ['uses' => 'AuthController@doAuth']);
     $router->post('doReset',  ['uses' => 'AuthController@doReset']);
 });
 
-
 $router->group(['prefix' => 'external'], function () use ($router) {
-    $router->post('doAuthGoogle',  ['uses' => 'ExternalController@doAuthGoogle']);
-    $router->post('doRegister',  ['uses' => 'ExternalController@doRegister']);
-    $router->post('doLogin',  ['uses' => 'ExternalController@doLogin']);
-    $router->post('doLogout',  ['uses' => 'ExternalController@doLogout']);
-    $router->post('doReset',  ['uses' => 'AuthController@doReset']);
     $router->get('getAll',  ['uses' => 'ExternalController@getAll']);
-    $router->get('getProduct',  ['uses' => 'ExternalController@getProduct']);
-    $router->get('getProductVariant',  ['uses' => 'ExternalController@getProductVariant']);
-    $router->get('getProductVariantOption',  ['uses' => 'ExternalController@getProductVariantOption']);
+
+    $router->get('getProduct',  ['uses' => 'ProductController@getProduct']);
+    $router->get('getProductVariant',  ['uses' => 'ProductController@getProductVariant']);
+    $router->get('getProductVariantOption',  ['uses' => 'ProductController@getProductVariantOption']);
+
+    $router->get('getVariant',  ['uses' => 'VariantController@getVariant']);
+    $router->get('getVariantOption',  ['uses' => 'VariantController@getVariantOption']);
+
+    $router->get('getTransaction',  ['uses' => 'TransactionController@getTransaction']);
+    $router->get('getTransactionHistory',  ['uses' => 'TransactionController@getTransactionHistory']);
+
     $router->get('getCategory',  ['uses' => 'ExternalController@getCategory']);
-    $router->get('getVariant',  ['uses' => 'ExternalController@getVariant']);
-    $router->get('getVariantOption',  ['uses' => 'ExternalController@getVariantOption']);
-    $router->get('getTransaction',  ['uses' => 'ExternalController@getTransaction']);
-    $router->get('getTransactionHistory',  ['uses' => 'ExternalController@getTransactionHistory']);
-    $router->get('getTransactionProduct',  ['uses' => 'ExternalController@getTransactionProduct']);
-    $router->get('getTransactionProductVariant',  ['uses' => 'ExternalController@getTransactionProductVariant']);
     $router->get('getClient',  ['uses' => 'ExternalController@getClient']);
     $router->get('getOutlet',  ['uses' => 'ExternalController@getOutlet']);
     $router->get('getCustomer',  ['uses' => 'ExternalController@getCustomer']);
     $router->get('getUser',  ['uses' => 'ExternalController@getUser']);
     $router->get('getPayment',  ['uses' => 'ExternalController@getPayment']);
+
     $router->post('doSaveCategory',  ['uses' => 'ExternalController@doSaveCategory']);
     $router->post('doSaveVariant',  ['uses' => 'ExternalController@doSaveVariant']);
     $router->post('doSaveVariantOption',  ['uses' => 'ExternalController@doSaveVariantOption']);
@@ -61,12 +58,7 @@ $router->group(['prefix' => 'external'], function () use ($router) {
     $router->post('doSaveClient',  ['uses' => 'ExternalController@doSaveClient']);
     $router->post('doSaveOutlet',  ['uses' => 'ExternalController@doSaveOutlet']);
     $router->post('doSaveCustomer',  ['uses' => 'ExternalController@doSaveCustomer']);
-    $router->get('getDiscount',  ['uses' => 'ExternalController@getDiscount']);
     $router->get('getAllProduct',  ['uses' => 'ExternalController@getAllProduct']);
-    $router->get('getProductPrice',  ['uses' => 'ExternalController@getProductPrice']);
     $router->get('getProductDetail',  ['uses' => 'ExternalController@getProductDetail']);
     $router->get('getProductImage',  ['uses' => 'ExternalController@getProductImage']);
 });
-
-$router->get('testExternal',  ['uses' => 'ExternalController@test']);
-$router->get('invoice',  ['uses' => 'ExternalController@printOrder']);
