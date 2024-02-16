@@ -99,4 +99,101 @@ class VariantController extends Controller
    return response()->json($return, 200);
    }
    // END GET VARIANT OPTION
+
+   // POST VARIANT
+   public function doSaveVariant(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null);
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->Action == "add") {
+                $query = "INSERT INTO MsVariant
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Type)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->VariantName,
+                    $request->VariantType,
+                ]);
+                $return['message'] = "Variant successfully created.";
+            }
+            if ($request->Action == "edit") {
+                $query = "UPDATE MsVariant
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    Name=?,
+                    Type=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->VariantName,
+                    $request->ariantType,
+                    $request->ID
+                ]);
+                $return['message'] = "Variant successfully modified.";
+            }
+            if ($request->Action == "delete") {
+                $query = "DELETE FROM MsVariant
+                WHERE ID=?";
+                DB::delete($query, [$request->ID]);
+                $return['message'] = "Variant successfully deleted.";
+            }
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveVariantOption(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null);
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->Action == "add") {
+                $query = "INSERT INTO MsVariantOption
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->VariantID,
+                    $request->Label,
+                    $request->Price,
+                ]);
+                $return['message'] = "Variant Option successfully created.";
+            }
+            if ($request->Action == "edit") {
+                $query = "UPDATE MsVariantOption
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    VariantID=?,
+                    Label=?,
+                    Price=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->VariantID,
+                    $request->Label,
+                    $request->Price,
+                    $request->ID
+                ]);
+                $return['message'] = "Variant Option successfully modified.";
+            }
+            if ($request->Action == "delete") {
+                $query = "DELETE FROM MsVariantOption
+                WHERE ID=?";
+                DB::delete($query, [$request->ID]);
+                $return['message'] = "Variant Option successfully deleted.";
+            }
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
+        return response()->json($return, 200);
+    }
+    // END POST VARIANT
 }

@@ -25,40 +25,56 @@ $router->group(['prefix' => 'auth'], function () use ($router) {
     $router->post('doReset',  ['uses' => 'AuthController@doReset']);
 });
 
-$router->group(['prefix' => 'external'], function () use ($router) {
-    $router->get('getAll',  ['uses' => 'ExternalController@getAll']);
-
+$router->group(['prefix' => 'product'], function () use ($router) {
     $router->get('getProduct',  ['uses' => 'ProductController@getProduct']);
     $router->get('getProductVariant',  ['uses' => 'ProductController@getProductVariant']);
     $router->get('getProductVariantOption',  ['uses' => 'ProductController@getProductVariantOption']);
+    $router->post('doSaveProduct',  ['uses' => 'ProductController@doSaveProduct']);
+    $router->post('doSaveProductVariant',  ['uses' => 'ProductController@doSaveProductVariant']);
+    $router->post('doSaveProductVariantOption',  ['uses' => 'ProductController@doSaveProductVariantOption']);
+});
 
+$router->group(['prefix' => 'variant'], function () use ($router) {
     $router->get('getVariant',  ['uses' => 'VariantController@getVariant']);
     $router->get('getVariantOption',  ['uses' => 'VariantController@getVariantOption']);
+    $router->post('doSaveVariant',  ['uses' => 'VariantController@doSaveVariant']);
+    $router->post('doSaveVariantOption',  ['uses' => 'VariantController@doSaveVariantOption']);
+});
 
+$router->group(['prefix' => 'transaction'], function () use ($router) {
     $router->get('getTransaction',  ['uses' => 'TransactionController@getTransaction']);
     $router->get('getTransactionHistory',  ['uses' => 'TransactionController@getTransactionHistory']);
+    $router->post('doSaveTransaction',  ['uses' => 'TransactionController@doSaveTransaction']);
+    $router->post('doSaveTransactionProduct',  ['uses' => 'TransactionController@doSaveTransactionProduct']);
+    $router->post('doSaveTransactionProductVariant',  ['uses' => 'TransactionController@doSaveTransactionProductVariant']);
+});
 
-    $router->get('getCategory',  ['uses' => 'ExternalController@getCategory']);
-    $router->get('getClient',  ['uses' => 'ExternalController@getClient']);
-    $router->get('getOutlet',  ['uses' => 'ExternalController@getOutlet']);
-    $router->get('getCustomer',  ['uses' => 'ExternalController@getCustomer']);
-    $router->get('getUser',  ['uses' => 'ExternalController@getUser']);
-    $router->get('getPayment',  ['uses' => 'ExternalController@getPayment']);
+$router->group(['prefix' => 'category'], function () use ($router) {
+    $router->get('getCategory',  ['uses' => 'CategoryController@getCategory']);
+    $router->post('doSaveCategory',  ['uses' => 'CategoryController@doSaveCategory']);
+});
 
-    $router->post('doSaveCategory',  ['uses' => 'ExternalController@doSaveCategory']);
-    $router->post('doSaveVariant',  ['uses' => 'ExternalController@doSaveVariant']);
-    $router->post('doSaveVariantOption',  ['uses' => 'ExternalController@doSaveVariantOption']);
-    $router->post('doSaveProduct',  ['uses' => 'ExternalController@doSaveProduct']);
-    $router->post('doSaveProductVariant',  ['uses' => 'ExternalController@doSaveProductVariant']);
-    $router->post('doSaveProductVariantOption',  ['uses' => 'ExternalController@doSaveProductVariantOption']);
-    $router->post('doSaveTransaction',  ['uses' => 'ExternalController@doSaveTransaction']);
-    $router->post('doSaveTransactionProduct',  ['uses' => 'ExternalController@doSaveTransactionProduct']);
-    $router->post('doSaveTransactionProductVariant',  ['uses' => 'ExternalController@doSaveTransactionProductVariant']);
-    $router->post('doSavePayment',  ['uses' => 'ExternalController@doSavePayment']);
-    $router->post('doSaveClient',  ['uses' => 'ExternalController@doSaveClient']);
-    $router->post('doSaveOutlet',  ['uses' => 'ExternalController@doSaveOutlet']);
-    $router->post('doSaveCustomer',  ['uses' => 'ExternalController@doSaveCustomer']);
-    $router->get('getAllProduct',  ['uses' => 'ExternalController@getAllProduct']);
-    $router->get('getProductDetail',  ['uses' => 'ExternalController@getProductDetail']);
-    $router->get('getProductImage',  ['uses' => 'ExternalController@getProductImage']);
+$router->group(['prefix' => 'client'], function () use ($router) {
+    $router->get('getClient',  ['uses' => 'ClientController@getClient']);
+    $router->post('doSaveClient',  ['uses' => 'ClientController@doSaveClient']);
+});
+
+$router->group(['prefix' => 'outlet'], function () use ($router) {
+    $router->get('getOutlet',  ['uses' => 'OutletController@getOutlet']);
+    $router->post('doSaveOutlet',  ['uses' => 'OutletController@doSaveOutlet']);
+});
+
+$router->group(['prefix' => 'user'], function () use ($router) {
+    $router->get('getUser',  ['uses' => 'UserController@getUser']);
+    $router->get('getUserDetail',  ['uses' => 'UserController@getUserDetail']);
+});
+
+$router->group(['prefix' => 'payment'], function () use ($router) {
+    $router->get('getPayment',  ['uses' => 'PaymentController@getPayment']);
+    $router->post('doSavePayment',  ['uses' => 'PaymentController@doSavePayment']);
+});
+
+$router->group(['prefix' => 'customer'], function () use ($router) {
+    $router->get('getCustomer',  ['uses' => 'CustomerController@getPayment']);
+    $router->post('doSaveCustomer',  ['uses' => 'CustomerController@doSaveCustomer']);
 });

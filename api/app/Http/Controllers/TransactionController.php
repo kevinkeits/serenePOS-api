@@ -178,4 +178,186 @@ class TransactionController extends Controller
         return response()->json($return, 200);
     }
     // END GET TRANSACTION HISTORY
+
+    // POST TRANSACTION
+    public function doSaveTransaction(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null);
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->Action == "add") {
+                $query = "INSERT INTO TrTransaction
+                        (IsDeleted, UserIn, DateIn, ID, TransactionNumber, ClientID, PaymentID, TransactionDate, PaidDate, CustomerName, SubTotal, Discount, Tax, TotalPayment, PaymentAmount, Changes, Status, Notes)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $request->TransactionNumber,
+                    $getAuth['ClientID'],
+                    $request->PaymentID,
+                    $request->CustomerName,
+                    $request->SubTotal,
+                    $request->Discount,
+                    $request->Tax,
+                    $request->TotalPayment,
+                    $request->PaymentAmount,
+                    $request->Changes,
+                    $request->Status,
+                    $request->Notes,
+                ]);
+                $return['message'] = "Transaction successfully created.";
+            } 
+            if ($request->Action == "edit") {
+                $query = "UPDATE TrTransaction
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    TransactionNumber=?,
+                    ClientID=?,
+                    PaymentID=?,
+                    TransactionDate=NOW(),
+                    PaidDate=NOW(),
+                    CustomerName=?,
+                    SubTotal=?,
+                    Discount=?,
+                    TotalPayment=?,
+                    PaymentAmount=?,
+                    Changes=?,
+                    Status=?,
+                    Notes=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $request->TransactionNumber,
+                    $getAuth['ClientID'],
+                    $request->PaymentID,
+                    $request->CustomerName,
+                    $request->SubTotal,
+                    $request->Discount,
+                    $request->TotalPayment,
+                    $request->PaymentAmount,
+                    $request->Changes,
+                    $request->Status,
+                    $request->Notes,
+                    $request->ID
+                ]);
+                $return['message'] = "Transaction successfully modified.";
+            }
+            if ($request->Action == "delete") {
+                $query = "DELETE FROM TrTransaction
+                WHERE ID=?";
+                DB::delete($query, [$request->ID]);
+                $return['message'] = "Transaction successfully deleted.";
+            }
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveTransactionProduct(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null);
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->Action == "add") {
+                $query = "INSERT INTO TrTransactionProduct
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, TransactionID, Qty, UnitPrice, Discount, UnitPriceAfterDiscount, Notes)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->ProductID,
+                    $request->TransactionID,
+                    $request->Qty,
+                    $request->UnitPrice,
+                    $request->Discount,
+                    $request->UnitPriceAfterDiscount,
+                    $request->UnitNotes,
+                ]);
+                $return['message'] = "Transaction Product successfully created.";
+            }
+            if ($request->Action == "edit") {
+                $query = "UPDATE TrTransactionProduct
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    ProductID=?,
+                    TransactionID=?,
+                    Qty=?,
+                    UnitPrice=?,
+                    Discount=?,
+                    UnitPriceAfterDiscount=?,
+                    Notes=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->ProductID,
+                    $request->TransactionID,
+                    $request->Qty,
+                    $request->UnitPrice,
+                    $request->Discount,
+                    $request->UnitPriceAfterDiscount,
+                    $request->Notes,
+                    $request->ID
+                ]);
+                $return['message'] = "Transaction Product successfully modified.";
+            }
+            if ($request->Action == "delete") {
+                $query = "DELETE FROM TrTransactionProduct
+                WHERE ID=?";
+                DB::delete($query, [$request->ID]);
+                $return['message'] = "Transaction Product successfully deleted.";
+            }
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveTransactionProductVariant(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null);
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->Action == "add") {
+                $query = "INSERT INTO TrTransactionProductVariant
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->ProductID,
+                    $request->VariantOptionID,
+                ]);
+                $return['message'] = "Transaction Product Variant successfully created.";
+            }
+            if ($request->Action == "edit") {
+                $query = "UPDATE TrTransactionProductVariant
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    ProductID=?,
+                    VariantOptionID=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->ProductID,
+                    $request->VariantOptionID,
+                    $request->ID
+                ]);
+                $return['message'] = "Transaction Product Variant successfully modified.";
+            }
+            if ($request->Action == "delete") {
+                $query = "DELETE FROM TrTransactionProductVariant
+                WHERE ID=?";
+                DB::delete($query, [$request->ID]);
+                $return['message'] = "Transaction Product Variant successfully deleted.";
+            }
+        } else $return = array('status'=>false,'message'=>"");
+        return response()->json($return, 200);
+    }
+    // END POST TRANSACTION
 }

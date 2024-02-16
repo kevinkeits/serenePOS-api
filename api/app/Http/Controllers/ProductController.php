@@ -27,7 +27,7 @@ class ProductController extends Controller
         }
         return $return;
     }
-    
+
     // GET PRODUCT
     public function getProduct(Request $request)
     {
@@ -118,4 +118,158 @@ class ProductController extends Controller
         return response()->json($return, 200);
     }
     // END GET PRODUCT
+
+    // POST PRODUCT
+    public function doSaveProduct(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null);
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->Action == "add") {
+                $query = "INSERT INTO MsProduct
+                    (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Notes, Qty, Price, CategoryID, ProductSKU, ImgUrl, MimeType)
+                    VALUES
+                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->ProductName,
+                    $request->Notes,
+                    $request->Qty,
+                    $request->Price,
+                    $request->CategoryID,
+                    $request->ProductSKU,
+                    $request->ImgUrl,
+                    $request->MimeType,
+                ]);
+                $return['message'] = "Product successfully created.";
+            } 
+            if ($request->Action == "edit") {
+                $query = "UPDATE MsProduct
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    Name=?,
+                    Notes=?,
+                    Qty=?,
+                    Price=?,
+                    CategoryID=?,
+                    ImgUrl=?,
+                    MimeType=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->ProductName,
+                    $request->Notes,
+                    $request->Qty,
+                    $request->Price,
+                    $request->CategoryID,
+                    $request->ImgUrl,
+                    $request->MimeType,
+                    $request->ID
+                ]);
+                $return['message'] = "Product successfully modified.";
+            }
+            if ($request->Action == "delete") {
+                $query = "DELETE FROM MsProduct
+                WHERE ID=?";
+                DB::delete($query, [$request->ID]);
+                $return['message'] = "Product successfully deleted.";
+            }
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveProductVariant(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null);
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->Action == "add") {
+                $query = "INSERT INTO MsProductVariant
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantID)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->ProductID,
+                    $request->VariantID,
+                ]);
+                $return['message'] = "Product Variant successfully created.";
+            } 
+            if ($request->Action == "edit") {
+                $query = "UPDATE MsProductVariant
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->ProductID,
+                    $request->VariantID,
+                    $request->ID
+                ]);
+                $return['message'] = "Product Variant successfully modified.";
+            }
+            if ($request->Action == "delete") {
+                $query = "DELETE FROM MsProductVariant
+                WHERE ID=?";
+                DB::delete($query, [$request->ID]);
+                $return['message'] = "Product Variant successfully deleted.";
+            }
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
+        return response()->json($return, 200);
+    }
+
+    public function doSaveProductVariantOption(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null);
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->Action == "add") {
+                $query = "INSERT INTO MsProductVariantOption
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID)
+                        VALUES
+                        (0, ?, NOW(), UUID(), ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->ProductID,
+                    $request->VariantOptionID,
+                ]);
+                $return['message'] = "Product Variant Option successfully created.";
+            } 
+            if ($request->Action == "edit") {
+                $query = "UPDATE MsProductVariantOption
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    ClientID=?,
+                    ProductID=?,
+                    VariantOptionID=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $getAuth['ClientID'],
+                    $request->ProductID,
+                    $request->VariantOptionID,
+                    $request->ID
+                ]);
+                $return['message'] = "Product Variant Option successfully modified.";
+            }
+            if ($request->Action == "delete") {
+                $query = "DELETE FROM MsProductVariantOption
+                WHERE ID=?";
+                DB::delete($query, [$request->ID]);
+                $return['message'] = "Product Variant Option successfully deleted.";
+            }
+        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
+        return response()->json($return, 200);
+    }
+    // END POST PRODUCT
 }
