@@ -37,7 +37,8 @@ class CategoryController extends Controller
        if ($getAuth['status']) {
             $query = "SELECT ID, Name, QtyAlert, BGColor
                 FROM MsCategory
-                WHERE ClientID = ?"; 
+                WHERE IsDeleted=0
+                    AND ClientID = ?"; 
             if ($request->ID) {
                 $query .= " AND ID = ? ";
                 $return['data'] = DB::select($query,[$getAuth['ClientID'], $request->ID])[0];
