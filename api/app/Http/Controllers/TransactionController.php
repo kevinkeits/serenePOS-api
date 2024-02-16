@@ -29,7 +29,7 @@ class TransactionController extends Controller
    }
    
     // GET TRANSACTION
-    public function getTransaction(Request $request)
+    public function get(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>array());
         $getAuth = $this->validateAuth($request->_s);
@@ -103,7 +103,7 @@ class TransactionController extends Controller
     // END GET TRANSACTION
 
     // GET TRANSACTION HISTORY
-    public function getTransactionHistory(Request $request)
+    public function getHistory(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>array());
         $getAuth = $this->validateAuth($request->_s);
@@ -180,7 +180,7 @@ class TransactionController extends Controller
     // END GET TRANSACTION HISTORY
 
     // POST TRANSACTION
-    public function doSaveTransaction(Request $request)
+    public function doSave(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
@@ -253,7 +253,7 @@ class TransactionController extends Controller
         return response()->json($return, 200);
     }
 
-    public function doSaveTransactionProduct(Request $request)
+    public function doSaveProduct(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
@@ -314,7 +314,7 @@ class TransactionController extends Controller
         return response()->json($return, 200);
     }
 
-    public function doSaveTransactionProductVariant(Request $request)
+    public function doSaveProductVariant(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);

@@ -29,7 +29,7 @@ class VariantController extends Controller
    }
    
    // GET VARIANT
-   public function getVariant(Request $request)
+   public function get(Request $request)
    {
        $return = array('status'=>true,'message'=>"",'data'=>array());
        $getAuth = $this->validateAuth($request->_s);
@@ -84,7 +84,7 @@ class VariantController extends Controller
    // END GET VARIANT
 
    // GET VARIANT OPTION
-   public function getVariantOption(Request $request)
+   public function getOption(Request $request)
    {
        $return = array('status'=>true,'message'=>"",'data'=>null);
        $getAuth = $this->validateAuth($request->_s);
@@ -101,7 +101,7 @@ class VariantController extends Controller
    // END GET VARIANT OPTION
 
    // POST VARIANT
-   public function doSaveVariant(Request $request)
+   public function doSave(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
@@ -147,7 +147,7 @@ class VariantController extends Controller
         return response()->json($return, 200);
     }
 
-    public function doSaveVariantOption(Request $request)
+    public function doSaveOption(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);

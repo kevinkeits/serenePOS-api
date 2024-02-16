@@ -7,7 +7,6 @@ use Illuminate\Http\Request;
 
 class ProductController extends Controller
 {
-
     private function validateAuth($Token)
     {
         $return = array('status'=>false,'ID'=>"");
@@ -29,7 +28,7 @@ class ProductController extends Controller
     }
 
     // GET PRODUCT
-    public function getProduct(Request $request)
+    public function get(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>array());
         $getAuth = $this->validateAuth($request->_s);
@@ -86,7 +85,7 @@ class ProductController extends Controller
         return response()->json($return, 200);
     }
 
-    public function getProductVariant(Request $request)
+    public function getVariant(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $query = "SELECT MsProductVariant.ID, MsProduct.ID ProductID, MsVariant.ID VariantID, MsVariant.Name
@@ -102,7 +101,7 @@ class ProductController extends Controller
         return response()->json($return, 200);
     }
 
-    public function getProductVariantOption(Request $request)
+    public function getVariantOption(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $query = "SELECT MsProductVariantOption.ID, MsProduct.ID ProductID, MsVariantOption.ID VariantOptionID, MsVariantOption.Label, MsVariantOption.Price
@@ -120,7 +119,7 @@ class ProductController extends Controller
     // END GET PRODUCT
 
     // POST PRODUCT
-    public function doSaveProduct(Request $request)
+    public function doSave(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
@@ -182,7 +181,7 @@ class ProductController extends Controller
         return response()->json($return, 200);
     }
 
-    public function doSaveProductVariant(Request $request)
+    public function doSaveVariant(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
@@ -226,7 +225,7 @@ class ProductController extends Controller
         return response()->json($return, 200);
     }
 
-    public function doSaveProductVariantOption(Request $request)
+    public function doSaveVariantOption(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);

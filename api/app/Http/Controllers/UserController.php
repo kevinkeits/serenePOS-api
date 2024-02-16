@@ -28,7 +28,7 @@ class UserController extends Controller
     }
     
     // GET USER
-    public function getUser(Request $request)
+    public function get(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
@@ -45,7 +45,7 @@ class UserController extends Controller
     // END GET USER
 
     // GET USER DETAIL
-    public function getUserDetail(Request $request)
+    public function getDetail(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,''=>"");
         $getAuth = $this->validateAuth($request->_s);

@@ -28,7 +28,7 @@ class CustomerController extends Controller
     }
     
     // GET CUSTOMER
-    public function getCustomer(Request $request)
+    public function get(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
@@ -45,7 +45,7 @@ class CustomerController extends Controller
     // END GET CUSTOMER
 
    // POST CUSTOMER
-   public function doSaveCustomer(Request $request)
+   public function doSave(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);

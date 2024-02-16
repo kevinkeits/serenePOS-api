@@ -28,7 +28,7 @@ class PaymentController extends Controller
     }
     
     // GET PAYMENT
-    public function getPayment(Request $request)
+    public function get(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
@@ -45,7 +45,7 @@ class PaymentController extends Controller
     // END GET PAYMENT
 
    // POST PAYMENT
-   public function doSavePayment(Request $request)
+   public function doSave(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);

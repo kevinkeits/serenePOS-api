@@ -28,7 +28,7 @@ class ClientController extends Controller
     }
     
    // GET CLIENT
-   public function getClient(Request $request)
+   public function get(Request $request)
    {
        $return = array('status'=>true,'message'=>"",'data'=>null);
        $query = "SELECT MsClient.ID, MsOutlet.Address, MsClient.Name, MsOutlet.PhoneNumber, MsClient.PlanType, MsClient.Message, MsClient.ImgUrl, MsClient.MimeType, MsOutlet.Name OutlatName, MsOutlet.IsPrimary
@@ -43,7 +43,7 @@ class ClientController extends Controller
    // END GET CLIENT
 
    // POST CLIENT
-   public function doSaveClient(Request $request)
+   public function doSave(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);

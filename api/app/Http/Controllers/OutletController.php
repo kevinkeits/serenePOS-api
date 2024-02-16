@@ -28,7 +28,7 @@ class OutletCntroller extends Controller
     }
     
     // GET OUTLET
-    public function getOutlet(Request $request)
+    public function get(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
@@ -45,7 +45,7 @@ class OutletCntroller extends Controller
     // END GET OUTLET
 
     // POST OUTLET
-    public function doSaveOutlet(Request $request)
+    public function doSave(Request $request)
         {
             $return = array('status'=>true,'message'=>"",'data'=>null);
             $getAuth = $this->validateAuth($request->_s);
