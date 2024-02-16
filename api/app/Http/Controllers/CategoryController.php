@@ -9,6 +9,7 @@ class CategoryController extends Controller
 {
     private function validateAuth($Token)
     {
+        if ($Token != null) $Token = trim(str_replace("Bearer","",$Token));
         $return = array('status'=>false,'ID'=>"");
         $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
                     FROM MsUser
@@ -31,16 +32,21 @@ class CategoryController extends Controller
    public function get(Request $request)
    {
        $return = array('status'=>true,'message'=>"",'data'=>null);
-       $getAuth = $this->validateAuth($request->_s);
+       $header = $request->header('Authorization');
+       $getAuth = $this->validateAuth($header);
        if ($getAuth['status']) {
-       $query = "SELECT ID, ClientID, Name, QtyAlert, BGColor
-           FROM MsCategory
-           WHERE MsCategory.ClientID = ?"; 
-           $data = DB::select($query,[$getAuth['ClientID']]);
-       $return['data'] = $data[0];
-       if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
-   } else $return = array('status'=>false,'message'=>"");
-   return response()->json($return, 200);
+            $query = "SELECT ID, Name, QtyAlert, BGColor
+                FROM MsCategory
+                WHERE ClientID = ?"; 
+            if ($request->ID) {
+                $query .= " AND ID = ? ";
+                $return['data'] = DB::select($query,[$getAuth['ClientID'], $request->ID])[0];
+            } else {
+                $query .= " ORDER BY Name ASC";
+                $return['data'] = DB::select($query,[$getAuth['ClientID']]);
+            }
+        } else $return = array('status'=>false,'message'=>"Not Authorized!",'data'=>null);
+        return response()->json($return, 200);
    }
    // END GET CATEGORY
 
@@ -48,7 +54,8 @@ class CategoryController extends Controller
    public function doSave(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
-        $getAuth = $this->validateAuth($request->_s);
+        $header = $request->header('Authorization');
+        $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
             if ($request->Action == "add") {
                 $query = "INSERT INTO MsCategory
@@ -58,26 +65,23 @@ class CategoryController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->CategoryName,
-                    $request->tyAlert,
+                    $request->Name,
+                    $request->QtyAlert,
                     $request->BGColor,
                 ]);
                 $return['message'] = "Category successfully created.";
             } 
             if ($request->Action == "edit") {
                 $query = "UPDATE MsCategory
-                SET IsDeleted=0,
-                    UserUp=?,
-                    DateUp=NOW(),
-                    ClientID=?,
-                    Name=?,
-                    QtyAlert=?,
-                    BGColor=?
-                    WHERE ID=?";
+                            SET UserUp=?,
+                                DateUp=NOW(),
+                                Name=?,
+                                QtyAlert=?,
+                                BGColor=?
+                                WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
-                    $getAuth['ClientID'],
-                    $request->CategoryName,
+                    $request->Name,
                     $request->QtyAlert,
                     $request->BGColor,
                     $request->ID
@@ -85,12 +89,11 @@ class CategoryController extends Controller
                 $return['message'] = "Category successfully modified.";
             }
             if ($request->Action == "delete") {
-                $query = "DELETE FROM MsCategory
-                WHERE ID=?";
-                DB::delete($query, [$request->ID]);
+                $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
+                DB::update($query, [$getAuth['UserID'],$request->ID]);
                 $return['message'] = "Category successfully deleted.";
             }
-        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
+        } else $return = array('status'=>false,'message'=>"Not Authorized!",'data'=>null);
         return response()->json($return, 200);
     }
     // END POST CATEGORY
