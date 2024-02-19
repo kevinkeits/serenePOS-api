@@ -167,11 +167,9 @@ class AuthController extends Controller
         $return = array('status'=>false,'message'=>"",'data'=>null);
         $header = $request->header('Authorization');
         if ($header != null) $header = trim(str_replace("Bearer","",$header));
-        if ($getAuth['status']) {
-            $query = "UPDATE TrSession SET IsLoggedOut=1, DateUp=NOW() WHERE ID=?";
-            DB::update($query, [$header]);
-            $return['status'] = true;
-        } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
+        $query = "UPDATE TrSession SET IsLoggedOut=1, DateUp=NOW() WHERE ID=?";
+        DB::update($query, [$header]);
+        $return['status'] = true;
         return response()->json($return, 200);
     }
     

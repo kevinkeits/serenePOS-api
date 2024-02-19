@@ -90,9 +90,19 @@ class CategoryController extends Controller
                 $return['message'] = "Category successfully modified";
             }
             if ($request->Action == "delete") {
-                $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
-                DB::update($query, [$getAuth['UserID'],$request->ID]);
-                $return['message'] = "Category successfully deleted";
+                if (str_contains($request->ID,',')) {
+                    $tempID = explode(',',$request->ID);
+                    foreach ($tempID as $key => $ID) {
+                        $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
+                        DB::update($query, [$getAuth['UserID'],$ID]);
+                    }
+                    $return['message'] = "Category successfully deleted";
+                } else {
+                    $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
+                    DB::update($query, [$getAuth['UserID'],$request->ID]);
+                    $return['message'] = "Category successfully deleted";
+                }
+                
             }
         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
         return response()->json($return, 200);
