@@ -139,7 +139,7 @@ class ProductController extends Controller
                                 $getAuth['UserID'],
                                 $request->ID,
                                 $VariantOptionID[$i],
-                                ($IsSelected[$i] == "T" ? "1" : "0"),
+                                ($IsSelected[$i] == "T" ? 1 : 0),
                                 $ProductVariantOptionID[$i],
                             ]);
                         }

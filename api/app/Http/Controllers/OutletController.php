@@ -9,6 +9,7 @@ class OutletController extends Controller
 {
     private function validateAuth($Token)
     {
+        if ($Token != null) $Token = trim(str_replace("Bearer","",$Token));
         $return = array('status'=>false,'ID'=>"");
         $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
                     FROM MsUser
@@ -27,101 +28,86 @@ class OutletController extends Controller
         return $return;
     }
 
-//     // GET CATEGORY
-//     public function get(Request $request)
-//     {
-//         $return = array('status'=>true,'message'=>"",'data'=>null);
-//         $header = $request->header('Authorization');
-//         $getAuth = $this->validateAuth($header);
-//         if ($getAuth['status']) {
-//                 $query = "SELECT ID, Name, QtyAlert, BGColor
-//                     FROM MsCategory
-//                     WHERE IsDeleted=0
-//                         AND ClientID = ?"; 
-//                 if ($request->ID) {
-//                     $query .= " AND ID = ? ";
-//                     $return['data'] = DB::select($query,[$getAuth['ClientID'], $request->ID])[0];
-//                 } else {
-//                     $query .= " ORDER BY Name ASC";
-//                     $return['data'] = DB::select($query,[$getAuth['ClientID']]);
-//                 }
-//             } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
-//             return response()->json($return, 200);
-//     }
-//    // END GET CATEGORY
-    
-    // GET OUTLET
     public function get(Request $request)
+    {
+       $return = array('status'=>true,'message'=>"",'data'=>array());
+       $header = $request->header('Authorization');
+       $getAuth = $this->validateAuth($header);
+       if ($getAuth['status']) {
+            if ($request->ID) {
+                $query = "  SELECT MsOutlet.ID, MsOutlet.Name OutletName, MsOutlet.PhoneNumber, MsOutlet.IsPrimary, MsOutlet.Address
+                            FROM MsOutlet
+                            WHERE ID = ?
+                                ORDER BY ID ASC";
+                $details = DB::select($query,[$request->ID])[0];
+
+                $return['data'] = array('details'=>$details);
+            } else {
+                $query = "  SELECT MsOutlet.ID, MsOutlet.Name, MsOutlet.IsPrimary, MsOutlet.Address
+                            FROM MsOutlet
+                            WHERE IsDeleted=0
+                                AND ClientID = ?
+                                ORDER BY Name ASC";
+                $data = DB::select($query, [$getAuth['ClientID']]);
+                if ($data) $return['data'] = $data;
+            }
+        } else $return = array('status'=>false,'message'=>"");
+    return response()->json($return, 200);
+   }
+    
+    // POST OUTLET
+    public function doSave(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
-            $query = "SELECT MsOutlet.ID, MsOutlet.ClientID, MsOutlet.Name, MsOutlet.PhoneNumber, MsOutlet.IsPrimary, MsOutlet.Address
-                FROM MsOutlet
-                WHERE IsDeleted=0
-                    AND ClientID = ?";
-                 if ($request->ID) {
-                    $query .= " AND ID = ? ";
-                    $return['data'] = DB::select($query,[$getAuth['ClientID'], $request->ID])[0];
-                } else {
-                    $query .= " ORDER BY Name ASC";
-                    $return['data'] = DB::select($query,[$getAuth['ClientID']]);
-                }
-            } else $return = array('status'=>false,'message'=>"");
-            return response()->json($return, 200);
-    }
-    // END GET OUTLET
+            if ($request->Action == "add") {
 
-    // POST OUTLET
-    public function doSave(Request $request)
-        {
-            $return = array('status'=>true,'message'=>"",'data'=>null);
-            $getAuth = $this->validateAuth($request->_s);
-            if ($getAuth['status']) {
-                if ($request->Action == "add") {
-                    $query = "INSERT INTO MsOutlet
-                            (IsDeleted, UserIn, DateIn, ID, Name, PhoneNumber, IsPrimary, Address)
-                            VALUES
-                            (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?)";
-                    DB::insert($query, [
-                        $getAuth['UserID'],
-                        $request->OutletName,
-                        $request->PhoneNumber,
-                        $request->IsPrimary,
-                        $request->Address,
-                    ]);
-                    $return['message'] = "Outlet successfully created.";
-                } 
-                if ($request->Action == "edit") {
-                    $query = "UPDATE MsOutlet
-                    SET IsDeleted=0,
-                        UserUp=?,
-                        DateUp=NOW(),
-                        Name=?,
-                        PhoneNumber=?,
-                        IsPrimary=?,
-                        Address=?
-                        WHERE ID=?";
-                    DB::update($query, [
-                        $getAuth['UserID'],
-                        $request->OutletName,
-                        $request->PhoneNumber,
-                        $request->IsPrimary,
-                        $request->Address,
-                        $request->ID
-                    ]);
-                    $return['message'] = "Outlet successfully modified.";
-                }
-                if ($request->Action == "delete") {
-                    $query = "DELETE FROM MsOutlet
+                $query = "SELECT UUID() GenID";
+                $OutletID = DB::select($query)[0]->GenID;
+                $query = "INSERT INTO MsOutlet
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, Name, PhoneNumber, IsPrimary, Address)
+                        VALUES
+                        (0, ?, NOW(), ?, ?, ?, ?, ?, ?)";
+                DB::insert($query, [
+                    $getAuth['UserID'],
+                    $OutletID,
+                    $getAuth['ClientID'],
+                    $request->Name,
+                    $request->PhoneNumber,
+                    $request->IsPrimary == "T" ? 1 : 0,
+                    $request->Address,
+                ]);
+                $return['message'] = "Outlet successfully created.";
+            } 
+            if ($request->Action == "edit") {
+                $query = "UPDATE MsOutlet
+                SET UserUp=?,
+                    DateUp=NOW(),
+                    Name=?,
+                    PhoneNumber=?,
+                    IsPrimary=?,
+                    Address=?
                     WHERE ID=?";
-                    DB::delete($query, [$request->ID]);
-                    $return['message'] = "Outlet successfully deleted.";
-                }
-                
-            } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
-            return response()->json($return, 200);
-        }
-        // END POST OUTLET
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $request->Name,
+                    $request->PhoneNumber,
+                    $request->IsPrimary == "T" ? 1 : 0,
+                    $request->Address,
+                    $request->ID
+                ]);
+                $return['message'] = "Outlet successfully modified.";
+            }
+            if ($request->Action == "delete") {
+                $query = "DELETE FROM MsOutlet
+                WHERE ID=?";
+                DB::delete($query, [$request->ID]);
+                $return['message'] = "Outlet successfully deleted.";
+            }
+        } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
+        return response()->json($return, 200);
+    }
+    // END POST OUTLET
 }
