@@ -45,7 +45,7 @@ class UserController extends Controller
     // END GET USER
 
     // GET USER DETAIL
-    public function getDetail(Request $request)
+    public function getSetting(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null,''=>"");
         $getAuth = $this->validateAuth($request->_s);

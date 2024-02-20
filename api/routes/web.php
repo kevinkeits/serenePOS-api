@@ -43,6 +43,7 @@ $router->group(['prefix' => 'variant'], function () use ($router) {
 
 $router->group(['prefix' => 'transaction'], function () use ($router) {
     $router->get('get',  ['uses' => 'TransactionController@get']);
+    $router->get('getTransaction',  ['uses' => 'TransactionController@getTransaction']);
     $router->get('getHistory',  ['uses' => 'TransactionController@getHistory']);
     $router->post('doSave',  ['uses' => 'TransactionController@doSave']);
     $router->post('doSaveProduct',  ['uses' => 'TransactionController@doSaveProduct']);
@@ -66,7 +67,7 @@ $router->group(['prefix' => 'outlet'], function () use ($router) {
 
 $router->group(['prefix' => 'user'], function () use ($router) {
     $router->get('get',  ['uses' => 'UserController@get']);
-    $router->get('getDetail',  ['uses' => 'UserController@getDetail']);
+    $router->get('getSetting',  ['uses' => 'UserController@getSetting']);
 });
 
 $router->group(['prefix' => 'payment'], function () use ($router) {

@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use DB;
 use Illuminate\Http\Request;
 
-class OutletCntroller extends Controller
+class OutletController extends Controller
 {
     private function validateAuth($Token)
     {
@@ -26,21 +26,50 @@ class OutletCntroller extends Controller
         }
         return $return;
     }
+
+//     // GET CATEGORY
+//     public function get(Request $request)
+//     {
+//         $return = array('status'=>true,'message'=>"",'data'=>null);
+//         $header = $request->header('Authorization');
+//         $getAuth = $this->validateAuth($header);
+//         if ($getAuth['status']) {
+//                 $query = "SELECT ID, Name, QtyAlert, BGColor
+//                     FROM MsCategory
+//                     WHERE IsDeleted=0
+//                         AND ClientID = ?"; 
+//                 if ($request->ID) {
+//                     $query .= " AND ID = ? ";
+//                     $return['data'] = DB::select($query,[$getAuth['ClientID'], $request->ID])[0];
+//                 } else {
+//                     $query .= " ORDER BY Name ASC";
+//                     $return['data'] = DB::select($query,[$getAuth['ClientID']]);
+//                 }
+//             } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
+//             return response()->json($return, 200);
+//     }
+//    // END GET CATEGORY
     
     // GET OUTLET
     public function get(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
-        $getAuth = $this->validateAuth($request->_s);
+        $header = $request->header('Authorization');
+        $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
-        $query = "SELECT MsOutlet.ID, MsOutlet.ClientID, MsOutlet.Name, MsOutlet.PhoneNumber, MsOutlet.IsPrimary, MsOutlet.Address
-            FROM MsOutlet
-            WHERE MsOutlet.ClientID = ?";
-            $data = DB::select($query,[$getAuth['ClientID']]);
-            $return['data'] = $data[0];
-        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
-    } else $return = array('status'=>false,'message'=>"");
-    return response()->json($return, 200);
+            $query = "SELECT MsOutlet.ID, MsOutlet.ClientID, MsOutlet.Name, MsOutlet.PhoneNumber, MsOutlet.IsPrimary, MsOutlet.Address
+                FROM MsOutlet
+                WHERE IsDeleted=0
+                    AND ClientID = ?";
+                 if ($request->ID) {
+                    $query .= " AND ID = ? ";
+                    $return['data'] = DB::select($query,[$getAuth['ClientID'], $request->ID])[0];
+                } else {
+                    $query .= " ORDER BY Name ASC";
+                    $return['data'] = DB::select($query,[$getAuth['ClientID']]);
+                }
+            } else $return = array('status'=>false,'message'=>"");
+            return response()->json($return, 200);
     }
     // END GET OUTLET
 

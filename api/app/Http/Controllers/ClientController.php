@@ -31,15 +31,17 @@ class ClientController extends Controller
    public function get(Request $request)
    {
        $return = array('status'=>true,'message'=>"",'data'=>null);
-       $query = "SELECT MsClient.ID, MsOutlet.Address, MsClient.Name, MsOutlet.PhoneNumber, MsClient.PlanType, MsClient.Message, MsClient.ImgUrl, MsClient.MimeType, MsOutlet.Name OutlatName, MsOutlet.IsPrimary
+       $query = "SELECT MsClient.ID, MsClient.Name, MsClient.PlanType, MsUser.Name UserName, MsUser.PhoneNumber, MsOutlet.Address, MsOutlet.PhoneNumber, MsClient.ImgUrl, MsClient.MimeType
            FROM MsClient
            JOIN MsOutlet
-           ON MsOutlet.ID = MsClient.OutletID
+           JOIN MsUser
+           ON MsClient.ID = MsUser.ClientID
+           ON MsOutlet.ClientID = MsClient.ID
            ORDER BY ID ASC";
        $return['data'] = DB::select($query);
        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
        return response()->json($return, 200);
-   }
+   }    
    // END GET CLIENT
 
    // POST CLIENT

@@ -10,8 +10,9 @@ class VariantController extends Controller
    
    private function validateAuth($Token)
    {
-       $return = array('status'=>false,'ID'=>"");
-       $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
+        if ($Token != null) $Token = trim(str_replace("Bearer","",$Token));
+        $return = array('status'=>false,'ID'=>"");
+        $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
                    FROM MsUser
                    JOIN TrSession ON TrSession.UserID = MsUser.ID
                    WHERE TrSession.ID=?
@@ -32,168 +33,270 @@ class VariantController extends Controller
    public function get(Request $request)
    {
        $return = array('status'=>true,'message'=>"",'data'=>array());
-       $getAuth = $this->validateAuth($request->_s);
+       $header = $request->header('Authorization');
+       $getAuth = $this->validateAuth($header);
        if ($getAuth['status']) {
-           $mainQuery = "  SELECT ID, Name, Type, 
-                           (SELECT COUNT(ProductID)
-                               FROM MsVariantProduct
-                               WHERE MsVariantProduct.VariantID = MsVariant.ID) Count,
-                               (SELECT GROUP_CONCAT(Label SEPARATOR ', ')
-                                       FROM MsVariantOption
-                                       WHERE MsVariantOption.VariantID = MsVariant.ID 
-                                       GROUP BY VariantID) ListLabel
-                               FROM MsVariant
-                               WHERE {definedFilter}
-                               ORDER BY MsVariant.Name ASC";
-                           $definedFilter = "1=1";
-           if ($getAuth['ClientID'] != "") $definedFilter = "MsVariant.ClientID = '".$getAuth['ClientID']."'";
-           if ($request->_i) {
-               $definedFilter = "MsVariant.ID=?";
-               $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
-               $data = DB::select($query,[$request->_i]);
-               if ($data) {
-                   $query = "SELECT    MsVariant.ID,
-                                       MsVariant.Name,
-                                       MsVariant.Type,
-                                       MsVariantOption.ID VariantOptionID,
-                                       MsVariantOption.Label,
-                                       MsVariantOption.Price,
-                                       MsVariantProduct.ProductID
-                               FROM    MsVariant
-                               JOIN    MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
-                               JOIN    MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
-                               WHERE   MsVariantOption.VariantID = ? 
-                               ORDER BY  MsVariant.Name ASC";
-                   $selVariant = DB::select($query,[$request->_r]);
-                   $arrData = [];
-                   if ($selVariant) {
-                       foreach ($selVariant as $key => $value) {
-                           array_push($arrData,$value->ID);
-                       }
-                   }
-                   $return['data'] = array('header'=>$data[0], 'selVariant'=> $selVariant);
-               }
+            if ($request->ID) {
+                $query = "  SELECT MsVariant.ID, MsVariant.Name, MsVariant.Type
+                                FROM MsVariant
+                                WHERE ID = ?";
+                $details = DB::select($query,[$request->ID])[0];
+
+                $query = "  SELECT MsVariantOption.ID, MsVariantOption.Label, MsVariantOption.Price
+                                FROM MsVariantOption
+                                WHERE VariantID = ?
+                                ORDER BY ID ASC";
+                $options = DB::select($query,[$request->ID]);
+
+                $query = "  SELECT MsProduct.ID, MsProduct.Name, MsProduct.ImgUrl
+                                FROM MsVariantProduct
+                                JOIN MsProduct ON MsProduct.ID = MsVariantProduct.ProductID
+                                WHERE VariantID = ?
+                                ORDER BY MsProduct.Name ASC";
+                $product = DB::select($query,[$request->ID]);
+
+                $return['data'] = array('details'=>$details,'options'=>$options, 'product'=>$product);
            } else {
-               $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
-               $data = DB::select($query);
-               if ($data) $return['data'] = $data;
-           }
-       } else $return = array('status'=>false,'message'=>"");
-       return response()->json($return, 200);
+                $query = "  SELECT ID, Name, Type, 
+                                    (SELECT COUNT(ProductID)
+                                        FROM MsVariantProduct
+                                        WHERE MsVariantProduct.VariantID = MsVariant.ID) Count,
+                                    (SELECT GROUP_CONCAT(Label SEPARATOR ', ')
+                                        FROM MsVariantOption
+                                        WHERE MsVariantOption.VariantID = MsVariant.ID 
+                                        GROUP BY VariantID) ListLabel
+                                FROM MsVariant
+                                WHERE ClientID = ?
+                                ORDER BY Name ASC";
+                $data = DB::select($query, [$getAuth['ClientID']]);
+                if ($data) $return['data'] = $data;
+            }
+        } else $return = array('status'=>false,'message'=>"");
+    return response()->json($return, 200);
    }
    // END GET VARIANT
-
-   // GET VARIANT OPTION
-   public function getOption(Request $request)
-   {
-       $return = array('status'=>true,'message'=>"",'data'=>null);
-       $getAuth = $this->validateAuth($request->_s);
-       if ($getAuth['status']) {
-       $query = "SELECT ID, VariantID, Label, Price
-           FROM MsVariantOption
-           WHERE MsVariantOption.ClientID = ?";
-           $data = DB::select($query,[$getAuth['ClientID']]);
-        $return['data'] = $data[0];
-       if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
-   } else $return = array('status'=>false,'message'=>"");
-   return response()->json($return, 200);
-   }
-   // END GET VARIANT OPTION
 
    // POST VARIANT
    public function doSave(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
-        $getAuth = $this->validateAuth($request->_s);
+        $header = $request->header('Authorization');
+        $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
             if ($request->Action == "add") {
+
+                $query = "SELECT UUID() GenID";
+                $VariantID = DB::select($query)[0]->GenID;
                 $query = "INSERT INTO MsVariant
                         (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Type)
                         VALUES
-                        (0, ?, NOW(), UUID(), ?, ?, ?)";
+                        (0, ?, NOW(), ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
+                    $VariantID,
                     $getAuth['ClientID'],
-                    $request->VariantName,
-                    $request->VariantType,
+                    $request->Name,
+                    $request->Type,
                 ]);
+                
+                if (str_contains($request->optionLabel,',')) {
+                    $optionLabel = explode(',',$request->optionLabel);
+                    $optionPrice = explode(',',$request->optionPrice);
+                    for ($i=0; $i<count($optionLabel); $i++)
+                    {
+                        $query = "INSERT INTO MsVariantOption
+                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
+                                VALUES
+                                (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
+                            DB::insert($query, [
+                                $getAuth['UserID'],
+                                $getAuth['ClientID'],
+                                $VariantID,
+                                $optionLabel[$i],
+                                $optionPrice[$i],
+                            ]);
+                    }
+                } else {
+                    $query = "INSERT INTO MsVariantOption
+                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
+                                VALUES
+                                (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
+                            DB::insert($query, [
+                                $getAuth['UserID'],
+                                $getAuth['ClientID'],
+                                $VariantID,
+                                $request->optionLabel,
+                                $request->optionPrice
+                            ]);
+                }
+
+                if (str_contains($request->ProductID,',')) {
+                    $ProductID = explode(',',$request->ProductID);
+                    for ($i=0; $i<count($ProductID); $i++)
+                    {
+                        $query = "INSERT INTO MsVariantProduct
+                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
+                                VALUES
+                                (0, ?, NOW(), UUID(), ?, ?, ?)";
+                            DB::insert($query, [
+                                $getAuth['UserID'],
+                                $getAuth['ClientID'],
+                                $VariantID,
+                                $ProductID[$i],
+                            ]);
+                    }
+                } else {
+                    $query = "INSERT INTO MsVariantProduct
+                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
+                                VALUES
+                                (0, ?, NOW(), UUID(), ?, ?, ?)";
+                            DB::insert($query, [
+                                $getAuth['UserID'],
+                                $getAuth['ClientID'],
+                                $VariantID,
+                                $request->ProductID
+                            ]);
+                }
                 $return['message'] = "Variant successfully created.";
             }
+
             if ($request->Action == "edit") {
                 $query = "UPDATE MsVariant
-                SET IsDeleted=0,
-                    UserUp=?,
-                    DateUp=NOW(),
-                    ClientID=?,
-                    Name=?,
-                    Type=?
-                    WHERE ID=?";
-                DB::update($query, [
-                    $getAuth['UserID'],
-                    $getAuth['ClientID'],
-                    $request->VariantName,
-                    $request->ariantType,
-                    $request->ID
-                ]);
-                $return['message'] = "Variant successfully modified.";
-            }
-            if ($request->Action == "delete") {
-                $query = "DELETE FROM MsVariant
-                WHERE ID=?";
-                DB::delete($query, [$request->ID]);
-                $return['message'] = "Variant successfully deleted.";
-            }
-        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
-        return response()->json($return, 200);
-    }
+                        SET UserUp=?,
+                            DateUp=NOW(),
+                            Name=?,
+                            Type=?
+                            WHERE ID=?";
+                        DB::update($query, [
+                            $getAuth['UserID'],
+                            $request->Name,
+                            $request->Type,
+                            $request->ID
+                        ]);
+                if (str_contains($request->optionID,',')) {
+                    $optionID = explode(',',$request->optionID);
+                    $optionLabel = explode(',',$request->optionLabel);
+                    $optionPrice = explode(',',$request->optionPrice);
+                    for ($i=0; $i<count($optionID); $i++)
+                    {
+                        if ($optionID[$i] == "") {
+                            $query = "INSERT INTO MsVariantOption
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
+                                    VALUES
+                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
+                            DB::insert($query, [
+                                $getAuth['UserID'],
+                                $getAuth['ClientID'],
+                                $request->ID,
+                                $optionLabel[$i],
+                                $optionPrice[$i],
+                            ]);
+                        } else {
+                            $query = "UPDATE MsVariantOption 
+                            SET UserUp=?,
+                                DateUp=NOW(),
+                                Label=?,
+                                Price=?
+                                WHERE ID=?";
+                            DB::update($query, [
+                                $getAuth['UserID'],
+                                $optionLabel[$i],
+                                $optionPrice[$i],
+                                $optionID[$i]
+                            ]);
+                        }
+                        $return['message'] = "Variant successfully changed.";
+                    }
+                } else {
+                    if ($request->optionID == "") {
+                        $query = "INSERT INTO MsVariantOption
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
+                                    VALUES
+                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
+                            DB::insert($query, [
+                                $getAuth['UserID'],
+                                $getAuth['ClientID'],
+                                $request->ID,
+                                $request->optionLabel,
+                                $request->optionPrice
+                            ]);
+                    } else {
+                        $query = "UPDATE MsVariantOption 
+                        SET UserUp=?,
+                            DateUp=NOW(),
+                            Label=?,
+                            Price=?
+                            WHERE ID=?";
+                        DB::update($query, [
+                            $getAuth['UserID'],
+                            $request->optionLabel,
+                            $request->optionPrice,
+                            $request->optionID
+                        ]);
+                    }
+                    $return['message'] = "Variant successfully changed.";
+                }
 
-    public function doSaveOption(Request $request)
-    {
-        $return = array('status'=>true,'message'=>"",'data'=>null);
-        $getAuth = $this->validateAuth($request->_s);
-        if ($getAuth['status']) {
-            if ($request->Action == "add") {
-                $query = "INSERT INTO MsVariantOption
-                        (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
-                        VALUES
-                        (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
-                DB::insert($query, [
-                    $getAuth['UserID'],
-                    $getAuth['ClientID'],
-                    $request->VariantID,
-                    $request->Label,
-                    $request->Price,
-                ]);
-                $return['message'] = "Variant Option successfully created.";
-            }
-            if ($request->Action == "edit") {
-                $query = "UPDATE MsVariantOption
-                SET IsDeleted=0,
-                    UserUp=?,
-                    DateUp=NOW(),
-                    ClientID=?,
-                    VariantID=?,
-                    Label=?,
-                    Price=?
-                    WHERE ID=?";
-                DB::update($query, [
-                    $getAuth['UserID'],
-                    $getAuth['ClientID'],
-                    $request->VariantID,
-                    $request->Label,
-                    $request->Price,
-                    $request->ID
-                ]);
-                $return['message'] = "Variant Option successfully modified.";
+                if (str_contains($request->OptionIDDelete,',')) {
+                    $OptionIDDelete = explode(',',$request->OptionIDDelete);
+                    for ($i=0; $i<count($OptionIDDelete); $i++)
+                    {
+                        $query = "DELETE FROM MsVariantOption WHERE ID=?";
+                        DB::delete($query, [$OptionIDDelete[$i]]);
+                        $return['message'] = "Variant successfully deleted.";
+                    }
+                } else {
+                    $query = "DELETE FROM MsVariantOption WHERE ID=?";
+                    DB::delete($query, [$request->OptionIDDelete]);
+                    $return['message'] = "Variant successfully deleted.";
+                }
+
+                $query = "DELETE FROM MsVariantProduct WHERE VariantID=?";
+                DB::delete($query, [$request->ID]);
+                if (str_contains($request->ProductID,',')) {
+                    $ProductID = explode(',',$request->ProductID);
+                    for ($i=0; $i<count($ProductID); $i++)
+                    {
+                        $query = "INSERT INTO MsVariantProduct
+                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
+                                VALUES
+                                (0, ?, NOW(), UUID(), ?, ?, ?)";
+                        DB::insert($query, [
+                                $getAuth['UserID'],
+                                $getAuth['ClientID'],
+                                $request->ID,
+                                $ProductID[$i],
+                        ]);
+                    }
+                } else {
+                    $query = "INSERT INTO MsVariantProduct
+                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
+                                VALUES
+                                (0, ?, NOW(), UUID(), ?, ?, ?)";
+                        DB::insert($query, [
+                                $getAuth['UserID'],
+                                $getAuth['ClientID'],
+                                $request->ID,
+                                $request->ProductID,
+                        ]);
+                }
+                $return['message'] = "Variant successfully created.";
             }
             if ($request->Action == "delete") {
-                $query = "DELETE FROM MsVariantOption
-                WHERE ID=?";
-                DB::delete($query, [$request->ID]);
-                $return['message'] = "Variant Option successfully deleted.";
+                if (str_contains($request->ID,',')) {
+                    $tempID = explode(',',$request->ID);
+                    foreach ($tempID as $key => $ID) {
+                        $query = "UPDATE MsVariant SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
+                        DB::update($query, [$getAuth['UserID'],$ID]);
+                        $return['message'] = "Variant successfully deleted";
+                    }
+                } else {
+                    $query = "UPDATE MsVariant SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
+                    DB::update($query, [$getAuth['UserID'],$request->ID]);
+                    $return['message'] = "Variant successfully deleted";
+                }
             }
-        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
+        } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
         return response()->json($return, 200);
     }
-    // END POST VARIANT
 }

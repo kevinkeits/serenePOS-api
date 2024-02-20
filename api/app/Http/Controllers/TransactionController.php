@@ -29,9 +29,31 @@ class TransactionController extends Controller
    }
    
     // GET TRANSACTION
+//    public function getCategory(Request $request)
+//    {
+//        $return = array('status'=>true,'message'=>"",'data'=>null);
+//        $header = $request->header('Authorization');
+//        $getAuth = $this->validateAuth($header);
+//        if ($getAuth['status']) {
+//             $query = "SELECT ID, Name, QtyAlert, BGColor
+//                 FROM MsCategory
+//                 WHERE IsDeleted=0
+//                     AND ClientID = ?"; 
+//             if ($request->ID) {
+//                 $query .= " AND ID = ? ";
+//                 $return['data'] = DB::select($query,[$getAuth['ClientID'], $request->ID])[0];
+//             } else {
+//                 $query .= " ORDER BY Name ASC";
+//                 $return['data'] = DB::select($query,[$getAuth['ClientID']]);
+//             }
+//         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
+//         return response()->json($return, 200);
+//    }
+
     public function get(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>array());
+        $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
             $mainQuery = "  SELECT  TrTransaction.ID, 
@@ -61,10 +83,10 @@ class TransactionController extends Controller
                             ORDER BY TransactionDate ASC";
                             $definedFilter = "1=1";
             if ($getAuth['ClientID'] != "") $definedFilter = "TrTransaction.ClientID = '".$getAuth['ClientID']."'";
-            if ($request->_i) {
+            if ($request->ID) {
                 $definedFilter = "TrTransaction.ID=?";
                 $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
-                $data = DB::select($query,[$request->_i]);
+                $data = DB::select($query,[$request->ID]);
                 if ($data) {
                     $query = "SELECT    TrTransactionProduct.ID,
                                         TrTransactionProduct.ClientID,
@@ -83,14 +105,14 @@ class TransactionController extends Controller
                                 JOIN    MsVariantOption on MsVariantOption.ID = TrTransactionProductVariant.VariantOptionID
                                 WHERE   TrTransactionProduct.TransactionID = ?
                                 ORDER BY  TrTransactionProduct.TransactionID ASC";
-                    $selVariant = DB::select($query,[$request->_i]);
+                    $detailsTransaction = DB::select($query,[$request->ID]);
                     $arrData = [];
-                    if ($selVariant) {
-                        foreach ($selVariant as $key => $value) {
+                    if ($detailsTransaction) {
+                        foreach ($detailsTransaction as $key => $value) {
                             array_push($arrData,$value->ID);
                         }
                     }
-                    $return['data'] = array('header'=>$data[0], 'selVariant'=> $selVariant);
+                    $return['data'] = array('header'=>$data[0], 'detailsTransaction'=> $detailsTransaction);
                 }
             } else {
                 $query = str_replace("{definedFilter}",$definedFilter,$mainQuery);
@@ -128,12 +150,12 @@ class TransactionController extends Controller
                                         TrTransaction.Status, 
                                         TrTransaction.Notes,
                                         MsClient.Name CashierName,
-                                        MsClient.OutletID,
+                                        TrTransaction.OutletID,
                                         MsOutlet.Name Outlet
                                 FROM    TrTransaction
                                 JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
                                 JOIN    MsClient ON MsClient.ID = TrTransaction.ClientID
-                                JOIN    MsOutlet ON MsOutlet.ID = MsClient.OutletID
+                                JOIN    MsOutlet ON MsOutlet.ID = TrTransaction.OutletID
                                 WHERE   {definedFilter}
                                 ORDER BY TransactionDate ASC";
                                 $definedFilter = "1=1";

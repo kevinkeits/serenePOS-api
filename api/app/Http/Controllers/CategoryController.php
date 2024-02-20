@@ -102,7 +102,6 @@ class CategoryController extends Controller
                     DB::update($query, [$getAuth['UserID'],$request->ID]);
                     $return['message'] = "Category successfully deleted";
                 }
-                
             }
         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
         return response()->json($return, 200);
