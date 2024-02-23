@@ -35,14 +35,14 @@ class ProductController extends Controller
        $getAuth = $this->validateAuth($header);
        if ($getAuth['status']) {
             if ($request->ID) {
-                $query = "  SELECT MsProduct.ID, MsProduct.ProductSKU, MsProduct.Name, MsCategory.ID CategoryID, MsCategory.Name CategoryName, MsProduct.Qty, MsProduct.Price, MsProduct.Notes, MsProduct.ImgUrl, MsProduct.MimeType 
+                $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSku, MsProduct.Name name, MsCategory.ID categoryId, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, MsProduct.ImgUrl imgurl, MsProduct.MimeType mimeType
                                 FROM MsProduct
                                 JOIN MsCategory
                                 ON MsProduct.CategoryID = MsCategory.ID
                                 WHERE MsProduct.ID = ?";
                 $product = DB::select($query,[$request->ID])[0];
 
-                $query = "  SELECT MsVariant.ID VariantID, MsVariant.Name, MsVariant.Type, MsVariantOption.ID VariantOptionID, MsVariantOption.Label, MsVariantOption.Price
+                $query = "  SELECT MsVariant.ID variantId, MsVariant.Name name, MsVariant.Type type, MsVariantOption.ID variantOptionId, MsVariantOption.Label label, MsVariantOption.Price price
                                 FROM MsVariant
                                 JOIN MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
                                 JOIN MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
@@ -52,7 +52,7 @@ class ProductController extends Controller
 
                 $return['data'] = array('product'=>$product, 'variant'=>$variant);
             } else {
-                $query = "  SELECT ID, Name, Price, Notes, ImgUrl
+                $query = "  SELECT ID id, Name name, Price price, Notes notes, ImgUrl imgUrl
                                 FROM MsProduct
                                 WHERE CategoryID = ?
                                 ORDER BY Name ASC";
@@ -122,11 +122,11 @@ class ProductController extends Controller
                     $request->ID
                 ]);
                
-                if (str_contains($request->ProductVariantOptionID,',')) {
-                    $ProductVariantOptionID = explode(',',$request->ProductVariantOptionID);
-                    $VariantOptionID = explode(',',$request->VariantOptionID);
-                    $IsSelected = explode(',',$request->IsSelected);
-                    for ($i=0; $i<count($ProductVariantOptionID); $i++)
+                if (str_contains($request->productVariantOptionID,',')) {
+                    $productVariantOptionID = explode(',',$request->productVariantOptionID);
+                    $variantOptionID = explode(',',$request->variantOptionID);
+                    $isSelected = explode(',',$request->isSelected);
+                    for ($i=0; $i<count($productVariantOptionID); $i++)
                     {
                             $query = "UPDATE MsProductVariantOption
                             SET UserUp=?,
@@ -138,9 +138,9 @@ class ProductController extends Controller
                             DB::update($query, [
                                 $getAuth['UserID'],
                                 $request->ID,
-                                $VariantOptionID[$i],
-                                ($IsSelected[$i] == "T" ? 1 : 0),
-                                $ProductVariantOptionID[$i],
+                                $variantOptionID[$i],
+                                ($isSelected[$i] == "T" ? 1 : 0),
+                                $productVariantOptionID[$i]
                             ]);
                         }
                     } else {
@@ -154,12 +154,11 @@ class ProductController extends Controller
                         DB::update($query, [
                             $getAuth['UserID'],
                             $request->ID,
-                            $request->VariantOptionID,
-                            ($request->IsSelected == "T" ? 1 : 0),
-                            $request->ProductVariantOptionID
+                            $request->variantOptionID,
+                            ($request->isSelected == "T" ? 1 : 0),
+                            $request->productVariantOptionID
                         ]);
                     }
-                    $return['message'] = "Product successfully Changed";
                 }
                 if ($request->Action == "delete") {
                     if (str_contains($request->ID,',')) {

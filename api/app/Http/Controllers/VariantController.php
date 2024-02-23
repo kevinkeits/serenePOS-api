@@ -37,34 +37,34 @@ class VariantController extends Controller
        $getAuth = $this->validateAuth($header);
        if ($getAuth['status']) {
             if ($request->ID) {
-                $query = "  SELECT MsVariant.ID, MsVariant.Name, MsVariant.Type
+                $query = "  SELECT MsVariant.ID id, MsVariant.Name name, MsVariant.Type type
                                 FROM MsVariant
                                 WHERE ID = ?";
                 $details = DB::select($query,[$request->ID])[0];
 
-                $query = "  SELECT MsVariantOption.ID, MsVariantOption.Label, MsVariantOption.Price
+                $query = "  SELECT MsVariantOption.ID id, MsVariantOption.Label label, MsVariantOption.Price price
                                 FROM MsVariantOption
                                 WHERE VariantID = ?
                                 ORDER BY ID ASC";
                 $options = DB::select($query,[$request->ID]);
 
-                $query = "  SELECT MsProduct.ID, MsProduct.Name, MsProduct.ImgUrl
+                $query = "  SELECT MsProduct.ID id, MsProduct.Name name, MsProduct.ImgUrl imgurl
                                 FROM MsVariantProduct
                                 JOIN MsProduct ON MsProduct.ID = MsVariantProduct.ProductID
                                 WHERE VariantID = ?
                                 ORDER BY MsProduct.Name ASC";
                 $product = DB::select($query,[$request->ID]);
 
-                $return['data'] = array('details'=>$details,'options'=>$options, 'product'=>$product);
+                $return['data'] = array('details'=>$details,'options'=>$options,'product'=>$product);
            } else {
-                $query = "  SELECT ID, Name, Type, 
+                $query = "  SELECT ID id, Name name, Type type, 
                                     (SELECT COUNT(ProductID)
                                         FROM MsVariantProduct
-                                        WHERE MsVariantProduct.VariantID = MsVariant.ID) Count,
+                                        WHERE MsVariantProduct.VariantID = MsVariant.ID) count,
                                     (SELECT GROUP_CONCAT(Label SEPARATOR ', ')
                                         FROM MsVariantOption
                                         WHERE MsVariantOption.VariantID = MsVariant.ID 
-                                        GROUP BY VariantID) ListLabel
+                                        GROUP BY VariantID) listlabel
                                 FROM MsVariant
                                 WHERE ClientID = ?
                                 ORDER BY Name ASC";
@@ -161,12 +161,12 @@ class VariantController extends Controller
             }
 
             if ($request->Action == "edit") {
-                $query = "UPDATE MsVariant
-                        SET UserUp=?,
-                            DateUp=NOW(),
-                            Name=?,
-                            Type=?
-                            WHERE ID=?";
+                $query = "  UPDATE MsVariant
+                            SET UserUp=?,
+                                DateUp=NOW(),
+                                Name=?,
+                                Type=?
+                                WHERE ID=?";
                         DB::update($query, [
                             $getAuth['UserID'],
                             $request->Name,

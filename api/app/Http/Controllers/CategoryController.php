@@ -28,28 +28,28 @@ class CategoryController extends Controller
         return $return;
     }
     
-   // GET CATEGORY
-   public function get(Request $request)
-   {
-       $return = array('status'=>true,'message'=>"",'data'=>null);
-       $header = $request->header('Authorization');
-       $getAuth = $this->validateAuth($header);
-       if ($getAuth['status']) {
-            $query = "SELECT ID, Name, QtyAlert, BGColor
-                FROM MsCategory
-                WHERE IsDeleted=0
-                    AND ClientID = ?"; 
-            if ($request->ID) {
-                $query .= " AND ID = ? ";
-                $return['data'] = DB::select($query,[$getAuth['ClientID'], $request->ID])[0];
-            } else {
-                $query .= " ORDER BY Name ASC";
-                $return['data'] = DB::select($query,[$getAuth['ClientID']]);
-            }
-        } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
-        return response()->json($return, 200);
-   }
-   // END GET CATEGORY
+    // GET CATEGORY
+    public function get(Request $request)
+    {
+        $return = array('status'=>true,'message'=>"",'data'=>null);
+        $header = $request->header('Authorization');
+        $getAuth = $this->validateAuth($header);
+        if ($getAuth['status']) {
+                $query = "SELECT ID id, Name name, QtyAlert qtyAlert, BGColor bgColor
+                    FROM MsCategory
+                    WHERE IsDeleted=0
+                        AND ClientID = ?"; 
+                if ($request->ID) {
+                    $query .= " AND ID = ? ";
+                    $return['data'] = DB::select($query,[$getAuth['ClientID'], $request->ID])[0];
+                } else {
+                    $query .= " ORDER BY Name ASC";
+                    $return['data'] = DB::select($query,[$getAuth['ClientID']]);
+                }
+            } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
+            return response()->json($return, 200);
+    }
+    // END GET CATEGORY
 
    // POST CATEGORY
    public function doSave(Request $request)
