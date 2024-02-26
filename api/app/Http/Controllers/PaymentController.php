@@ -9,6 +9,7 @@ class PaymentController extends Controller
 {
     private function validateAuth($Token)
     {
+        if ($Token != null) $Token = trim(str_replace("Bearer","",$Token));
         $return = array('status'=>false,'ID'=>"");
         $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
                     FROM MsUser
@@ -26,44 +27,46 @@ class PaymentController extends Controller
         }
         return $return;
     }
-    
-    // GET PAYMENT
+
     public function get(Request $request)
     {
-        $return = array('status'=>true,'message'=>"",'data'=>null);
-        $getAuth = $this->validateAuth($request->_s);
-        if ($getAuth['status']) {
-        $query = "SELECT MsPayment.ID, MsPayment.ClientID, MsPayment.PaymentCash, MsPayment.PaymentCredit, MsPayment.PaymentDebit, MsPayment.PaymentQRIS,  MsPayment.PaymentTransfer, MsPayment.PaymentEWallet
-            FROM MsPayment
-            WHERE MsPayment.ClientID = ?";
-            $data = DB::select($query,[$getAuth['ClientID']]);
-        $return['data'] = $data[0];
-        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
-    } else $return = array('status'=>false,'message'=>"");
+       $return = array('status'=>true,'message'=>"",'data'=>array());
+       $header = $request->header('Authorization');
+       $getAuth = $this->validateAuth($header);
+       if ($getAuth['status']) {
+           {
+                $query = "  SELECT MsPayment.ID, MsPayment.ClientID, MsPayment.Name, MsPayment.Description, MsPayment.isActive
+                                FROM MsPayment
+                                WHERE ClientID = ?
+                                ORDER BY Name ASC";
+                $data = DB::select($query, [$getAuth['ClientID']]);
+                if ($data) $return['data'] = $data;
+            }
+        } else $return = array('status'=>false,'message'=>"");
     return response()->json($return, 200);
-    }
-    // END GET PAYMENT
-
+   }
+    
    // POST PAYMENT
    public function doSave(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
-        $getAuth = $this->validateAuth($request->_s);
+        $header = $request->header('Authorization');
+        $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
             if ($request->Action == "add") {
+                $query = "SELECT UUID() GenID";
+                $PaymentID = DB::select($query)[0]->GenID;
                 $query = "INSERT INTO MsPayment
-                        (IsDeleted, UserIn, DateIn, ID, ClientID, PaymentCash, PaymentCredit, PaymentDebit, PaymentQRIS, PaymentTransfer, PaymentEWallet)
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Description, IsActive)
                         VALUES
-                        (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?)";
+                        (0, ?, NOW(), ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
+                    $PaymentID,
                     $getAuth['ClientID'],
-                    $request->PaymentCash,
-                    $request->PaymentCredit,
-                    $request->PaymentDebit,
-                    $request->PaymentQRIS,
-                    $request->PaymentTransfer,
-                    $request->PaymentEWallet,
+                    $request->Name,
+                    $request->Description,
+                    $request->IsActive == "T" ? 1 : 0,
                 ]);
                 $return['message'] = "Payment successfully created.";
             }
@@ -73,22 +76,16 @@ class PaymentController extends Controller
                     UserUp=?,
                     DateUp=NOW(),
                     ClientID=?,
-                    PaymentCash=?,
-                    PaymentCredit=?,
-                    PaymentDebit=?,
-                    PaymentQRIS=?,
-                    PaymentTransfer=?,
-                    PaymentEWallet=?
+                    Name=?,
+                    Description=?,
+                    IsActive=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->PaymentCash,
-                    $request->PaymentCredit,
-                    $request->PaymentDebit,
-                    $request->PaymentQRIS,
-                    $request->PaymentTransfer,
-                    $request->PaymentEWallet,
+                    $request->Name,
+                    $request->Description,
+                    $request->IsActive == "T" ? 1 : 0,
                     $request->ID
                 ]);
                 $return['message'] = "Payment successfully modified.";
