@@ -33,7 +33,7 @@ class CustomerController extends Controller
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $getAuth = $this->validateAuth($request->_s);
         if ($getAuth['status']) {
-        $query = "SELECT ID, ClientID, Name, HandphoneNumber, Address, Gender
+        $query = "SELECT ID id, ClientID clientID, Name name, HandphoneNumber hanphoneNumber, Address address, Gender gender
             FROM MsCustomer
             WHERE MsCustomer.ClientID = ?";
             $data = DB::select($query,[$getAuth['ClientID']]);

@@ -92,16 +92,16 @@ class TransactionController extends Controller
 
                             $return['data'] = array('details'=>$details,'detailsProduct'=>$detailsProduct,'detailsVariant'=>$detailsVariant);
                         } else {
-                            $query = "SELECT    TrTransaction.ID, 
-                                                TrTransaction.TransactionNumber, 
-                                                TrTransaction.TransactionDate, 
-                                                TrTransaction.PaidDate, 
-                                                TrTransaction.CustomerName, 
-                                                MsPayment.ID PaymentID, 
-                                                MsPayment.Name, 
-                                                MsPayment.Description, 
-                                                MsPayment.IsActive, 
-                                                TrTransaction.TotalPayment
+                            $query = "SELECT    TrTransaction.ID id, 
+                                                TrTransaction.TransactionNumber transactionNumber, 
+                                                TrTransaction.TransactionDate transactionDate, 
+                                                TrTransaction.PaidDate paidDate, 
+                                                TrTransaction.CustomerName customerName, 
+                                                MsPayment.ID PaymentID paymentID, 
+                                                MsPayment.Name name, 
+                                                MsPayment.Description description, 
+                                                MsPayment.IsActive isActive, 
+                                                TrTransaction.TotalPayment totalPayment
                                         FROM    TrTransaction
                                         JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
                                         WHERE   TrTransaction.ClientID = ?

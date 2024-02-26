@@ -35,7 +35,7 @@ class PaymentController extends Controller
        $getAuth = $this->validateAuth($header);
        if ($getAuth['status']) {
            {
-                $query = "  SELECT MsPayment.ID, MsPayment.ClientID, MsPayment.Name, MsPayment.Description, MsPayment.isActive
+                $query = "  SELECT MsPayment.ID id, MsPayment.ClientID clientID, MsPayment.Name name, MsPayment.Description description, MsPayment.IsActive isActive
                                 FROM MsPayment
                                 WHERE ClientID = ?
                                 ORDER BY Name ASC";
