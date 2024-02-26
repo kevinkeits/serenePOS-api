@@ -28,7 +28,7 @@ class TransactionController extends Controller
         return $return;
     }
 
-    // GET SALES
+    // GET TRANSACTION
     public function get(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>array());
@@ -36,32 +36,85 @@ class TransactionController extends Controller
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
                 if ($request->ID) {
-                    $query = "  SELECT  TrTransactionProduct.ID id, 
-                                        TrTransactionProduct.ProductID productId,
-                                        TrTransactionProduct.Qty qty, 
-                                        TrTransactionProduct.Discount discount, 
-                                        TrTransactionProduct.Notes notes
-                                FROM TrTransactionProduct
-                                JOIN TrTransactionProductVariant
-                                ON TrTransactionProduct.ID = TrTransactionProductVariant.TransactionProductID
-                                WHERE TrTransactionProduct.ProductID = ?
-                                ORDER BY TrTransactionProduct.ID ASC";
-                    $Header = DB::select($query,[$request->ID]);
-                    $return['data'] = array('Header'=>$Header);
-                } else {
-                    $query = "  SELECT ID id, Name name, Price price, ImgUrl imgUrl
-                        FROM MsProduct
-                        WHERE CategoryID = ?
-                        ORDER BY Name ASC";
-                    $data = DB::select($query, [$request->CategoryID]);
-                    if ($data) $return['data'] = $data;
-                }
+                            $query = "SELECT    TrTransaction.ID transactionID, 
+                                                TrTransaction.TransactionNumber transcationNumber, 
+                                                TrTransaction.TransactionDate transactionDate, 
+                                                TrTransaction.UserIn userIn,
+                                                TrTransaction.CustomerName customerName,
+                                                MsOutlet.Name outletName,
+                                                
+                                                MsPayment.ID paymentId,
+                                                MsPayment.Name name, 
+                                                MsPayment.Description description, 
+                                                MsPayment.IsActive isActive,
+
+                                                TrTransaction.SubTotal subTotal, 
+                                                TrTransaction.Discount discount, 
+                                                TrTransaction.Tax tax, 
+                                                TrTransaction.TotalPayment totalPayment, 
+                                                TrTransaction.PaymentAmount paymentAmount, 
+                                                TrTransaction.Changes changes, 
+                                                TrTransaction.Status status, 
+                                                TrTransaction.Notes notes
+                                        FROM    TrTransaction
+                                        JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
+                                        JOIN    MsOutlet ON MsOutlet.ID = TrTransaction.OutletID
+                                        WHERE   TrTransaction.ID = ?
+                                        ORDER BY TransactionDate DESC";
+                            $details = DB::select($query,[$request->ID])[0];
+
+                            $query = "  SELECT  TrTransactionProduct.ID transactionProductID,
+                                                TrTransactionProduct.ProductID productID,
+                                                MsProduct.Name productName,
+                                                TrTransactionProduct.Qty qty,
+                                                TrTransactionProduct.UnitPrice unitPrice,
+                                                TrTransactionProduct.Discount discount,
+                                                TrTransactionProduct.UnitPriceAfterDiscount unitPriceAfterDiscount,
+                                                TrTransactionProduct.Notes notes
+                                        FROM    TrTransactionProduct
+                                        JOIN    MsProduct on MsProduct.ID = TrTransactionProduct.ProductID
+                                        WHERE   TrTransactionProduct.TransactionID = ?
+                                        ORDER BY MsProduct.Name DESC";
+                            $detailsProduct = DB::select($query,[$request->ID]);
+
+                            $query = "  SELECT  TrTransactionProductVariant.ID id,
+                                                TrTransactionProductVariant.TransactionProductID transactionProductID,
+                                                TrTransactionProduct.ProductID productID,
+                                                TrTransactionProductVariant.VariantOptionID variantOptionID,
+                                                TrTransactionProductVariant.Label label,
+                                                TrTransactionProductVariant.Price price
+                                        FROM    TrTransactionProductVariant
+                                        JOIN    TrTransactionProduct 
+                                        ON      TrTransactionProduct.ID = TrTransactionProductVariant.TransactionProductID
+                                        WHERE   TrTransactionProductVariant.TransactionID = ?
+                                        ORDER BY TrTransactionProductVariant.ID DESC";
+                            $detailsVariant = DB::select($query,[$request->ID]);
+
+                            $return['data'] = array('details'=>$details,'detailsProduct'=>$detailsProduct,'detailsVariant'=>$detailsVariant);
+                        } else {
+                            $query = "SELECT    TrTransaction.ID, 
+                                                TrTransaction.TransactionNumber, 
+                                                TrTransaction.TransactionDate, 
+                                                TrTransaction.PaidDate, 
+                                                TrTransaction.CustomerName, 
+                                                MsPayment.ID PaymentID, 
+                                                MsPayment.Name, 
+                                                MsPayment.Description, 
+                                                MsPayment.IsActive, 
+                                                TrTransaction.TotalPayment
+                                        FROM    TrTransaction
+                                        JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
+                                        WHERE   TrTransaction.ClientID = ?
+                                        ORDER BY TransactionDate DESC";
+                            $data = DB::select($query, [$getAuth['ClientID']]);
+                            if ($data) $return['data'] = $data;
+                        }
             } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
     }
-    // END SALES
+    // END TRANSACTION
 
-    // GET TRANSACTION HISTORY
+    // GET HISTORY TRANSACTION
     public function getHistory(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>array());
@@ -145,7 +198,7 @@ class TransactionController extends Controller
             } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
     }
-    // END TRANSACTION HISTORY
+    // END HISTORY TRANSACTION
    
     // POST TRANSACTION
     public function doSave(Request $request)

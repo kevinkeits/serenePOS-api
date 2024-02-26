@@ -67,7 +67,7 @@ $router->group(['prefix' => 'outlet'], function () use ($router) {
 
 $router->group(['prefix' => 'user'], function () use ($router) {
     $router->get('get',  ['uses' => 'UserController@get']);
-    $router->get('getSetting',  ['uses' => 'UserController@getSetting']);
+    $router->post('doSave',  ['uses' => 'UserController@doSave']);
 });
 
 $router->group(['prefix' => 'payment'], function () use ($router) {
