@@ -35,7 +35,7 @@ class OutletController extends Controller
        $getAuth = $this->validateAuth($header);
        if ($getAuth['status']) {
             if ($request->ID) {
-                $query = "  SELECT MsOutlet.ID, MsOutlet.Name OutletName, MsOutlet.PhoneNumber, MsOutlet.IsPrimary, MsOutlet.Address
+                $query = "  SELECT MsOutlet.ID id, MsOutlet.Name outletName, MsOutlet.PhoneNumber phoneNumber, MsOutlet.IsPrimary isPrimary, MsOutlet.Address address, MsOutlet.ProvinceID provinceID, MsOutlet.DistrictID districtID, MsOutlet.SubDistrictID subDistrictID, MsOutlet.PostalCode postalCode
                             FROM MsOutlet
                             WHERE ID = ?
                                 ORDER BY ID ASC";
@@ -43,7 +43,7 @@ class OutletController extends Controller
 
                 $return['data'] = array('details'=>$details);
             } else {
-                $query = "  SELECT MsOutlet.ID, MsOutlet.Name, MsOutlet.IsPrimary, MsOutlet.Address
+                $query = "  SELECT MsOutlet.ID id, MsOutlet.Name outlet, MsOutlet.IsPrimary isPrimary, MsOutlet.Address address, MsOutlet.ProvinceID provinceID, MsOutlet.DistrictID districtID, MsOutlet.SubDistrictID subDistrictID, MsOutlet.PostalCode postalCode
                             FROM MsOutlet
                             WHERE IsDeleted=0
                                 AND ClientID = ?
@@ -67,9 +67,9 @@ class OutletController extends Controller
                 $query = "SELECT UUID() GenID";
                 $OutletID = DB::select($query)[0]->GenID;
                 $query = "INSERT INTO MsOutlet
-                        (IsDeleted, UserIn, DateIn, ID, ClientID, Name, PhoneNumber, IsPrimary, Address)
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, Name, PhoneNumber, IsPrimary, Address, ProvinceID, DistrictID, SubDistrictID, PostalCode)
                         VALUES
-                        (0, ?, NOW(), ?, ?, ?, ?, ?, ?)";
+                        (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $OutletID,
@@ -78,6 +78,10 @@ class OutletController extends Controller
                     $request->PhoneNumber,
                     $request->IsPrimary == "T" ? 1 : 0,
                     $request->Address,
+                    $request->ProvinceID,
+                    $request->DistrictID,
+                    $request->SubDistrictID,
+                    $request->PostalCode
                 ]);
                 $return['message'] = "Outlet successfully created.";
             } 
@@ -88,7 +92,11 @@ class OutletController extends Controller
                     Name=?,
                     PhoneNumber=?,
                     IsPrimary=?,
-                    Address=?
+                    Address=?,
+                    ProvinceID=?,
+                    DistrictID=?,
+                    SubDistrictID=?,
+                    PostalCode=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
@@ -96,6 +104,10 @@ class OutletController extends Controller
                     $request->PhoneNumber,
                     $request->IsPrimary == "T" ? 1 : 0,
                     $request->Address,
+                    $request->ProvinceID,
+                    $request->DistrictID,
+                    $request->SubDistrictID,
+                    $request->PostalCode,
                     $request->ID
                 ]);
                 $return['message'] = "Outlet successfully modified.";
