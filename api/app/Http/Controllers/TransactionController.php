@@ -222,7 +222,7 @@ class TransactionController extends Controller
                                 $request->unitPrice - $request->discount,
                                 $request->notes,
                             ]);
-                            $return['message'] = "Variant successfully created.";
+                            $return['message'] = "Transaction Product successfully created.";
                 }
 
                 if (str_contains($request->variantOptionID,',')) {
@@ -268,7 +268,7 @@ class TransactionController extends Controller
                             SET IsDeleted=0,
                                 UserUp=?,
                                 DateUp=NOW(),
-                                TransactionNumber=?,
+                                -- TransactionNumber=?,
                                 PaymentID=?,
                                 TransactionDate=NOW(),
                                 PaidDate=NOW(),
@@ -281,31 +281,34 @@ class TransactionController extends Controller
                                 Status=?,
                                 Notes=?
                                 WHERE ID=?";
-                            DB::update($query, [
-                                $getAuth['UserID'],
-                                $request->TransactionNumber,
-                                $request->PaymentID,
-                                $request->CustomerName,
-                                $request->SubTotal,
-                                $request->Discount,
-                                $request->TotalPayment,
-                                $request->PaymentAmount,
-                                $request->Changes,
-                                $request->Status,
-                                $request->Notes,
-                                $request->ID
-                            ]);
-                if (str_contains($request->transactionProductID,',')) {
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    // $request->TransactionNumber,
+                    $request->PaymentID,
+                    $request->CustomerName,
+                    $request->SubTotal,
+                    $request->Discount,
+                    $request->TotalPayment,
+                    $request->PaymentAmount,
+                    $request->Changes,
+                    $request->IsPaid == "T" ? 1 : 0,
+                    $request->Notes,
+                    $request->ID
+                ]);
+
+                if (str_contains($request->productID,',')) {
                     $transactionProductID = explode(',',$request->transactionProductID);
+                    $productID = explode(',',$request->productID);
                     $qty = explode(',',$request->qty);
                     $unitPrice = explode(',',$request->unitPrice);
                     $discount = explode(',',$request->discount);
                     $notes = explode(',',$request->notes);
-                    for ($i=0; $i<count($transactionProductID); $i++)
+                    for ($i=0; $i<count($productID); $i++)
                     {
                         $query = "UPDATE TrTransactionProduct
                         SET UserUp=?,
                             DateUp=NOW(),
+                            ProductID=?,
                             Qty=?,
                             UnitPrice=?,
                             Discount=?,
@@ -314,6 +317,7 @@ class TransactionController extends Controller
                             WHERE ID=?";
                         DB::update($query, [
                             $getAuth['UserID'],
+                            $productID[$i],
                             $qty[$i],
                             $unitPrice[$i],
                             $discount[$i],
@@ -326,6 +330,7 @@ class TransactionController extends Controller
                     $query = "UPDATE TrTransactionProduct 
                     SET UserUp=?,
                         DateUp=NOW(),
+                        ProductID=?,
                         Qty=?,
                         UnitPrice=?,
                         discount=?,
@@ -335,6 +340,7 @@ class TransactionController extends Controller
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
+                        $request->productID,
                         $request->qty,
                         $request->unitPrice,
                         $request->discount,
@@ -344,49 +350,45 @@ class TransactionController extends Controller
                     ]);
                 }
 
-                if (str_contains($request->transactionProductVariantID,',')) {
-                    $transactionProductVariantID = explode(',',$request->transactionProductVariantID);
-                    $transactionProductID = explode(',',$request->transactionProductID);
+                if (str_contains($request->variantOptionID,',')) {
+                    $transactionProductIDVariant = explode(',',$request->transactionProductIDVariant);
                     $variantOptionID = explode(',',$request->variantOptionID);
                     $variantLabel = explode(',',$request->variantLabel);
                     $variantPrice = explode(',',$request->variantPrice);
-                    for ($i=0; $i<count($transactionProductVariantID); $i++)
+                    for ($i=0; $i<count($variantOptionID); $i++)
                     {
                         $query = "UPDATE TrTransactionProductVariant
                         SET UserUp=?,
                             DateUp=NOW(),
-                            TransactionProductID=?,
                             VariantOptionID=?,
                             Label=?,
                             Price=?
                             WHERE ID=?";
                         DB::update($query, [
                             $getAuth['UserID'],
-                            $transactionProductID,
                             $variantOptionID[$i],
                             $variantLabel[$i],
-                            $variantPrice[$i],
-                            $transactionProductVariantID[$i]
+                            strval($variantPrice[$i]),
+                            $transactionProductIDVariant[$i]
                         ]);
                     }
                 } else {
                     $query = "UPDATE TrTransactionProductVariant 
                     SET UserUp=?,
                         DateUp=NOW(),
-                        TransactionProductID=?,
                         VariantOptionID=?,
                         Label=?,
                         Price=?
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
-                        $request->transactionProductID,
                         $request->variantOptionID,
                         $request->variantLabel,
-                        $request->variantPrice,
-                        $request->transactionProductID
+                        strval($request->variantPrice),
+                        $request->transactionProductIDVariant
                     ]);
                 }
+                $return['message'] = "Transaction successfully modified.";
             }
             if ($request->Action == "delete") {
                 $query = "DELETE FROM TrTransaction
