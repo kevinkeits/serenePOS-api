@@ -9,6 +9,7 @@ class CustomerController extends Controller
 {
     private function validateAuth($Token)
     {
+        if ($Token != null) $Token = trim(str_replace("Bearer","",$Token));
         $return = array('status'=>false,'ID'=>"");
         $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
                     FROM MsUser
@@ -26,24 +27,30 @@ class CustomerController extends Controller
         }
         return $return;
     }
-    
+
     // GET CUSTOMER
     public function get(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
-        $getAuth = $this->validateAuth($request->_s);
+        $header = $request->header('Authorization');
+        $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
-        $query = "SELECT ID id, ClientID clientID, Name name, HandphoneNumber hanphoneNumber, Address address, Gender gender
-            FROM MsCustomer
-            WHERE MsCustomer.ClientID = ?";
-            $data = DB::select($query,[$getAuth['ClientID']]);
-        $return['data'] = $data[0];
-        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
-    } else $return = array('status'=>false,'message'=>"");
-    return response()->json($return, 200);
+                $query = "  SELECT ID id, ClientID clientID, Name name, HandphoneNumber hanphoneNumber, Address address, Gender gender
+                    FROM MsCustomer
+                    WHERE IsDeleted=0
+                        AND ClientID = ?"; 
+                if ($request->ID) {
+                    $query .= " AND ID = ? ";
+                    $return['data'] = DB::select($query,[$getAuth['ClientID'], $request->ID])[0];
+                } else {
+                    $query .= " ORDER BY Name ASC";
+                    $return['data'] = DB::select($query,[$getAuth['ClientID']]);
+                }
+            } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
+            return response()->json($return, 200);
     }
     // END GET CUSTOMER
-
+    
    // POST CUSTOMER
    public function doSave(Request $request)
     {
