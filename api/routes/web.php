@@ -27,11 +27,17 @@ $router->group(['prefix' => 'auth'], function () use ($router) {
 
 $router->group(['prefix' => 'product'], function () use ($router) {
     $router->get('get',  ['uses' => 'ProductController@get']);
-    $router->get('getVariant',  ['uses' => 'ProductController@getVariant']);
+    $router->get('getAllProduct',  ['uses' => 'ProductController@getAllProduct']);
     $router->get('getVariantOption',  ['uses' => 'ProductController@getVariantOption']);
     $router->post('doSave',  ['uses' => 'ProductController@doSave']);
+    $router->post('doSaveApp',  ['uses' => 'ProductController@doSaveApp']);
     $router->post('doSaveVariant',  ['uses' => 'ProductController@doSaveVariant']);
     $router->post('doSaveVariantOption',  ['uses' => 'ProductController@doSaveVariantOption']);
+});
+
+$router->group(['prefix' => 'scan'], function () use ($router) {
+    $router->get('get',  ['uses' => 'ScanOrderController@get']);
+    $router->post('doSave',  ['uses' => 'ScanOrderController@doSave']);
 });
 
 $router->group(['prefix' => 'variant'], function () use ($router) {
@@ -73,6 +79,11 @@ $router->group(['prefix' => 'user'], function () use ($router) {
 $router->group(['prefix' => 'payment'], function () use ($router) {
     $router->get('get',  ['uses' => 'PaymentController@get']);
     $router->post('doSave',  ['uses' => 'PaymentController@doSave']);
+});
+
+$router->group(['prefix' => 'tableManagement'], function () use ($router) {
+    $router->get('get',  ['uses' => 'TableManagementController@get']);
+    $router->post('doSave',  ['uses' => 'TableManagementController@doSave']);
 });
 
 $router->group(['prefix' => 'customer'], function () use ($router) {

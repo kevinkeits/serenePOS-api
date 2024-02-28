@@ -28,73 +28,40 @@ class ProductController extends Controller
         return $return;
     }
 
-    public function getAllProduct(Request $request)
-    {
-       $return = array('status'=>true,'message'=>"",'data'=>array());
-       if ($getAuth['status']) {
-            if ($request->ID) {
-                $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSku, MsProduct.Name name, MsCategory.ID categoryId, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, MsProduct.ImgUrl imgurl, MsProduct.MimeType mimeType
-                                FROM MsProduct
-                                JOIN MsCategory
-                                ON MsProduct.CategoryID = MsCategory.ID
-                                WHERE MsProduct.ID = ?";
-                $product = DB::select($query,[$request->ID])[0];
-
-                $query = "  SELECT MsVariant.ID variantId, MsVariant.Name name, MsVariant.Type type, MsVariantOption.ID variantOptionId, MsVariantOption.Label label, MsVariantOption.Price price
-                                FROM MsVariant
-                                JOIN MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
-                                JOIN MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
-                                WHERE MsVariantProduct.ProductID = ?
-                                ORDER BY MsVariant.Name ASC, MsVariantOption.Label ASC";
-                $variant = DB::select($query,[$request->ID]);
-
-                $return['data'] = array('product'=>$product, 'variant'=>$variant);
-            } else {
-                $query = "  SELECT ID id, Name name, Price price, Notes notes, ImgUrl imgUrl
-                                FROM MsProduct
-                                WHERE CategoryID = ?
-                                ORDER BY Name ASC";
-                $data = DB::select($query, [$request->CategoryID]);
-                if ($data) $return['data'] = $data;
-            }
-        } else $return = array('status'=>false,'message'=>"");
-    return response()->json($return, 200);
-   }
-
     public function get(Request $request)
     {
-       $return = array('status'=>true,'message'=>"",'data'=>array());
-       $header = $request->header('Authorization');
-       $getAuth = $this->validateAuth($header);
-       if ($getAuth['status']) {
-            if ($request->ID) {
-                $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSku, MsProduct.Name name, MsCategory.ID categoryId, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, MsProduct.ImgUrl imgurl, MsProduct.MimeType mimeType
-                                FROM MsProduct
-                                JOIN MsCategory
-                                ON MsProduct.CategoryID = MsCategory.ID
-                                WHERE MsProduct.ID = ?";
-                $product = DB::select($query,[$request->ID])[0];
+        $return = array('status'=>true,'message'=>"",'data'=>array());
+        $header = $request->header('Authorization');
+        $getAuth = $this->validateAuth($header);
+        if ($getAuth['status']) {
+                if ($request->ID) {
+                    $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSku, MsProduct.Name name, MsCategory.ID categoryId, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, MsProduct.ImgUrl imgurl, MsProduct.MimeType mimeType
+                                    FROM MsProduct
+                                    JOIN MsCategory
+                                    ON MsProduct.CategoryID = MsCategory.ID
+                                    WHERE MsProduct.ID = ?";
+                    $product = DB::select($query,[$request->ID])[0];
 
-                $query = "  SELECT MsVariant.ID variantId, MsVariant.Name name, MsVariant.Type type, MsVariantOption.ID variantOptionId, MsVariantOption.Label label, MsVariantOption.Price price
-                                FROM MsVariant
-                                JOIN MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
-                                JOIN MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
-                                WHERE MsVariantProduct.ProductID = ?
-                                ORDER BY MsVariant.Name ASC, MsVariantOption.Label ASC";
-                $variant = DB::select($query,[$request->ID]);
+                    $query = "  SELECT MsVariant.ID variantId, MsVariant.Name name, MsVariant.Type type, MsVariantOption.ID variantOptionId, MsVariantOption.Label label, MsVariantOption.Price price
+                                    FROM MsVariant
+                                    JOIN MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
+                                    JOIN MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
+                                    WHERE MsVariantProduct.ProductID = ?
+                                    ORDER BY MsVariant.Name ASC, MsVariantOption.Label ASC";
+                    $variant = DB::select($query,[$request->ID]);
 
-                $return['data'] = array('product'=>$product, 'variant'=>$variant);
-            } else {
-                $query = "  SELECT ID id, Name name, Price price, Notes notes, ImgUrl imgUrl
-                                FROM MsProduct
-                                WHERE CategoryID = ?
-                                ORDER BY Name ASC";
-                $data = DB::select($query, [$request->CategoryID]);
-                if ($data) $return['data'] = $data;
-            }
-        } else $return = array('status'=>false,'message'=>"");
-    return response()->json($return, 200);
-   }
+                    $return['data'] = array('product'=>$product, 'variant'=>$variant);
+                } else {
+                    $query = "  SELECT ID id, Name name, Price price, Notes notes, ImgUrl imgUrl
+                                    FROM MsProduct
+                                    WHERE CategoryID = ?
+                                    ORDER BY Name ASC";
+                    $data = DB::select($query, [$request->CategoryID]);
+                    if ($data) $return['data'] = $data;
+                }
+            } else $return = array('status'=>false,'message'=>"");
+        return response()->json($return, 200);
+    }
 
     // POST PRODUCT
     public function doSave(Request $request)
@@ -106,25 +73,24 @@ class ProductController extends Controller
             if ($request->action == "add") {
                 $query = "SELECT UUID() GenID";
                 $productID = DB::select($query)[0]->GenID;
-
-                $query = "INSERT INTO MsProduct
-                    (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Notes, Qty, Price, CategoryID, ProductSKU, ImgUrl, MimeType)
-                    VALUES
-                    (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-                DB::insert($query, [
-                    $getAuth['UserID'],
-                    $productID,
-                    $getAuth['ClientID'],
-                    $request->name,
-                    $request->notes,
-                    $request->qty,
-                    $request->price,
-                    $request->categoryID,
-                    $request->productSKU,
-                    $request->imgUrl,
-                    $request->mimeType,
-                ]);
-                $return['message'] = "Product successfully created.";
+                    $query = "INSERT INTO MsProduct
+                        (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Notes, Qty, Price, CategoryID, ProductSKU, ImgUrl, MimeType)
+                        VALUES
+                        (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                    DB::insert($query, [
+                        $getAuth['UserID'],
+                        $productID,
+                        $getAuth['ClientID'],
+                        $request->name,
+                        $request->notes,
+                        $request->qty,
+                        $request->price,
+                        $request->categoryID,
+                        $request->productSKU,
+                        $request->fileName,
+                        $request->MimeType,
+                    ]);
+                    $return['message'] = "Product successfully created.";
             }
             if ($request->action == "edit") {
                 $query = "UPDATE MsProduct
@@ -149,7 +115,7 @@ class ProductController extends Controller
                     $request->categoryID,
                     $request->productSKU,
                     $request->fileName,
-                    $request->mimeType,
+                    $request->fileData,
                     $request->id
                 ]);
                
@@ -215,4 +181,5 @@ class ProductController extends Controller
         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
         return response()->json($return, 200);
     }
+    // END POST PRODUCT
 }
