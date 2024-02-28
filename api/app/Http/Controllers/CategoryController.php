@@ -58,7 +58,7 @@ class CategoryController extends Controller
         $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
-            if ($request->Action == "add") {
+            if ($request->action == "add") {
                 $query = "INSERT INTO MsCategory
                         (IsDeleted, UserIn, DateIn, ID, ClientID, Name, QtyAlert, BGColor)
                         VALUES
@@ -66,13 +66,13 @@ class CategoryController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->Name,
-                    $request->QtyAlert,
-                    $request->BGColor,
+                    $request->name,
+                    $request->qtyAlert,
+                    $request->bgColor,
                 ]);
                 $return['message'] = "Category successfully created";
             } 
-            if ($request->Action == "edit") {
+            if ($request->action == "edit") {
                 $query = "UPDATE MsCategory
                             SET UserUp=?,
                                 DateUp=NOW(),
@@ -82,16 +82,16 @@ class CategoryController extends Controller
                                 WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
-                    $request->Name,
-                    $request->QtyAlert,
-                    $request->BGColor,
-                    $request->ID
+                    $request->name,
+                    $request->qtyAlert,
+                    $request->bgColor,
+                    $request->id
                 ]);
                 $return['message'] = "Category successfully modified";
             }
-            if ($request->Action == "delete") {
-                if (str_contains($request->ID,',')) {
-                    $tempID = explode(',',$request->ID);
+            if ($request->action == "delete") {
+                if (str_contains($request->id,',')) {
+                    $tempID = explode(',',$request->id);
                     foreach ($tempID as $key => $ID) {
                         $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
                         DB::update($query, [$getAuth['UserID'],$ID]);
@@ -99,7 +99,7 @@ class CategoryController extends Controller
                     $return['message'] = "Category successfully deleted";
                 } else {
                     $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
-                    DB::update($query, [$getAuth['UserID'],$request->ID]);
+                    DB::update($query, [$getAuth['UserID'],$request->id]);
                     $return['message'] = "Category successfully deleted";
                 }
             }

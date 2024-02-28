@@ -99,13 +99,13 @@ class UserController extends Controller
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $isValid = true;
         $_message = "";
-        if (!filter_var($request->Email, FILTER_VALIDATE_EMAIL)) {
+        if (!filter_var($request->email, FILTER_VALIDATE_EMAIL)) {
             $_message = "Email is not in the correct format";
             $isValid = false;
         }
         if ($isValid) {
             $query = "SELECT ID FROM MsUser WHERE UPPER(Email) = UPPER(?)";
-            $data = DB::select($query,[$request->Email]);
+            $data = DB::select($query,[$request->email]);
             if ($data) {
                 $_message = "This email has been registered";
                 $isValid = false;
@@ -115,25 +115,25 @@ class UserController extends Controller
         $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
-            if ($request->Action == "add") {
+            if ($request->action == "add") {
                 if ($isValid) {
                     $key = $this->randomString(10);
-                    $encrypt = $this->strEncrypt($key,$request->Password);
+                    $encrypt = $this->strEncrypt($key,$request->password);
                     $query = "SELECT UUID() GenID";
-                    $UserID = DB::select($query)[0]->GenID;
+                    $userID = DB::select($query)[0]->GenID;
                     $query = "INSERT INTO MsUser
                                 (IsDeleted, UserIn, DateIn, ID, ClientID, OutletID, RegisterFrom, Name, PhoneNumber, Email, Password, Salt, IVssl, Tagssl)
                                 VALUES
                                 (0, ?, NOW(), ?, ?, ?, 'App', ?, ?, ?, ?, ?, ?, ?)";
                     DB::insert($query, [
                         $getAuth['UserID'],
-                        $UserID,
+                        $userID,
                         $getAuth['ClientID'],
-                        $request->OutletID,
+                        $request->outletID,
 
-                        $request->Name,
-                        $request->PhoneNumber,
-                        $request->Email,
+                        $request->name,
+                        $request->phoneNumber,
+                        $request->email,
                         base64_encode($encrypt['result']),
                         base64_encode($key),
                         base64_encode($encrypt['iv']),
@@ -143,9 +143,10 @@ class UserController extends Controller
                     $return['message'] = "User successfully created.";
                 }
             }
+            
             $return['message'] = $_message;
 
-            if ($request->Action == "edit") {
+            if ($request->action == "edit") {
                 if ($isValid = true) {
                     $query = "UPDATE MsUser
                     SET IsDeleted=0,
@@ -158,11 +159,11 @@ class UserController extends Controller
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
-                        $request->Name,
-                        $request->PhoneNumber,
-                        $request->Password,
-                        $request->OutletID,
-                        $request->ID
+                        $request->name,
+                        $request->phoneNumber,
+                        $request->password,
+                        $request->outletID,
+                        $request->id
                     ]);
                     $isValid = true;
                     $return['message'] = "User successfully modified.";
@@ -171,10 +172,9 @@ class UserController extends Controller
             $return['status'] = $isValid;
             return response()->json($return, 200);
 
-            if ($request->Action == "delete") {
-                $query = "DELETE FROM MsUser
-                WHERE ID=?";
-                DB::delete($query, [$request->ID]);
+            if ($request->action == "delete") {
+                $query = "UPDATE MsUser SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
+                DB::update($query, [$getAuth['UserID'],$request->id]);
                 $return['message'] = "User successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);

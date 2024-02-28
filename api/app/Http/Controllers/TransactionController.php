@@ -44,7 +44,7 @@ class TransactionController extends Controller
                                                 MsOutlet.Name outletName,
                                                 
                                                 MsPayment.ID paymentId,
-                                                MsPayment.Name name, 
+                                                MsPayment.Name payment, 
                                                 MsPayment.Description description, 
                                                 MsPayment.IsActive isActive,
 
@@ -54,7 +54,7 @@ class TransactionController extends Controller
                                                 TrTransaction.TotalPayment totalPayment, 
                                                 TrTransaction.PaymentAmount paymentAmount, 
                                                 TrTransaction.Changes changes, 
-                                                TrTransaction.Status status, 
+                                                TrTransaction.Status isPaid, 
                                                 TrTransaction.Notes notes
                                         FROM    TrTransaction
                                         JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
@@ -97,8 +97,8 @@ class TransactionController extends Controller
                                                 TrTransaction.TransactionDate transactionDate, 
                                                 TrTransaction.PaidDate paidDate, 
                                                 TrTransaction.CustomerName customerName, 
-                                                MsPayment.ID PaymentID paymentID, 
-                                                MsPayment.Name name, 
+                                                MsPayment.ID paymentID, 
+                                                MsPayment.Name payment, 
                                                 MsPayment.Description description, 
                                                 MsPayment.IsActive isActive, 
                                                 TrTransaction.TotalPayment totalPayment
@@ -123,7 +123,7 @@ class TransactionController extends Controller
         if ($getAuth['status']) {
                 if ($request->ID) {
                             $query = "SELECT    TrTransaction.ID transactionID, 
-                                                TrTransaction.TransactionNumber transcationNumber, 
+                                                TrTransaction.TransactionNumber transactionNumber, 
                                                 TrTransaction.TransactionDate transactionDate, 
                                                 TrTransaction.UserIn userIn,
                                                 TrTransaction.CustomerName customerName,
@@ -178,16 +178,16 @@ class TransactionController extends Controller
 
                             $return['data'] = array('details'=>$details,'detailsProduct'=>$detailsProduct,'detailsVariant'=>$detailsVariant);
                         } else {
-                            $query = "SELECT    TrTransaction.ID, 
-                                                TrTransaction.TransactionNumber, 
-                                                TrTransaction.TransactionDate, 
-                                                TrTransaction.PaidDate, 
-                                                TrTransaction.CustomerName, 
-                                                MsPayment.ID PaymentID, 
-                                                MsPayment.Name, 
-                                                MsPayment.Description, 
-                                                MsPayment.IsActive, 
-                                                TrTransaction.TotalPayment
+                            $query = "SELECT    TrTransaction.ID id, 
+                                                TrTransaction.TransactionNumber transactionNumber, 
+                                                TrTransaction.TransactionDate transactionDate, 
+                                                TrTransaction.PaidDate padiDate, 
+                                                TrTransaction.CustomerName customerName, 
+                                                MsPayment.ID paymentID, 
+                                                MsPayment.Name payment,
+                                                MsPayment.Description description, 
+                                                MsPayment.IsActive isActive, 
+                                                TrTransaction.TotalPayment totalPayment
                                         FROM    TrTransaction
                                         JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
                                         WHERE   TrTransaction.ClientID = ?
@@ -207,29 +207,29 @@ class TransactionController extends Controller
         $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
-            if ($request->Action == "add") {
+            if ($request->action == "add") {
                 $query = "SELECT UUID() GenID";
-                $TransactionID = DB::select($query)[0]->GenID;
+                $transactionID = DB::select($query)[0]->GenID;
                 $query = "INSERT INTO TrTransaction
                             (IsDeleted, UserIn, DateIn, ID, TransactionNumber, ClientID, OutletID, PaymentID, TransactionDate, PaidDate, CustomerName, SubTotal, Discount, Tax, TotalPayment, PaymentAmount, Changes, Status, Notes)
                             VALUES
                             (0, ?, NOW(), ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
-                    $TransactionID,
-                    $request->TransactionNumber,
+                    $transactionID,
+                    $request->transactionNumber,
                     $getAuth['ClientID'],
-                    $request->OutletID,
-                    $request->PaymentID,
-                    $request->CustomerName,
-                    $request->SubTotal,
-                    $request->Discount,
-                    $request->Tax,
-                    $request->TotalPayment,
-                    $request->PaymentAmount,
-                    $request->Changes,
-                    $request->IsPaid == "T" ? 1 : 0,
-                    $request->Notes,
+                    $request->outletID,
+                    $request->paymentID,
+                    $request->customerName,
+                    $request->subTotal,
+                    $request->discount,
+                    $request->tax,
+                    $request->totalPayment,
+                    $request->paymentAmount,
+                    $request->changes,
+                    $request->isPaid == "T" ? 1 : 0,
+                    $request->notes,
                 ]);
 
                 if (str_contains($request->productID,',')) {
@@ -237,8 +237,8 @@ class TransactionController extends Controller
                     $productID = explode(',',$request->productID);
                     $qty = explode(',',$request->qty);
                     $unitPrice = explode(',',$request->unitPrice);
-                    $discount = explode(',',$request->discount);
-                    $notes = explode(',',$request->notes);
+                    $discountProduct = explode(',',$request->discountProduct);
+                    $notesProduct = explode(',',$request->notesProduct);
                     for ($i=0; $i<count($productID); $i++)
                     {
                         $query = "INSERT INTO TrTransactionProduct
@@ -250,12 +250,12 @@ class TransactionController extends Controller
                                 $transactionProductID[$i],
                                 $getAuth['ClientID'],
                                 $productID[$i],
-                                $TransactionID,
+                                $transactionID,
                                 $qty[$i],
                                 $unitPrice[$i],
-                                $discount[$i],
-                                $unitPrice[$i] - $discount[$i],
-                                $notes[$i],
+                                $discountProduct[$i],
+                                $unitPrice[$i] - $discountProduct[$i],
+                                $notesProduct[$i],
                             ]);
                     }
                 } else {
@@ -271,9 +271,9 @@ class TransactionController extends Controller
                                 $TransactionID,
                                 $request->qty,
                                 $request->unitPrice,
-                                $request->discount,
-                                $request->unitPrice - $request->discount,
-                                $request->notes,
+                                $request->discountProduct,
+                                $request->unitPrice - $request->discountProduct,
+                                $request->notesProduct,
                             ]);
                             $return['message'] = "Transaction Product successfully created.";
                 }
@@ -292,7 +292,7 @@ class TransactionController extends Controller
                             DB::insert($query, [
                                 $getAuth['UserID'],
                                 $getAuth['ClientID'],
-                                $TransactionID,
+                                $transactionID,
                                 $transactionProductIDVariant[$i],
                                 $variantOptionID[$i],
                                 $variantLabel[$i],
@@ -307,7 +307,7 @@ class TransactionController extends Controller
                             DB::insert($query, [
                                 $getAuth['UserID'],
                                 $getAuth['ClientID'],
-                                $TransactionID,
+                                $transactionID,
                                 $request->transactionProductIDVariant,
                                 $request->variantOptionID,
                                 $request->variantLabel,
@@ -316,12 +316,11 @@ class TransactionController extends Controller
                 }
                 $return['message'] = "Transaction successfully created.";
             }
-            if ($request->Action == "edit") {
+            if ($request->action == "edit") {
                 $query = "UPDATE TrTransaction
                             SET IsDeleted=0,
                                 UserUp=?,
                                 DateUp=NOW(),
-                                -- TransactionNumber=?,
                                 PaymentID=?,
                                 TransactionDate=NOW(),
                                 PaidDate=NOW(),
@@ -336,17 +335,16 @@ class TransactionController extends Controller
                                 WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
-                    // $request->TransactionNumber,
-                    $request->PaymentID,
-                    $request->CustomerName,
-                    $request->SubTotal,
-                    $request->Discount,
-                    $request->TotalPayment,
-                    $request->PaymentAmount,
-                    $request->Changes,
-                    $request->IsPaid == "T" ? 1 : 0,
-                    $request->Notes,
-                    $request->ID
+                    $request->paymentID,
+                    $request->customerName,
+                    $request->subTotal,
+                    $request->discount,
+                    $request->totalPayment,
+                    $request->paymentAmount,
+                    $request->changes,
+                    $request->isPaid == "T" ? 1 : 0,
+                    $request->notes,
+                    $request->id
                 ]);
 
                 if (str_contains($request->productID,',')) {
@@ -354,8 +352,8 @@ class TransactionController extends Controller
                     $productID = explode(',',$request->productID);
                     $qty = explode(',',$request->qty);
                     $unitPrice = explode(',',$request->unitPrice);
-                    $discount = explode(',',$request->discount);
-                    $notes = explode(',',$request->notes);
+                    $discountProduct = explode(',',$request->discountProduct);
+                    $notesProduct = explode(',',$request->notesProduct);
                     for ($i=0; $i<count($productID); $i++)
                     {
                         $query = "UPDATE TrTransactionProduct
@@ -373,9 +371,9 @@ class TransactionController extends Controller
                             $productID[$i],
                             $qty[$i],
                             $unitPrice[$i],
-                            $discount[$i],
-                            $unitPrice[$i] - $discount[$i],
-                            $notes[$i],
+                            $discountProduct[$i],
+                            $unitPrice[$i] - $discountProduct[$i],
+                            $notesProduct[$i],
                             $transactionProductID[$i],
                         ]);
                     }
@@ -396,9 +394,9 @@ class TransactionController extends Controller
                         $request->productID,
                         $request->qty,
                         $request->unitPrice,
-                        $request->discount,
-                        $request->unitPrice - $request->discount,
-                        $request->notes,
+                        $request->discountProduct,
+                        $request->unitPrice - $request->discountProduct,
+                        $request->notesProduct,
                         $request->transactionProductID
                     ]);
                 }
@@ -443,11 +441,16 @@ class TransactionController extends Controller
                 }
                 $return['message'] = "Transaction successfully modified.";
             }
-            if ($request->Action == "delete") {
-                $query = "DELETE FROM TrTransaction
-                WHERE ID=?";
-                DB::delete($query, [$request->ID]);
-                $return['message'] = "Transaction successfully deleted.";
+            if ($request->action == "delete") {
+                $query = "UPDATE TrTransaction SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
+                DB::update($query, [$getAuth['UserID'],$request->id]);
+
+                $query = "UPDATE TrTransactionProduct SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE TransactionID=?";
+                DB::update($query, [$getAuth['UserID'],$request->transactionID]);
+
+                $query = "UPDATE TrTransactionProductVariant SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE TransactionID=?";
+                DB::update($query, [$getAuth['UserID'],$request->transactionID]);
+                $return['message'] = "Transaction successfully deleted";
             }
         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
         return response()->json($return, 200);

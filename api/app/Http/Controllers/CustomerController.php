@@ -55,9 +55,13 @@ class CustomerController extends Controller
    public function doSave(Request $request)
     {
         $return = array('status'=>true,'message'=>"",'data'=>null);
-        $getAuth = $this->validateAuth($request->_s);
+        $header = $request->header('Authorization');
+        $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
-            if ($request->Action == "add") {
+            if ($request->action == "add") {
+
+                $query = "SELECT UUID() GenID";
+                $customerID = DB::select($query)[0]->GenID;
                 $query = "INSERT INTO MsCustomer
                         (IsDeleted, UserIn, DateIn, ID, ClientID, Name, HandphoneNumber, Address, Gender)
                         VALUES
@@ -65,14 +69,14 @@ class CustomerController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->CustomerName,
-                    $request->PhoneNumber,
-                    $request->Address,
-                    $request->Gender,
+                    $request->customerName,
+                    $request->phoneNumber,
+                    $request->address,
+                    $request->gender,
                 ]);
                 $return['message'] = "Customer successfully created.";
             } 
-            if ($request->Action == "edit") {
+            if ($request->action == "edit") {
                 $query = "UPDATE MsCustomer
                 SET IsDeleted=0,
                     UserUp=?,
@@ -86,22 +90,20 @@ class CustomerController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->CustomerName,
-                    $request->PhoneNumber,
-                    $request->Address,
-                    $request->Gender,
-                    $request->ID
+                    $request->customerName,
+                    $request->phoneNumber,
+                    $request->address,
+                    $request->gender,
+                    $request->id
                 ]);
                 $return['message'] = "Customer successfully modified.";
             }
-            if ($request->Action == "delete") {
-                $query = "DELETE FROM MsCustomer
-                WHERE ID=?";
-                DB::delete($query, [$request->ID]);
+            if ($request->action == "delete") {
+                $query = "UPDATE MsCustomer SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
+                DB::update($query, [$getAuth['UserID'],$request->id]);
                 $return['message'] = "Customer successfully deleted.";
             }
-            
-        } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
+        } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
         return response()->json($return, 200);
     }
     // END POST CUSTOMER

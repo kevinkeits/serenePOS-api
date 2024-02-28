@@ -28,6 +28,39 @@ class ProductController extends Controller
         return $return;
     }
 
+    public function getAllProduct(Request $request)
+    {
+       $return = array('status'=>true,'message'=>"",'data'=>array());
+       if ($getAuth['status']) {
+            if ($request->ID) {
+                $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSku, MsProduct.Name name, MsCategory.ID categoryId, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, MsProduct.ImgUrl imgurl, MsProduct.MimeType mimeType
+                                FROM MsProduct
+                                JOIN MsCategory
+                                ON MsProduct.CategoryID = MsCategory.ID
+                                WHERE MsProduct.ID = ?";
+                $product = DB::select($query,[$request->ID])[0];
+
+                $query = "  SELECT MsVariant.ID variantId, MsVariant.Name name, MsVariant.Type type, MsVariantOption.ID variantOptionId, MsVariantOption.Label label, MsVariantOption.Price price
+                                FROM MsVariant
+                                JOIN MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
+                                JOIN MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
+                                WHERE MsVariantProduct.ProductID = ?
+                                ORDER BY MsVariant.Name ASC, MsVariantOption.Label ASC";
+                $variant = DB::select($query,[$request->ID]);
+
+                $return['data'] = array('product'=>$product, 'variant'=>$variant);
+            } else {
+                $query = "  SELECT ID id, Name name, Price price, Notes notes, ImgUrl imgUrl
+                                FROM MsProduct
+                                WHERE CategoryID = ?
+                                ORDER BY Name ASC";
+                $data = DB::select($query, [$request->CategoryID]);
+                if ($data) $return['data'] = $data;
+            }
+        } else $return = array('status'=>false,'message'=>"");
+    return response()->json($return, 200);
+   }
+
     public function get(Request $request)
     {
        $return = array('status'=>true,'message'=>"",'data'=>array());
@@ -70,9 +103,9 @@ class ProductController extends Controller
         $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
-            if ($request->Action == "add") {
+            if ($request->action == "add") {
                 $query = "SELECT UUID() GenID";
-                $ProductID = DB::select($query)[0]->GenID;
+                $productID = DB::select($query)[0]->GenID;
 
                 $query = "INSERT INTO MsProduct
                     (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Notes, Qty, Price, CategoryID, ProductSKU, ImgUrl, MimeType)
@@ -80,22 +113,20 @@ class ProductController extends Controller
                     (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
-                    $ProductID,
+                    $productID,
                     $getAuth['ClientID'],
-                    $request->Name,
-                    $request->Notes,
-                    $request->Qty,
-                    $request->Price,
-                    $request->CategoryID,
-                    $request->ProductSKU,
-                    $request->ImgUrl,
-                    $request->FileData,
-                    $request->FileName,
-                    $request->MimeType,
+                    $request->name,
+                    $request->notes,
+                    $request->qty,
+                    $request->price,
+                    $request->categoryID,
+                    $request->productSKU,
+                    $request->imgUrl,
+                    $request->mimeType,
                 ]);
                 $return['message'] = "Product successfully created.";
             }
-            if ($request->Action == "edit") {
+            if ($request->action == "edit") {
                 $query = "UPDATE MsProduct
                 SET IsDeleted=0,
                     UserUp=?,
@@ -106,20 +137,20 @@ class ProductController extends Controller
                     Price=?,
                     CategoryID=?,
                     ProductSKU=?,
-                    ImgUrl=?,/
+                    ImgUrl=?,
                     MimeType=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
-                    $request->Name,
-                    $request->Notes,
-                    $request->Qty,
-                    $request->Price,
-                    $request->CategoryID,
-                    $request->ProductSKU,
-                    $request->FileName,
-                    $request->MimeType,
-                    $request->ID
+                    $request->name,
+                    $request->notes,
+                    $request->qty,
+                    $request->price,
+                    $request->categoryID,
+                    $request->productSKU,
+                    $request->fileName,
+                    $request->mimeType,
+                    $request->id
                 ]);
                
                 if (str_contains($request->productVariantOptionID,',')) {
@@ -128,21 +159,21 @@ class ProductController extends Controller
                     $isSelected = explode(',',$request->isSelected);
                     for ($i=0; $i<count($productVariantOptionID); $i++)
                     {
-                            $query = "UPDATE MsProductVariantOption
-                            SET UserUp=?,
-                                DateUp=NOW(),
-                                ProductID=?,
-                                VariantOptionID=?,
-                                IsSelected=?
-                                WHERE ID=?";
-                            DB::update($query, [
-                                $getAuth['UserID'],
-                                $request->ID,
-                                $variantOptionID[$i],
-                                ($isSelected[$i] == "T" ? 1 : 0),
-                                $productVariantOptionID[$i]
-                            ]);
-                        }
+                        $query = "UPDATE MsProductVariantOption
+                        SET UserUp=?,
+                            DateUp=NOW(),
+                            ProductID=?,
+                            VariantOptionID=?,
+                            IsSelected=?
+                            WHERE ID=?";
+                        DB::update($query, [
+                            $getAuth['UserID'],
+                            $request->id,
+                            $variantOptionID[$i],
+                            ($isSelected[$i] == "T" ? 1 : 0),
+                            $productVariantOptionID[$i]
+                        ]);
+                    }
                     } else {
                         $query = "UPDATE MsProductVariantOption 
                         SET UserUp=?,
@@ -153,16 +184,17 @@ class ProductController extends Controller
                             WHERE ID=?";
                         DB::update($query, [
                             $getAuth['UserID'],
-                            $request->ID,
+                            $request->id,
                             $request->variantOptionID,
                             ($request->isSelected == "T" ? 1 : 0),
                             $request->productVariantOptionID
                         ]);
                     }
+                    $return['message'] = "Product successfully modified.";
                 }
-                if ($request->Action == "delete") {
-                    if (str_contains($request->ID,',')) {
-                        $tempID = explode(',',$request->ID);
+                if ($request->action == "delete") {
+                    if (str_contains($request->id,',')) {
+                        $tempID = explode(',',$request->id);
                         foreach ($tempID as $key => $ID) {
                             $query = "UPDATE MsProduct SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
                             DB::update($query, [$getAuth['UserID'],$ID]);
@@ -173,10 +205,10 @@ class ProductController extends Controller
                         $return['message'] = "Product successfully deleted";
                     } else {
                         $query = "UPDATE MsProduct SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
-                        DB::update($query, [$getAuth['UserID'],$request->ID]);
+                        DB::update($query, [$getAuth['UserID'],$request->id]);
 
                         $query = "DELETE FROM MsVariantProduct WHERE ProductID=?";
-                        DB::delete($query, [$request->ID]);
+                        DB::delete($query, [$request->id]);
                         $return['message'] = "Product successfully deleted";
                     }
                 }

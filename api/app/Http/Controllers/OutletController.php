@@ -62,30 +62,30 @@ class OutletController extends Controller
         $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
-            if ($request->Action == "add") {
+            if ($request->action == "add") {
 
                 $query = "SELECT UUID() GenID";
-                $OutletID = DB::select($query)[0]->GenID;
+                $outletID = DB::select($query)[0]->GenID;
                 $query = "INSERT INTO MsOutlet
                         (IsDeleted, UserIn, DateIn, ID, ClientID, Name, PhoneNumber, IsPrimary, Address, ProvinceID, DistrictID, SubDistrictID, PostalCode)
                         VALUES
                         (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
-                    $OutletID,
+                    $outletID,
                     $getAuth['ClientID'],
-                    $request->Name,
-                    $request->PhoneNumber,
-                    $request->IsPrimary == "T" ? 1 : 0,
-                    $request->Address,
-                    $request->ProvinceID,
-                    $request->DistrictID,
-                    $request->SubDistrictID,
-                    $request->PostalCode
+                    $request->name,
+                    $request->phoneNumber,
+                    $request->isPrimary == "T" ? 1 : 0,
+                    $request->address,
+                    $request->provinceID,
+                    $request->districtID,
+                    $request->subDistrictID,
+                    $request->postalCode
                 ]);
                 $return['message'] = "Outlet successfully created.";
             } 
-            if ($request->Action == "edit") {
+            if ($request->action == "edit") {
                 $query = "UPDATE MsOutlet
                 SET UserUp=?,
                     DateUp=NOW(),
@@ -100,22 +100,21 @@ class OutletController extends Controller
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
-                    $request->Name,
-                    $request->PhoneNumber,
-                    $request->IsPrimary == "T" ? 1 : 0,
-                    $request->Address,
-                    $request->ProvinceID,
-                    $request->DistrictID,
-                    $request->SubDistrictID,
-                    $request->PostalCode,
-                    $request->ID
+                    $request->name,
+                    $request->phoneNumber,
+                    $request->isPrimary == "T" ? 1 : 0,
+                    $request->address,
+                    $request->provinceID,
+                    $request->districtID,
+                    $request->subDistrictID,
+                    $request->postalCode,
+                    $request->id
                 ]);
                 $return['message'] = "Outlet successfully modified.";
             }
-            if ($request->Action == "delete") {
-                $query = "DELETE FROM MsOutlet
-                WHERE ID=?";
-                DB::delete($query, [$request->ID]);
+            if ($request->action == "delete") {
+                $query = "UPDATE MsOutlet SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
+                DB::update($query, [$getAuth['UserID'],$request->id]);
                 $return['message'] = "Outlet successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);

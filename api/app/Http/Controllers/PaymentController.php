@@ -53,24 +53,24 @@ class PaymentController extends Controller
         $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
-            if ($request->Action == "add") {
+            if ($request->action == "add") {
                 $query = "SELECT UUID() GenID";
-                $PaymentID = DB::select($query)[0]->GenID;
+                $paymentID = DB::select($query)[0]->GenID;
                 $query = "INSERT INTO MsPayment
                         (IsDeleted, UserIn, DateIn, ID, ClientID, Name, Description, IsActive)
                         VALUES
                         (0, ?, NOW(), ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $getAuth['UserID'],
-                    $PaymentID,
+                    $paymentID,
                     $getAuth['ClientID'],
-                    $request->Name,
-                    $request->Description,
-                    $request->IsActive == "T" ? 1 : 0,
+                    $request->name,
+                    $request->description,
+                    $request->isActive == "T" ? 1 : 0,
                 ]);
                 $return['message'] = "Payment successfully created.";
             }
-            if ($request->Action == "edit") {
+            if ($request->action == "edit") {
                 $query = "UPDATE MsPayment
                 SET IsDeleted=0,
                     UserUp=?,
@@ -83,17 +83,16 @@ class PaymentController extends Controller
                 DB::update($query, [
                     $getAuth['UserID'],
                     $getAuth['ClientID'],
-                    $request->Name,
-                    $request->Description,
-                    $request->IsActive == "T" ? 1 : 0,
-                    $request->ID
+                    $request->name,
+                    $request->description,
+                    $request->isActive == "T" ? 1 : 0,
+                    $request->id
                 ]);
                 $return['message'] = "Payment successfully modified.";
             }
-            if ($request->Action == "delete") {
-                $query = "DELETE FROM MsPayment
-                WHERE ID=?";
-                DB::delete($query, [$request->ID]);
+            if ($request->action == "delete") {
+                $query = "UPDATE MsPayment SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
+                DB::update($query, [$getAuth['UserID'],$request->id]);
                 $return['message'] = "Payment successfully deleted.";
             }
         } else $return = array('status'=>false,'message'=>"Oops! It seems you haven't logged in yet.");
