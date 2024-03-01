@@ -71,6 +71,12 @@ class ProductController extends Controller
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
             if ($request->action == "add") {
+                $fileData = base64_decode('#^data:[\w/\-]+;base64,#i', '', $request->fileData);
+                $fileName = $request->fileName;
+                $uploadDirectory = 'public/uploaded/product';
+                $imagePath = $uploadDirectory . $fileName;
+                file_put_contents($imagePath, $fileData);
+
                 $query = "SELECT UUID() GenID";
                 $productID = DB::select($query)[0]->GenID;
                     $query = "INSERT INTO MsProduct
@@ -87,7 +93,7 @@ class ProductController extends Controller
                         $request->price,
                         $request->categoryID,
                         $request->productSKU,
-                        $request->fileName,
+                        $imagePath,
                         $request->MimeType,
                     ]);
                     $return['message'] = "Product successfully created.";
