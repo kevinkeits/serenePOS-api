@@ -71,12 +71,28 @@ class ProductController extends Controller
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
             if ($request->action == "add") {
-                $fileData = base64_decode('#^data:[\w/\-]+;base64,#i', '', $request->fileData);
-                $fileName = $request->fileName;
-                $uploadDirectory = 'public/uploaded/product';
-                $imagePath = $uploadDirectory . $fileName;
-                file_put_contents($imagePath, $fileData);
 
+                $base64string = $request->fileData;
+
+                // Split the base64 string to get the MIME type and file data
+                $parts = explode(";base64,", $base64string);
+
+                // Extract the file data
+                $fileData = base64_decode($parts[1]);
+
+                // Specify the directory where you want to save the file
+                $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
+
+                // Specify the filename
+                $fileName = $request->fileName;
+
+                // Specify the full path including the filename
+                $filePath = $uploadDirectory . $fileName;
+
+                // // Save the file to the specified directory
+                file_put_contents($filePath, $fileData);
+
+                // $return['message'] = $fileData;
                 $query = "SELECT UUID() GenID";
                 $productID = DB::select($query)[0]->GenID;
                     $query = "INSERT INTO MsProduct
@@ -93,8 +109,8 @@ class ProductController extends Controller
                         $request->price,
                         $request->categoryID,
                         $request->productSKU,
-                        $imagePath,
-                        $request->MimeType,
+                        $filePath,
+                        $parts[0],
                     ]);
                     $return['message'] = "Product successfully created.";
             }

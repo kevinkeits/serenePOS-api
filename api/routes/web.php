@@ -35,7 +35,7 @@ $router->group(['prefix' => 'product'], function () use ($router) {
     $router->post('doSaveVariantOption',  ['uses' => 'ProductController@doSaveVariantOption']);
 });
 
-$router->group(['prefix' => 'scan'], function () use ($router) {
+$router->group(['prefix' => 'scanOrder'], function () use ($router) {
     $router->get('get',  ['uses' => 'ScanOrderController@get']);
     $router->post('doSave',  ['uses' => 'ScanOrderController@doSave']);
 });

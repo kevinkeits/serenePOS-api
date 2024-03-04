@@ -38,7 +38,7 @@ class TableManagementController extends Controller
                 $query = "  SELECT MsTableManagement.ID id, MsTableManagement.ClientID clientID, MsTableManagement.OutletID outletID, MsTableManagement.TableName tableName, MsTableManagement.Capacity capacity, MsTableManagement.Status status
                                 FROM MsTableManagement
                                 WHERE ClientID = ?
-                                ORDER BY Name ASC";
+                                ORDER BY tableName ASC";
                 $data = DB::select($query, [$getAuth['ClientID']]);
                 if ($data) $return['data'] = $data;
             }
