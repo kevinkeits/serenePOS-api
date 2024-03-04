@@ -115,6 +115,26 @@ class ProductController extends Controller
                     $return['message'] = "Product successfully created.";
             }
             if ($request->action == "edit") {
+                
+                $base64string = $request->fileData;
+
+                // Split the base64 string to get the MIME type and file data
+                $parts = explode(";base64,", $base64string);
+
+                // Extract the file data
+                $fileData = base64_decode($parts[1]);
+
+                // Specify the directory where you want to save the file
+                $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
+
+                // Specify the filename
+                $fileName = $request->fileName;
+
+                // Specify the full path including the filename
+                $filePath = $uploadDirectory . $fileName;
+
+                // // Save the file to the specified directory
+                file_put_contents($filePath, $fileData);
                 $query = "UPDATE MsProduct
                 SET IsDeleted=0,
                     UserUp=?,
@@ -136,8 +156,8 @@ class ProductController extends Controller
                     $request->price,
                     $request->categoryID,
                     $request->productSKU,
-                    $request->fileName,
-                    $request->fileData,
+                    $filePath,
+                    $parts[0],
                     $request->id
                 ]);
                
