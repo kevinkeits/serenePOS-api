@@ -35,7 +35,7 @@ class ProductController extends Controller
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
                 if ($request->ID) {
-                    $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSku, MsProduct.Name name, MsCategory.ID categoryId, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, MsProduct.ImgUrl imgurl, MsProduct.MimeType mimeType
+                    $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSku, MsProduct.Name name, MsCategory.ID categoryId, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, (SELECT CONCAT('http://localhost/serenePOS-api/api/public/uploaded/product/', ImgUrl)) imgUrl, MsProduct.MimeType mimeType
                                     FROM MsProduct
                                     JOIN MsCategory
                                     ON MsProduct.CategoryID = MsCategory.ID
@@ -73,26 +73,16 @@ class ProductController extends Controller
             if ($request->action == "add") {
 
                 $base64string = $request->fileData;
+                $mime = explode(";base64,", $base64string);
+                $mimeType = str_replace('data:', '', $mime[0]);
 
-                // Split the base64 string to get the MIME type and file data
-                $parts = explode(";base64,", $base64string);
-
-                // Extract the file data
-                $fileData = base64_decode($parts[1]);
-
-                // Specify the directory where you want to save the file
+                $fileData = base64_decode($mime[1]);
                 $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
-
-                // Specify the filename
                 $fileName = $request->fileName;
-
-                // Specify the full path including the filename
                 $filePath = $uploadDirectory . $fileName;
 
-                // // Save the file to the specified directory
                 file_put_contents($filePath, $fileData);
 
-                // $return['message'] = $fileData;
                 $query = "SELECT UUID() GenID";
                 $productID = DB::select($query)[0]->GenID;
                     $query = "INSERT INTO MsProduct
@@ -109,58 +99,72 @@ class ProductController extends Controller
                         $request->price,
                         $request->categoryID,
                         $request->productSKU,
-                        $filePath,
-                        $parts[0],
+                        $fileName,
+                        $mimeType,
                     ]);
                     $return['message'] = "Product successfully created.";
             }
             if ($request->action == "edit") {
+                if ($request->fileData != "") {
+
+                    $base64string = $request->fileData;
+                    $mime = explode(";base64,", $base64string);
+                    $mimeType = str_replace('data:', '', $mime[0]);
+                    $fileData = base64_decode($mime[1]);
+                    $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
+                    $fileName = $request->fileName;
+    
+                    $query = "UPDATE MsProduct
+                        SET IsDeleted = 0,
+                            UserUp = ?,
+                            DateUp = NOW(),
+                            Name = ?,
+                            Notes = ?,
+                            Qty = ?,
+                            Price = ?,
+                            CategoryID = ?,
+                            ProductSKU = ?,
+                            ImgUrl = ?,
+                            MimeType = ?
+                        WHERE ID = ?";
+                    DB::update($query, [
+                        $getAuth['UserID'],
+                        $request->name,
+                        $request->notes,
+                        $request->qty,
+                        $request->price,
+                        $request->categoryID,
+                        $request->productSKU,
+                        $fileName,
+                        $mimeType,
+                        $request->id
+                    ]);
+                    $return['message'] = "Product successfully modified with image.";
+                } else {
+                    $query = "UPDATE MsProduct
+                        SET IsDeleted = 0,
+                            UserUp = ?,
+                            DateUp = NOW(),
+                            Name = ?,
+                            Notes = ?,
+                            Qty = ?,
+                            Price = ?,
+                            CategoryID = ?,
+                            ProductSKU = ?
+                        WHERE ID = ?";
+                    DB::update($query, [
+                        $getAuth['UserID'],
+                        $request->name,
+                        $request->notes,
+                        $request->qty,
+                        $request->price,
+                        $request->categoryID,
+                        $request->productSKU,
+                        $request->id
+                    ]);
+                    $return['message'] = "Product successfully modified without image.";
+                }
                 
-                $base64string = $request->fileData;
-
-                // Split the base64 string to get the MIME type and file data
-                $parts = explode(";base64,", $base64string);
-
-                // Extract the file data
-                $fileData = base64_decode($parts[1]);
-
-                // Specify the directory where you want to save the file
-                $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
-
-                // Specify the filename
-                $fileName = $request->fileName;
-
-                // Specify the full path including the filename
-                $filePath = $uploadDirectory . $fileName;
-
-                // // Save the file to the specified directory
-                file_put_contents($filePath, $fileData);
-                $query = "UPDATE MsProduct
-                SET IsDeleted=0,
-                    UserUp=?,
-                    DateUp=NOW(),
-                    Name=?,
-                    Notes=?,
-                    Qty=?,
-                    Price=?,
-                    CategoryID=?,
-                    ProductSKU=?,
-                    ImgUrl=?,
-                    MimeType=?
-                    WHERE ID=?";
-                DB::update($query, [
-                    $getAuth['UserID'],
-                    $request->name,
-                    $request->notes,
-                    $request->qty,
-                    $request->price,
-                    $request->categoryID,
-                    $request->productSKU,
-                    $filePath,
-                    $parts[0],
-                    $request->id
-                ]);
-               
                 if (str_contains($request->productVariantOptionID,',')) {
                     $productVariantOptionID = explode(',',$request->productVariantOptionID);
                     $variantOptionID = explode(',',$request->variantOptionID);

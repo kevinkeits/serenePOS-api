@@ -34,15 +34,14 @@ class ClientController extends Controller
         $return = array('status'=>true,'message'=>"",'data'=>array());
         $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($header);
-        $query = "SELECT MsClient.ID id, MsClient.Name name, MsClient.PlanType planType, MsUser.Name userName, MsUser.PhoneNumber phoneNumber, MsOutlet.Address address, MsClient.ImgUrl imgUrl, MsClient.MimeType mimeType
+        $query = "SELECT MsClient.ID id, MsClient.Name name, MsClient.PlanType planType, MsUser.Name userName, MsUser.PhoneNumber phoneNumber, MsOutlet.Address address, (SELECT CONCAT('http://localhost/serenePOS-api/api/public/uploaded/client/', ImgUrl)) imgUrl, MsClient.MimeType mimeType
            FROM MsClient
            JOIN MsUser
            ON MsClient.ID = MsUser.ClientID
            JOIN MsOutlet
            ON MsClient.ID = MsOutlet.ClientID
-           ORDER BY ID ASC";
+           ORDER BY MsClient.ID ASC";
         $return['data'] = DB::select($query);
-        if ($request->_cb) $return[''] = $request->_cb."(e.data,'".$request->_p."')";
         return response()->json($return, 200);
    }    
    // END GET CLIENT
@@ -55,25 +54,18 @@ class ClientController extends Controller
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
             if ($request->action == "add") {
+
                 $base64string = $request->fileData;
+                $mime = explode(";base64,", $base64string);
+                $mimeType = str_replace('data:', '', $mime[0]);
 
-                // Split the base64 string to get the MIME type and file data
-                $parts = explode(";base64,", $base64string);
-
-                // Extract the file data
-                $fileData = base64_decode($parts[1]);
-
-                // Specify the directory where you want to save the file
+                $fileData = base64_decode($mime[1]);
                 $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/client/';
-
-                // Specify the filename
                 $fileName = $request->fileName;
-
-                // Specify the full path including the filename
                 $filePath = $uploadDirectory . $fileName;
 
-                // // Save the file to the specified directory
                 file_put_contents($filePath, $fileData);
+
                 $query = "SELECT UUID() GenID";
                 $userID = DB::select($query)[0]->GenID;
                 $query = "INSERT INTO MsClient
@@ -85,50 +77,55 @@ class ClientController extends Controller
                     $userID,
                     $request->clientName,
                     $request->planType,
-                    $filePath,
-                    $parts[0],
+                    $fileName,
+                    $mimeType,
                 ]);
                 $return['message'] = "Client successfully created.";
             }
             if ($request->action == "edit") {
-
-                $base64string = $request->fileData;
-
-                // Split the base64 string to get the MIME type and file data
-                $parts = explode(";base64,", $base64string);
-
-                // Extract the file data
-                $fileData = base64_decode($parts[1]);
-
-                // Specify the directory where you want to save the file
-                $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/client/';
-
-                // Specify the filename
-                $fileName = $request->fileName;
-
-                // Specify the full path including the filename
-                $filePath = $uploadDirectory . $fileName;
-
-                // // Save the file to the specified directory
-                file_put_contents($filePath, $fileData);
-                $query = "UPDATE MsClient
-                SET IsDeleted=0,
-                    UserUp=?,
-                    DateUp=NOW(),
-                    Name=?,
-                    PlanType=?,
-                    ImgUrl=?,
-                    MimeType=?
-                    WHERE ID=?";
-                DB::update($query, [
-                    $getAuth['UserID'],
-                    $request->clientName,
-                    $request->planType,
-                    $filePath,
-                    $parts[0],
-                    $request->id
-                ]);
-                $return['message'] = "Client successfully modified.";
+                if ($request->fileData != "") {
+                    $base64string = $request->fileData;
+                    $mime = explode(";base64,", $base64string);
+                    $mimeType = str_replace('data:', '', $mime[0]);
+                    $fileData = base64_decode($mime[1]);
+                    $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/client/';
+                    $fileName = $request->fileName;
+    
+                    $query = "UPDATE MsClient
+                    SET IsDeleted=0,
+                        UserUp=?,
+                        DateUp=NOW(),
+                        Name=?,
+                        PlanType=?,
+                        ImgUrl=?,
+                        MimeType=?
+                        WHERE ID=?";
+                    DB::update($query, [
+                        $getAuth['UserID'],
+                        $request->clientName,
+                        $request->planType,
+                        $fileName,
+                        $mimeType,
+                        $request->id
+                    ]);
+                    $return['message'] = "Client successfully modified.";
+                } else {
+                    $query = "UPDATE MsClient
+                    SET IsDeleted=0,
+                        UserUp=?,
+                        DateUp=NOW(),
+                        Name=?,
+                        PlanType=?,
+                        WHERE ID=?";
+                    DB::update($query, [
+                        $getAuth['UserID'],
+                        $request->clientName,
+                        $request->planType,
+                        $request->id
+                    ]);
+                    $return['message'] = "Client successfully modified without image.";
+                }
+               
             }
             if ($request->action == "delete") {
                 $query = "UPDATE MsClient SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";

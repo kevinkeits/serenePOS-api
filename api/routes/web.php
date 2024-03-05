@@ -27,24 +27,14 @@ $router->group(['prefix' => 'auth'], function () use ($router) {
 
 $router->group(['prefix' => 'product'], function () use ($router) {
     $router->get('get',  ['uses' => 'ProductController@get']);
-    $router->get('getAllProduct',  ['uses' => 'ProductController@getAllProduct']);
     $router->get('getVariantOption',  ['uses' => 'ProductController@getVariantOption']);
     $router->post('doSave',  ['uses' => 'ProductController@doSave']);
-    $router->post('doSaveApp',  ['uses' => 'ProductController@doSaveApp']);
-    $router->post('doSaveVariant',  ['uses' => 'ProductController@doSaveVariant']);
-    $router->post('doSaveVariantOption',  ['uses' => 'ProductController@doSaveVariantOption']);
-});
-
-$router->group(['prefix' => 'scanOrder'], function () use ($router) {
-    $router->get('get',  ['uses' => 'ScanOrderController@get']);
-    $router->post('doSave',  ['uses' => 'ScanOrderController@doSave']);
 });
 
 $router->group(['prefix' => 'variant'], function () use ($router) {
     $router->get('get',  ['uses' => 'VariantController@get']);
     $router->get('getOption',  ['uses' => 'VariantController@getOption']);
     $router->post('doSave',  ['uses' => 'VariantController@doSave']);
-    $router->post('doSaveOption',  ['uses' => 'VariantController@doSaveOption']);
 });
 
 $router->group(['prefix' => 'transaction'], function () use ($router) {
@@ -52,8 +42,6 @@ $router->group(['prefix' => 'transaction'], function () use ($router) {
     $router->get('getTransaction',  ['uses' => 'TransactionController@getTransaction']);
     $router->get('getHistory',  ['uses' => 'TransactionController@getHistory']);
     $router->post('doSave',  ['uses' => 'TransactionController@doSave']);
-    $router->post('doSaveProduct',  ['uses' => 'TransactionController@doSaveProduct']);
-    $router->post('doSaveProductVariant',  ['uses' => 'TransactionController@doSaveProductVariant']);
 });
 
 $router->group(['prefix' => 'category'], function () use ($router) {
@@ -86,7 +74,18 @@ $router->group(['prefix' => 'tableManagement'], function () use ($router) {
     $router->post('doSave',  ['uses' => 'TableManagementController@doSave']);
 });
 
+$router->group(['prefix' => 'scanOrder'], function () use ($router) {
+    $router->get('get',  ['uses' => 'ScanOrderController@get']);
+    $router->post('doSave',  ['uses' => 'ScanOrderController@doSave']);
+});
+
 $router->group(['prefix' => 'customer'], function () use ($router) {
     $router->get('get',  ['uses' => 'CustomerController@get']);
     $router->post('doSave',  ['uses' => 'CustomerController@doSave']);
 });
+
+$router->group(['prefix' => 'report'], function () use ($router) {
+    $router->get('get',  ['uses' => 'ReportController@get']);
+    $router->post('doSave',  ['uses' => 'ReportController@doSave']);
+});
+
