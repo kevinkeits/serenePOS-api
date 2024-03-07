@@ -228,4 +228,58 @@ class ProductController extends Controller
         return response()->json($return, 200);
     }
     // END POST PRODUCT
+
+    public function doUpload(Request $request)
+    {
+        $return = array('status'=>false,'message'=>"",'data'=>null,'callback'=>"");
+        $getAuth = $this->validateAuth($request->_s);
+        if ($getAuth['status']) {
+            if ($request->file('inpFile_'.$request->_data3)->isValid()) {
+                try
+                {
+                    $query = "SELECT ImagePath FROM MS_PRODUCT_IMAGE WHERE ID=?";
+                    $isExist = DB::select($query, [$request->_data2]);
+                    if ($isExist) {
+                        if(file_exists(base_path('public/uploaded/product').$isExist[0]->ImagePath)) {
+                            unlink(base_path('public/uploaded/product').$isExist[0]->ImagePath);
+                        }
+                    }
+
+                    $tempFile = 'temp-'.time().$request->data3.'.'.$request->file('inpFile'.$request->_data3)->getClientOriginalExtension();
+                    $request->file('inpFile_'.$request->_data3)->move(base_path('public/uploaded/product'), $tempFile);
+                    
+                    if ($isExist) {
+                        $query = "UPDATE MS_PRODUCT_IMAGE
+                                SET ImagePath=?, 
+                                    SequenceNo=?
+                                WHERE ID=?";
+                        DB::update($query, [
+                            $tempFile,
+                            $request->_data3 == 1 ? 1 : 0,
+                            $request->_data3,
+                            $request->_data2
+                        ]);
+                    } else {
+                        $query = "INSERT INTO MS_PRODUCT_IMAGE (ID, ProductID, ImagePath, IsMain, SequenceNo)
+                                VALUES (?, ?, ?, ?, ?)";
+                        DB::insert($query, [
+                            $request->_data2,
+                            $request->_data1,
+                            $tempFile,
+                            $request->_data3 == 1 ? 1 : 0,
+                            $request->_data3
+                        ]);
+                    }
+
+                    $return['status'] = true;
+                    //$return['message'] = "Data berhasil tersimpan!";
+                    //$return['callback'] = "doReloadTable()";
+                } catch(Exception $e) {
+                    $return['status'] = false;
+                    $return['message'] = $e->getMessage();
+                }
+            }
+        } else $return = array('status'=>false,'message'=>"Not Authorized");
+        return response()->json($return, 200);
+    }
 }

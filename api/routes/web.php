@@ -89,3 +89,10 @@ $router->group(['prefix' => 'report'], function () use ($router) {
     $router->post('doSave',  ['uses' => 'ReportController@doSave']);
 });
 
+$router->group(['prefix' => 'dashboard'], function () use ($router) {
+    $router->get('getTodayIncome',  ['uses' => 'DashboardController@getTodayIncome']);
+    $router->get('getTotalIncomeForMonth',  ['uses' => 'DashboardController@getTotalIncomeForMonth']);
+    $router->get('getTopSellings',  ['uses' => 'DashboardController@getTopSellings']);
+    $router->get('getSalesWeekly',  ['uses' => 'DashboardController@getSalesWeekly']);
+});
+

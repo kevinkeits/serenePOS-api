@@ -40,10 +40,10 @@ class ClientController extends Controller
            ON MsClient.ID = MsUser.ClientID
            JOIN MsOutlet
            ON MsClient.ID = MsOutlet.ClientID
-           ORDER BY MsClient.ID ASC";
+           ORDER BY MsClient.ID DESC";
         $return['data'] = DB::select($query);
         return response()->json($return, 200);
-   }    
+   }
    // END GET CLIENT
 
    // POST CLIENT
