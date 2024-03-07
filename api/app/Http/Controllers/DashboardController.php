@@ -125,5 +125,46 @@ class DashboardController extends Controller
         
         return response()->json($return, 200);
     }
+
+    public function getProfitAmount(Request $request)
+    {
+        $return = array('status' => true, 'message' => '', 'data' => array());
+        $header = $request->header('Authorization');
+        $getAuth = $this->validateAuth($header);
+        
+        // Get the start and end dates for this week
+        $thisWeekStartDate = date('Y-m-d', strtotime('this week Monday'));
+        $thisWeekEndDate = date('Y-m-d', strtotime('this week Sunday'));
+        
+        // Get the start and end dates for last week
+        $lastWeekStartDate = date('Y-m-d', strtotime('last week Monday'));
+        $lastWeekEndDate = date('Y-m-d', strtotime('last week Sunday'));
+        
+        $query = "SELECT 
+                        (SELECT SUM(PaymentAmount) FROM TrTransaction WHERE TransactionDate BETWEEN '$thisWeekStartDate' AND '$thisWeekEndDate') AS thisWeekAmount,
+                        (SELECT SUM(PaymentAmount) FROM TrTransaction WHERE TransactionDate BETWEEN '$lastWeekStartDate' AND '$lastWeekEndDate') AS lastWeekAmount
+                LIMIT 1";
+        $result = DB::select($query);
+        
+        if ($result) {
+            // Calculate profit percentage
+            $thisWeekAmount = $result[0]->thisWeekAmount ?? 0;
+            $lastWeekAmount = $result[0]->lastWeekAmount ?? 0;
+            
+            $profitPercentage = 0;
+            if ($lastWeekAmount != 0) {
+                $profitPercentage = ((($thisWeekAmount / $lastWeekAmount) * 100) - 100);
+            }
+            
+            // Add profit percentage to the data
+            $result[0]->profitPercentage = $profitPercentage;
+            
+            $return['data'] = $result;
+        } else {
+            $return['data'] = null;
+        }
+        
+        return response()->json($return, 200);
+    }
     // END GET DASHBOARD
 }

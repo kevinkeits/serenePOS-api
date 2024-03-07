@@ -94,5 +94,6 @@ $router->group(['prefix' => 'dashboard'], function () use ($router) {
     $router->get('getTotalIncomeForMonth',  ['uses' => 'DashboardController@getTotalIncomeForMonth']);
     $router->get('getTopSellings',  ['uses' => 'DashboardController@getTopSellings']);
     $router->get('getSalesWeekly',  ['uses' => 'DashboardController@getSalesWeekly']);
+    $router->get('getProfitAmount',  ['uses' => 'DashboardController@getProfitAmount']);
 });
 
