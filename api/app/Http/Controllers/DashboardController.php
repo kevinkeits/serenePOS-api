@@ -135,8 +135,9 @@ class DashboardController extends Controller
         // Get the start and end dates for this week
         $thisWeekStartDate = date('Y-m-d', strtotime('this week Monday'));
         $thisWeekEndDate = date('Y-m-d', strtotime('this week Sunday'));
-        
+         
         // Get the start and end dates for last week
+      
         $lastWeekStartDate = date('Y-m-d', strtotime('last week Monday'));
         $lastWeekEndDate = date('Y-m-d', strtotime('last week Sunday'));
         
