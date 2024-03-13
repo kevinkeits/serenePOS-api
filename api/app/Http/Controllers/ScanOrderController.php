@@ -62,7 +62,7 @@ class ScanOrderController extends Controller
                     $request->discount,
                     $request->tax,
                     $request->totalPayment,
-                    $request->paymentAmount,
+                    $paymentAmount = $request->isPaid == "F" ? 0 : $request->paymentAmount,
                     $request->changes,
                     $request->isPaid == "T" ? 1 : 0,
                     $request->notes,

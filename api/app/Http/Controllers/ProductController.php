@@ -113,7 +113,7 @@ class ProductController extends Controller
                     $mimeType = str_replace('data:', '', $mime[0]);
                     $fileData = base64_decode($mime[1]);
                     //$uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
-                    $uploadDirectory = base_path('public/uploaded/product');
+                    $uploadDirectory = base_path('public/uploaded/product/');
                     $fileName = $request->fileName;
     
                     $query = "UPDATE MsProduct
