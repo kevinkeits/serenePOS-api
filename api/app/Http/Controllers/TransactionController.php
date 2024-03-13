@@ -11,7 +11,7 @@ class TransactionController extends Controller
     {
         if ($Token != null) $Token = trim(str_replace("Bearer","",$Token));
         $return = array('status'=>false,'ID'=>"");
-        $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
+        $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.OutletID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
                     FROM MsUser
                     JOIN TrSession ON TrSession.UserID = MsUser.ID
                     WHERE TrSession.ID=?
@@ -23,6 +23,7 @@ class TransactionController extends Controller
                 'status' => true,
                 'UserID' => $data->UserID,
                 'ClientID' => $data->ClientID,
+                'OutletID' => $data->OutletID,
             );
         }
         return $return;
@@ -102,7 +103,8 @@ class TransactionController extends Controller
                                                 MsPayment.Name payment, 
                                                 MsPayment.Description description, 
                                                 MsPayment.IsActive isActive, 
-                                                TrTransaction.TotalPayment totalPayment
+                                                TrTransaction.TotalPayment,
+                                                TrTransaction.Status isPaid
                                         FROM    TrTransaction
                                         JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
                                         WHERE   TrTransaction.ClientID = ?
@@ -123,7 +125,7 @@ class TransactionController extends Controller
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
                 if ($request->ID) {
-                            $query = "SELECT    TrTransaction.ID transactionID, 
+                            $query = "SELECT    TrTransaction.ID transactionID,
                                                 TrTransaction.TransactionNumber transactionNumber, 
                                                 TrTransaction.TransactionDate transactionDate, 
                                                 TrTransaction.UserIn userIn,
@@ -181,6 +183,7 @@ class TransactionController extends Controller
                         } else {
                             $query = "SELECT    TrTransaction.ID id, 
                                                 TrTransaction.TransactionNumber transactionNumber, 
+                                                SELECT COUNT(TransactionNumber) AS numberTransaction,
                                                 TrTransaction.TransactionDate transactionDate, 
                                                 TrTransaction.PaidDate padiDate, 
                                                 TrTransaction.CustomerName customerName, 
@@ -188,7 +191,8 @@ class TransactionController extends Controller
                                                 MsPayment.Name payment,
                                                 MsPayment.Description description, 
                                                 MsPayment.IsActive isActive, 
-                                                TrTransaction.TotalPayment totalPayment
+                                                TrTransaction.TotalPayment totalPayment.
+                                                TrTransaction.Status isPaid
                                         FROM    TrTransaction
                                         JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
                                         WHERE   TrTransaction.ClientID = ?
@@ -211,6 +215,11 @@ class TransactionController extends Controller
             if ($request->action == "add") {
                 $query = "SELECT UUID() GenID";
                 $transactionID = DB::select($query)[0]->GenID;
+
+                $countTransaction = "SELECT COUNT(TransactionNumber) +1 as transNumber FROM TrTransaction 
+                WHERE TrTransaction.ClientID = ? ";
+                $incrementTransaction = DB::select($countTransaction, [$getAuth['ClientID']]);
+                
                 $query = "INSERT INTO TrTransaction
                             (IsDeleted, UserIn, DateIn, ID, TransactionNumber, ClientID, OutletID, PaymentID, TransactionDate, PaidDate, CustomerName, SubTotal, Discount, Tax, TotalPayment, PaymentAmount, Changes, Status, Notes)
                             VALUES
@@ -218,16 +227,16 @@ class TransactionController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $transactionID,
-                    $request->transactionNumber,
+                    $incrementTransaction[0]->transNumber,
                     $getAuth['ClientID'],
-                    $request->outletID,
+                    $getAuth['OutletID'],
                     $request->paymentID,
                     $request->customerName,
                     $request->subTotal,
                     $request->discount,
                     $request->tax,
                     $request->totalPayment,
-                    $paymentAmount = $request->isPaid == "F" ? 0 : $request->paymentAmount,
+                    $request->isPaid == "F" ? 0 : $request->paymentAmount,
                     $request->changes,
                     $request->isPaid == "T" ? 1 : 0,
                     $request->notes,

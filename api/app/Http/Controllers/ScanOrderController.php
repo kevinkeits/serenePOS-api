@@ -48,21 +48,27 @@ class ScanOrderController extends Controller
         if ($request->action == "add") {
                 $query = "SELECT UUID() GenID";
                 $transactionID = DB::select($query)[0]->GenID;
+
+                $countTransaction = "SELECT COUNT(TransactionNumber) +1 as transNumber FROM TrTransaction 
+                WHERE TrTransaction.ClientID = ? ";
+                $incrementTransaction = DB::select($countTransaction, [$getAuth['ClientID']]);
+
                 $query = "INSERT INTO TrTransaction
                             (IsDeleted, UserIn, DateIn, ID, TransactionNumber, ClientID, OutletID, PaymentID, TransactionDate, PaidDate, CustomerName, SubTotal, Discount, Tax, TotalPayment, PaymentAmount, Changes, Status, Notes)
                             VALUES
                             (0, '7b8e8da2-cc9f-11ee-8603-ca13603aef66', NOW(), ?, ?, 'afe4146f-cc82-11ee-8603-ca13603aef66', ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
                     $transactionID,
-                    $request->transactionNumber,
-                    $request->outletID,
+                    $incrementTransaction[0]->transNumber,
+                    $getAuth['ClientID'],
+                    $getAuth['OutletID'],
                     $request->paymentID,
                     $request->customerName,
                     $request->subTotal,
                     $request->discount,
                     $request->tax,
                     $request->totalPayment,
-                    $paymentAmount = $request->isPaid == "F" ? 0 : $request->paymentAmount,
+                    $request->isPaid == "F" ? 0 : $request->paymentAmount,
                     $request->changes,
                     $request->isPaid == "T" ? 1 : 0,
                     $request->notes,
