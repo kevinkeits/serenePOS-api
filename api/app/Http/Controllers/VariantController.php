@@ -39,21 +39,21 @@ class VariantController extends Controller
             if ($request->ID) {
                 $query = "  SELECT MsVariant.ID id, MsVariant.Name name, MsVariant.Type type
                                 FROM MsVariant
-                                WHERE ID = ?";
-                $details = DB::select($query,[$request->ID])[0];
+                                WHERE IsDeleted = 0 AND ClientID = ? AND ID = ?";
+                $details = DB::select($query,[$getAuth['ClientID'],$request->ID])[0];
 
                 $query = "  SELECT MsVariantOption.ID id, MsVariantOption.Label label, MsVariantOption.Price price
                                 FROM MsVariantOption
-                                WHERE VariantID = ?
+                                WHERE ClientID = ? AND VariantID = ? 
                                 ORDER BY ID ASC";
-                $options = DB::select($query,[$request->ID]);
+                $options = DB::select($query,[$getAuth['ClientID'], $request->ID]);
 
                 $query = "  SELECT MsProduct.ID id, MsProduct.Name name, CASE MsProduct.ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', MsProduct.ImgUrl)) END imgUrl
                                 FROM MsVariantProduct
                                 JOIN MsProduct ON MsProduct.ID = MsVariantProduct.ProductID
-                                WHERE VariantID = ?
+                                WHERE ClientID = ? AND VariantID = ?
                                 ORDER BY MsProduct.Name ASC";
-                $product = DB::select($query,[$request->ID]);
+                $product = DB::select($query,[$getAuth['ClientID'], $request->ID]);
 
                 $return['data'] = array('details'=>$details,'options'=>$options,'product'=>$product);
            } else {
@@ -66,7 +66,7 @@ class VariantController extends Controller
                                         WHERE MsVariantOption.VariantID = MsVariant.ID 
                                         GROUP BY VariantID) listLabel
                                 FROM MsVariant
-                                WHERE ClientID = ?
+                                WHERE IsDeleted = 0 AND ClientID = ?
                                 ORDER BY Name ASC";
                 $data = DB::select($query, [$getAuth['ClientID']]);
                 if ($data) $return['data'] = $data;
@@ -166,13 +166,16 @@ class VariantController extends Controller
                                 DateUp=NOW(),
                                 Name=?,
                                 Type=?
-                                WHERE ID=?";
+                                WHERE ClientID=?
+                                    AND ID=?";
                         DB::update($query, [
                             $getAuth['UserID'],
                             $request->name,
                             $request->type,
+                            $getAuth['ClientID'],
                             $request->id
                         ]);
+
                 if (str_contains($request->optionID,',')) {
                     $optionID = explode(',',$request->optionID);
                     $optionLabel = explode(',',$request->optionLabel);
@@ -193,19 +196,19 @@ class VariantController extends Controller
                             ]);
                         } else {
                             $query = "UPDATE MsVariantOption 
-                            SET UserUp=?,
-                                DateUp=NOW(),
-                                Label=?,
-                                Price=?
-                                WHERE ID=?";
-                            DB::update($query, [
-                                $getAuth['UserID'],
-                                $optionLabel[$i],
-                                $optionPrice[$i],
-                                $optionID[$i]
-                            ]);
+                                    SET UserUp=?,
+                                        DateUp=NOW(),
+                                        Label=?,
+                                        Price=?
+                                        WHERE ClientID=? AND ID=?";
+                                    DB::update($query, [
+                                        $getAuth['UserID'],
+                                        $optionLabel[$i],
+                                        $optionPrice[$i],
+                                        $getAuth['ClientID'],
+                                        $optionID[$i]
+                                    ]);
                         }
-                        $return['message'] = "Variant successfully modified.";
                     }
                 } else {
                     if ($request->optionID == "") {
@@ -222,37 +225,35 @@ class VariantController extends Controller
                             ]);
                     } else {
                         $query = "UPDATE MsVariantOption 
-                        SET UserUp=?,
-                            DateUp=NOW(),
-                            Label=?,
-                            Price=?
-                            WHERE ID=?";
-                        DB::update($query, [
-                            $getAuth['UserID'],
-                            $request->optionLabel,
-                            $request->optionPrice,
-                            $request->optionID
-                        ]);
+                                SET UserUp=?,
+                                    DateUp=NOW(),
+                                    Label=?,
+                                    Price=?
+                                    WHERE ClientID=? AND ID=?";
+                                DB::update($query, [
+                                    $getAuth['UserID'],
+                                    $request->optionLabel,
+                                    $request->optionPrice,
+                                    $getAuth['ClientID'],
+                                    $request->optionID
+                                ]);
                     }
-                    $return['message'] = "Variant successfully modified.";
                 }
 
                 if (str_contains($request->optionIDDelete,',')) {
                     $optionIDDelete = explode(',',$request->optionIDDelete);
                     for ($i=0; $i<count($optionIDDelete); $i++)
                     {
-                        $query = "DELETE FROM MsVariantOption WHERE ID=?";
-                        DB::delete($query, [$optionIDDelete[$i]]);
-                        $return['message'] = "Variant successfully deleted.";
+                        $query = "DELETE FROM MsVariantOption WHERE ClientID=? AND ID=?";
+                        DB::delete($query, [$getAuth['ClientID'],$optionIDDelete[$i]]);
                     }
                 } else {
-                    $query = "DELETE FROM MsVariantOption WHERE ID=?";
-                    DB::delete($query, [$request->optionIDDelete]);
-                    $return['message'] = "Variant successfully deleted.";
+                    $query = "DELETE FROM MsVariantOption WHERE ClientID=? AND ID=?";
+                    DB::delete($query, [$getAuth['ClientID'],$request->optionIDDelete]);
                 }
 
-                $query = "DELETE FROM MsVariantProduct WHERE VariantID=?";
-                DB::delete($query, [$request->id]);
+                $query = "DELETE FROM MsVariantProduct WHERE ClientID=? AND VariantID=?";
+                DB::delete($query, [$getAuth['ClientID'],$request->id]);
                 if (str_contains($request->productID,',')) {
                     $productID = explode(',',$request->productID);
                     for ($i=0; $i<count($productID); $i++)
@@ -286,21 +287,14 @@ class VariantController extends Controller
                 if (str_contains($request->id,',')) {
                     $tempID = explode(',',$request->id);
                     foreach ($tempID as $key => $ID) {
-                        $query = "UPDATE MsVariant SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
-                        DB::update($query, [$getAuth['UserID'],$ID]);
+                        $query = "UPDATE MsVariant SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ClientID=? AND ID=?";
+                        DB::update($query, [$getAuth['UserID'],$getAuth['ClientID'],$ID]);
                         $return['message'] = "Variant successfully deleted";
                     }
                 } else {
-                    $query = "UPDATE MsVariant SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
-                    DB::update($query, [$getAuth['UserID'],$request->id]);
+                    $query = "UPDATE MsVariant SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ClientID=? AND ID=?";
+                    DB::update($query, [$getAuth['UserID'],$getAuth['ClientID'],$request->id]);
                     $return['message'] = "Variant successfully deleted";
-
-                    $query = "UPDATE MsVariantOption SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE VariantID=?";
-                    DB::update($query, [$getAuth['UserID'],$request->variantID]);
-    
-                    $query = "UPDATE MsVariantProduct SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE VariantID=?";
-                    DB::update($query, [$getAuth['UserID'],$request->variantID]);
-                    $return['message'] = "variant successfully deleted";
                 }
             }
         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);

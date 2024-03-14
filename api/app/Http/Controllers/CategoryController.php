@@ -79,13 +79,14 @@ class CategoryController extends Controller
                                 Name=?,
                                 QtyAlert=?,
                                 BGColor=?
-                                WHERE ID=?";
+                                WHERE ClientID=? AND ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
                     $request->name,
                     $request->qtyAlert,
                     $request->bgColor,
-                    $request->id
+                    $getAuth['ClientID'],
+                    $request->id,
                 ]);
                 $return['message'] = "Category successfully modified";
             }
@@ -93,13 +94,13 @@ class CategoryController extends Controller
                 if (str_contains($request->id,',')) {
                     $tempID = explode(',',$request->id);
                     foreach ($tempID as $key => $ID) {
-                        $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
-                        DB::update($query, [$getAuth['UserID'],$ID]);
+                        $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=? AND ClientID=?";
+                        DB::update($query, [$getAuth['UserID'],$getAuth['ClientID'], $ID]);
                     }
                     $return['message'] = "Category successfully deleted";
                 } else {
-                    $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
-                    DB::update($query, [$getAuth['UserID'],$request->id]);
+                    $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=? AND ClientID=?";
+                    DB::update($query, [$getAuth['UserID'],$getAuth['ClientID'],$request->id]);
                     $return['message'] = "Category successfully deleted";
                 }
             }
