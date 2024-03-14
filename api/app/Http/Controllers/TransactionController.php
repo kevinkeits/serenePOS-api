@@ -103,7 +103,7 @@ class TransactionController extends Controller
                                                 MsPayment.Name payment, 
                                                 MsPayment.Description description, 
                                                 MsPayment.IsActive isActive, 
-                                                TrTransaction.TotalPayment,
+                                                TrTransaction.TotalPayment totalPayment,
                                                 TrTransaction.Status isPaid
                                         FROM    TrTransaction
                                         JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
@@ -183,15 +183,14 @@ class TransactionController extends Controller
                         } else {
                             $query = "SELECT    TrTransaction.ID id, 
                                                 TrTransaction.TransactionNumber transactionNumber, 
-                                                SELECT COUNT(TransactionNumber) AS numberTransaction,
                                                 TrTransaction.TransactionDate transactionDate, 
-                                                TrTransaction.PaidDate padiDate, 
+                                                TrTransaction.PaidDate paidDate, 
                                                 TrTransaction.CustomerName customerName, 
                                                 MsPayment.ID paymentID, 
                                                 MsPayment.Name payment,
                                                 MsPayment.Description description, 
                                                 MsPayment.IsActive isActive, 
-                                                TrTransaction.TotalPayment totalPayment.
+                                                TrTransaction.TotalPayment totalPayment,
                                                 TrTransaction.Status isPaid
                                         FROM    TrTransaction
                                         JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
@@ -275,7 +274,6 @@ class TransactionController extends Controller
                                 (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                             DB::insert($query, [
                                 $getAuth['UserID'],
-                                $request->transactionProductID,
                                 $getAuth['ClientID'],
                                 $request->productID,
                                 $TransactionID,
@@ -350,7 +348,7 @@ class TransactionController extends Controller
                     $request->subTotal,
                     $request->discount,
                     $request->totalPayment,
-                    $paymentAmount = $request->isPaid == "F" ? 0 : $request->paymentAmount,
+                    $request->isPaid == "F" ? 0 : $request->paymentAmount,
                     $request->changes,
                     $request->isPaid == "T" ? 1 : 0,
                     $request->notes,
