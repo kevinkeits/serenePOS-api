@@ -38,15 +38,14 @@ class TransactionController extends Controller
         if ($getAuth['status']) {
                 if ($request->ID) {
                             $query = "SELECT    TrTransaction.ID transactionID, 
-                                                TrTransaction.TransactionNumber transcationNumber, 
+                                                TrTransaction.TransactionNumber transactionNumber, 
                                                 TrTransaction.TransactionDate transactionDate, 
                                                 TrTransaction.UserIn userIn,
                                                 TrTransaction.CustomerName customerName,
                                                 MsOutlet.Name outletName,
                                                 
-                                                MsPayment.ID paymentId,
-                                                MsPayment.Name name,
-                                                MsPayment.Name payment, 
+                                                MsPayment.ID paymentID,
+                                                MsPayment.Name payment,
                                                 MsPayment.Description description, 
                                                 MsPayment.IsActive isActive,
 

@@ -48,7 +48,7 @@ class VariantController extends Controller
                                 ORDER BY ID ASC";
                 $options = DB::select($query,[$request->ID]);
 
-                $query = "  SELECT MsProduct.ID id, MsProduct.Name name, MsProduct.ImgUrl imgurl
+                $query = "  SELECT MsProduct.ID id, MsProduct.Name name, CASE MsProduct.ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', MsProduct.ImgUrl)) END imgUrl
                                 FROM MsVariantProduct
                                 JOIN MsProduct ON MsProduct.ID = MsVariantProduct.ProductID
                                 WHERE VariantID = ?
@@ -64,7 +64,7 @@ class VariantController extends Controller
                                     (SELECT GROUP_CONCAT(Label SEPARATOR ', ')
                                         FROM MsVariantOption
                                         WHERE MsVariantOption.VariantID = MsVariant.ID 
-                                        GROUP BY VariantID) listlabel
+                                        GROUP BY VariantID) listLabel
                                 FROM MsVariant
                                 WHERE ClientID = ?
                                 ORDER BY Name ASC";
