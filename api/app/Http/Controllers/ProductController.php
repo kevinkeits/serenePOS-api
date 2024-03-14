@@ -35,7 +35,7 @@ class ProductController extends Controller
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
                 if ($request->ID) {
-                    $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSku, MsProduct.Name name, MsCategory.ID categoryId, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, (SELECT CONCAT('http://localhost/serenePOS-api/api/public/uploaded/product/', ImgUrl)) imgUrl, MsProduct.MimeType mimeType
+                    $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSku, MsProduct.Name name, MsCategory.ID categoryId, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) imgUrl, MsProduct.MimeType mimeType
                                     FROM MsProduct
                                     JOIN MsCategory
                                     ON MsProduct.CategoryID = MsCategory.ID
@@ -52,7 +52,7 @@ class ProductController extends Controller
 
                     $return['data'] = array('product'=>$product, 'variant'=>$variant);
                 } else {
-                    $query = "  SELECT ID id, Name name, Price price, Notes notes, ImgUrl imgUrl
+                    $query = "  SELECT ID id, Name name, Price price, Notes notes, (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) imgUrl
                                     FROM MsProduct
                                     WHERE CategoryID = ?
                                     ORDER BY Name ASC";
@@ -75,13 +75,11 @@ class ProductController extends Controller
                 $base64string = $request->fileData;
                 $mime = explode(";base64,", $base64string);
                 $mimeType = str_replace('data:', '', $mime[0]);
-
                 $fileData = base64_decode($mime[1]);
-                $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
+                //$uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
                 $uploadDirectory = base_path('public/uploaded/product');
                 $fileName = $request->fileName;
                 $filePath = $uploadDirectory . $fileName;
-
                 file_put_contents($filePath, $fileData);
 
                 $query = "SELECT UUID() GenID";
@@ -115,6 +113,8 @@ class ProductController extends Controller
                     //$uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
                     $uploadDirectory = base_path('public/uploaded/product/');
                     $fileName = $request->fileName;
+                    $filePath = $uploadDirectory . $fileName;
+                    file_put_contents($filePath, $fileData);
     
                     $query = "UPDATE MsProduct
                         SET IsDeleted = 0,
