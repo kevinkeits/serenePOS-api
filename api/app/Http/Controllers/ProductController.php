@@ -35,14 +35,14 @@ class ProductController extends Controller
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
                 if ($request->ID) {
-                    $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSku, MsProduct.Name name, MsCategory.ID categoryId, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, (SELECT CONCAT('http://localhost/serenePOS-api/api/public/uploaded/product/', ImgUrl)) imgUrl, MsProduct.MimeType mimeType
+                    $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSKU, MsProduct.Name name, MsCategory.ID categoryID, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, (SELECT CONCAT('http://localhost/serenePOS-api/api/public/uploaded/product/', ImgUrl)) imgUrl, MsProduct.MimeType mimeType
                                     FROM MsProduct
                                     JOIN MsCategory
                                     ON MsProduct.CategoryID = MsCategory.ID
                                     WHERE MsProduct.ID = ?";
                     $product = DB::select($query,[$request->ID])[0];
 
-                    $query = "  SELECT MsVariant.ID variantId, MsVariant.Name name, MsVariant.Type type, MsVariantOption.ID variantOptionId, MsVariantOption.Label label, MsVariantOption.Price price
+                    $query = "  SELECT MsVariant.ID variantID, MsVariant.Name name, MsVariant.Type type, MsVariantOption.ID variantOptionID, MsVariantOption.Label label, MsVariantOption.Price price
                                     FROM MsVariant
                                     JOIN MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
                                     JOIN MsVariantOption on MsVariantOption.VariantID = MsVariant.ID

@@ -19,7 +19,7 @@ class ScanOrderController extends Controller
                         WHERE MsProduct.ID = ?";
             $product = DB::select($query,[$request->ID])[0];
 
-            $query = "SELECT MsVariant.ID variantId, MsVariant.Name name, MsVariant.Type type, MsVariantOption.ID variantOptionId, MsVariantOption.Label label, MsVariantOption.Price price
+            $query = "SELECT MsVariant.ID variantID, MsVariant.Name name, MsVariant.Type type, MsVariantOption.ID variantOptionID, MsVariantOption.Label label, MsVariantOption.Price price
                         FROM MsVariant
                         JOIN MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
                         JOIN MsVariantOption on MsVariantOption.VariantID = MsVariant.ID

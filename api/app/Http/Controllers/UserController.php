@@ -23,6 +23,7 @@ class UserController extends Controller
                 'status' => true,
                 'UserID' => $data->UserID,
                 'ClientID' => $data->ClientID,
+                'OutletID' => $data->OutletID,
             );
         }
         return $return;
@@ -129,7 +130,7 @@ class UserController extends Controller
                         $getAuth['UserID'],
                         $userID,
                         $getAuth['ClientID'],
-                        $request->outletID,
+                        $getAuth['OutletID'],
 
                         $request->name,
                         $request->phoneNumber,
@@ -154,15 +155,13 @@ class UserController extends Controller
                         DateUp=NOW(),
                         Name=?,
                         PhoneNumber=?,
-                        Password=?,
-                        OutletID=?
+                        Password=?
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
                         $request->name,
                         $request->phoneNumber,
                         $request->password,
-                        $request->outletID,
                         $request->id
                     ]);
                     $isValid = true;

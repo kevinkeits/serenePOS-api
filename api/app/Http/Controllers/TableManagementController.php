@@ -23,6 +23,7 @@ class TableManagementController extends Controller
                 'status' => true,
                 'UserID' => $data->UserID,
                 'ClientID' => $data->ClientID,
+                'OutletID' => $data->OutletID,
             );
         }
         return $return;
@@ -64,7 +65,7 @@ class TableManagementController extends Controller
                     $getAuth['UserID'],
                     $tableID,
                     $getAuth['ClientID'],
-                    $request->outletID,
+                    $getAuth['OutletID'],
                     $request->tableName,
                     $request->capacity,
                 ]);
@@ -75,15 +76,11 @@ class TableManagementController extends Controller
                 SET IsDeleted=0,
                     UserUp=?,
                     DateUp=NOW(),
-                    ClientID=?,
-                    OutletID=?,
                     TableName=?,
                     Capacity=?
                     WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
-                    $getAuth['ClientID'],
-                    $request->outletID,
                     $request->tableName,
                     $request->capacity,
                     $request->id
