@@ -35,7 +35,7 @@ class CategoryController extends Controller
         $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
-                $query = "SELECT ID id, Name name, QtyAlert qtyAlert, BGColor bgColor
+                $query = "SELECT ID id, Name name, QtyAlert qtyAlert, BGColor bgColor, (SELECT COUNT(ID) FROM MsProduct WHERE MsProduct.CategoryID=MsCategory.ID AND MsProduct.IsDeleted=0) totalItem
                     FROM MsCategory
                     WHERE IsDeleted=0
                         AND ClientID = ?"; 
@@ -94,12 +94,12 @@ class CategoryController extends Controller
                 if (str_contains($request->id,',')) {
                     $tempID = explode(',',$request->id);
                     foreach ($tempID as $key => $ID) {
-                        $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=? AND ClientID=?";
+                        $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ClientID=? AND ID=? ";
                         DB::update($query, [$getAuth['UserID'],$getAuth['ClientID'], $ID]);
                     }
                     $return['message'] = "Category successfully deleted";
                 } else {
-                    $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=? AND ClientID=?";
+                    $query = "UPDATE MsCategory SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ClientID=? AND ID=?";
                     DB::update($query, [$getAuth['UserID'],$getAuth['ClientID'],$request->id]);
                     $return['message'] = "Category successfully deleted";
                 }

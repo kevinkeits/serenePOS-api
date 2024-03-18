@@ -42,10 +42,18 @@ class ProductController extends Controller
                                     WHERE MsProduct.IsDeleted=0 AND MsCategory.IsDeleted=0 AND MsProduct.ClientID=? AND MsProduct.ID = ?";
                     $product = DB::select($query,[$getAuth['ClientID'],$request->ID])[0];
 
-                    $query = "  SELECT MsVariant.ID variantID, MsVariant.Name name, MsVariant.Type type, MsVariantOption.ID variantOptionID, MsVariantOption.Label label, MsVariantOption.Price price
+                    $query = "  SELECT IFNULL(MsProductVariantOption.ID,'') productVariantOptionID, 
+                                    CASE WHEN IFNULL(MsProductVariantOption.IsSelected,0) = 1 THEN 'T' ELSE 'F' END isSelected, 
+                                    MsVariant.ID variantID, 
+                                    MsVariant.Name name, 
+                                    MsVariant.Type type, 
+                                    MsVariantOption.ID variantOptionID, 
+                                    MsVariantOption.Label label, 
+                                    MsVariantOption.Price price
                                     FROM MsVariant
                                     JOIN MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
                                     JOIN MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
+                                    LEFT JOIN MsProductVariantOption on (MsProductVariantOption.VariantOptionID = MsVariantOption.ID AND MsProductVariantOption.ProductID = MsVariantProduct.ProductID)
                                     WHERE MsVariant.IsDeleted=0 AND MsVariant.ClientID=? AND MsVariantProduct.ProductID = ?
                                     ORDER BY MsVariant.Name ASC, MsVariantOption.Label ASC";
                     $variant = DB::select($query,[$getAuth['ClientID'],$request->ID]);
@@ -53,14 +61,14 @@ class ProductController extends Controller
                     $return['data'] = array('product'=>$product, 'variant'=>$variant);
                 } else {
                     if ($request->CategoryID != '') {
-                        $query = "  SELECT ID id, Name name, Price price, Notes notes, CASE ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl
+                        $query = "  SELECT ID id, Name name, Price price, Qty qty, Notes notes, CASE ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl
                                         FROM MsProduct
                                         WHERE IsDeleted=0 AND ClientID=? AND CategoryID = ?
                                         ORDER BY Name ASC";
                         $data = DB::select($query, [$getAuth['ClientID'],$request->CategoryID]);
                         if ($data) $return['data'] = $data;
                     } else {
-                        $query = "  SELECT ID id, Name name, Price price, Notes notes, CASE ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl
+                        $query = "  SELECT ID id, Name name, Price price, Qty qty, Notes notes, CASE ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl
                                         FROM MsProduct
                                         WHERE IsDeleted=0 AND ClientID=?
                                         ORDER BY Name ASC";
@@ -89,8 +97,8 @@ class ProductController extends Controller
                 //$uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
                 $uploadDirectory = base_path('public/uploaded/product');
                 $fileName = $request->fileName;
-                $fileExt = explode(".", $fileName)[count(explode(".", $fileName))-1];
-                $filePath = $uploadDirectory . $productID . "." . $fileExt;
+                //$fileExt = explode(".", $fileName)[count(explode(".", $fileName))-1];
+                $filePath = $uploadDirectory . $fileName;
                 file_put_contents($filePath, $fileData);
 
                 $query = "SELECT UUID() GenID";
