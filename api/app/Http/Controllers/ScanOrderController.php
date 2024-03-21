@@ -29,8 +29,10 @@ class ScanOrderController extends Controller
 
             $return['data'] = array('product'=>$product, 'variant'=>$variant);
         } else {
-            $query = "SELECT ID id, Name name, Notes notes, Price price, ImgUrl imgUrl
+            $query = "SELECT MsProduct.ID id, MsProduct.Name name, MsCategory.ID idCategory, MsCategory.Name categoryName, MsProduct.Notes notes, MsProduct.Price price, MsProduct.ImgUrl imgUrl
                         FROM MsProduct
+                        JOIN MsCategory
+                        ON MsCategory.ID = MsProduct.CategoryID
                         ORDER BY Name ASC";
             $data = DB::select($query, [$request->ID]);
             if ($data) {
