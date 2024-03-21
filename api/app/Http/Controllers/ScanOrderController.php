@@ -12,7 +12,7 @@ class ScanOrderController extends Controller
     {
         $return = array('status'=>true,'message'=>"",'data'=>array());
         if ($request->ID) {
-            $query = "SELECT MsProduct.ID id, MsProduct.Name name, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes
+            $query = "SELECT MsProduct.ID id, MsProduct.Name name, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, CASE ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl
                         FROM MsProduct
                         JOIN MsCategory
                         ON MsProduct.CategoryID = MsCategory.ID
@@ -29,7 +29,7 @@ class ScanOrderController extends Controller
 
             $return['data'] = array('product'=>$product, 'variant'=>$variant);
         } else {
-            $query = "SELECT MsProduct.ID id, MsProduct.Name name, MsCategory.ID idCategory, MsCategory.Name categoryName, MsProduct.Notes notes, MsProduct.Price price, MsProduct.ImgUrl imgUrl
+            $query = "SELECT MsProduct.ID id, MsProduct.Name name, MsCategory.ID idCategory, MsCategory.Name categoryName, MsProduct.Notes notes, MsProduct.Price price, CASE ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl
                         FROM MsProduct
                         JOIN MsCategory
                         ON MsCategory.ID = MsProduct.CategoryID
