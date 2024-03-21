@@ -89,17 +89,23 @@ class ProductController extends Controller
         if ($getAuth['status']) {
             if ($request->action == "add") {
 
-                $base64string = $request->fileData;
-                $mime = explode(";base64,", $base64string);
-                $mimeType = str_replace('data:', '', $mime[0]);
+                $fileName = "";
+                $mimeType = "";
 
-                $fileData = base64_decode($mime[1]);
-                //$uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
-                $uploadDirectory = base_path('public/uploaded/product');
-                $fileName = $request->fileName;
-                //$fileExt = explode(".", $fileName)[count(explode(".", $fileName))-1];
-                $filePath = $uploadDirectory . $fileName;
-                file_put_contents($filePath, $fileData);
+                if ($request->fileName != "") {
+                    $base64string = $request->fileData;
+                    $mime = explode(";base64,", $base64string);
+                    $mimeType = str_replace('data:', '', $mime[0]);
+
+
+                    $fileData = base64_decode($mime[1]);
+                    //$uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/product/';
+                    $uploadDirectory = base_path('public/uploaded/product');
+                    $fileName = $request->fileName;
+                    //$fileExt = explode(".", $fileName)[count(explode(".", $fileName))-1];
+                    $filePath = $uploadDirectory . $fileName;
+                    file_put_contents($filePath, $fileData);
+                }
 
                 $query = "SELECT UUID() GenID";
                 $productID = DB::select($query)[0]->GenID;

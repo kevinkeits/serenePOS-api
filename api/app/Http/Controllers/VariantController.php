@@ -51,7 +51,7 @@ class VariantController extends Controller
                 $query = "  SELECT MsProduct.ID id, MsProduct.Name name, CASE MsProduct.ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', MsProduct.ImgUrl)) END imgUrl
                                 FROM MsVariantProduct
                                 JOIN MsProduct ON MsProduct.ID = MsVariantProduct.ProductID
-                                WHERE MsVariantProduct.ClientID = ? AND MsVariantProduct.VariantID = ?
+                                WHERE MsProduct.IsDeleted = 0 AND MsVariantProduct.ClientID = ? AND MsVariantProduct.VariantID = ?
                                 ORDER BY MsProduct.Name ASC";
                 $product = DB::select($query,[$getAuth['ClientID'], $request->ID]);
 
