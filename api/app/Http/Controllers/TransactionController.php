@@ -46,10 +46,8 @@ class TransactionController extends Controller
                                                 TrTransaction.CustomerName customerName,
                                                 MsOutlet.Name outletName,
                                                 
-                                                MsPayment.ID paymentID,
-                                                MsPayment.Name payment,
-                                                MsPayment.Description description, 
-                                                MsPayment.IsActive isActive,
+                                                TrTransaction.PaymentID paymentID,
+                                                (SELECT Name FROM MsPayment WHERE ID=TrTransaction.PaymentID) payment,
 
                                                 TrTransaction.SubTotal subTotal, 
                                                 TrTransaction.Discount discount, 
@@ -60,7 +58,6 @@ class TransactionController extends Controller
                                                 TrTransaction.Status isPaid, 
                                                 TrTransaction.Notes notes
                                         FROM    TrTransaction
-                                        JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
                                         JOIN    MsOutlet ON MsOutlet.ID = TrTransaction.OutletID
                                         WHERE   TrTransaction.ID = ?
                                         ORDER BY TransactionDate DESC";
@@ -100,14 +97,12 @@ class TransactionController extends Controller
                                                 TrTransaction.TransactionDate transactionDate, 
                                                 TrTransaction.PaidDate paidDate, 
                                                 TrTransaction.CustomerName customerName, 
-                                                MsPayment.ID paymentID, 
-                                                MsPayment.Name payment, 
-                                                MsPayment.Description description, 
-                                                MsPayment.IsActive isActive, 
+                                                TrTransaction.PaymentID paymentID,
+                                                (SELECT Name FROM MsPayment WHERE ID=TrTransaction.PaymentID) payment,
                                                 TrTransaction.TotalPayment totalPayment,
                                                 TrTransaction.Status isPaid
                                         FROM    TrTransaction
-                                        JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
+                                        LEFT JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
                                         WHERE   TrTransaction.ClientID = ?
                                         ORDER BY TransactionDate DESC";
                             $data = DB::select($query, [$getAuth['ClientID']]);
