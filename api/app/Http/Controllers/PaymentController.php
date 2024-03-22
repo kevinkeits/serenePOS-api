@@ -37,7 +37,8 @@ class PaymentController extends Controller
            {
                 $query = "  SELECT MsPayment.ID id, MsPayment.ClientID clientID, MsPayment.Name name, MsPayment.Description description, MsPayment.IsActive isActive
                                 FROM MsPayment
-                                WHERE ClientID = ?
+                                WHERE MsPayment.ClientID = ?
+                                    AND MsPayment.IsDeleted = 0
                                 ORDER BY Name ASC";
                 $data = DB::select($query, [$getAuth['ClientID']]);
                 if ($data) $return['data'] = $data;

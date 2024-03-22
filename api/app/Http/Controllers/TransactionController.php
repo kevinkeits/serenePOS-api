@@ -11,9 +11,10 @@ class TransactionController extends Controller
     {
         if ($Token != null) $Token = trim(str_replace("Bearer","",$Token));
         $return = array('status'=>false,'ID'=>"");
-        $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.OutletID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email
+        $query = "SELECT MsUser.ID UserID, MsUser.ClientID, MsUser.OutletID, MsUser.Name, MsUser.PhoneNumber, MsUser.Email, MsClient.Name ClientName
                     FROM MsUser
                     JOIN TrSession ON TrSession.UserID = MsUser.ID
+                    JOIN MsClient ON MsClient.ID = MsUser.ClientID
                     WHERE TrSession.ID=?
                         AND TrSession.IsLoggedOut=0";
         $checkAuth = DB::select($query,[$Token]);
@@ -23,6 +24,7 @@ class TransactionController extends Controller
                 'status' => true,
                 'UserID' => $data->UserID,
                 'ClientID' => $data->ClientID,
+                'ClientName' => $data->ClientName,
                 'OutletID' => $data->OutletID,
             );
         }
@@ -129,6 +131,15 @@ class TransactionController extends Controller
 
                 $countTransaction = "SELECT COUNT(TransactionNumber) +1 as transNumber FROM TrTransaction WHERE TrTransaction.ClientID = ? ";
                 $incrementTransaction = DB::select($countTransaction, [$getAuth['ClientID']]);
+
+                $initials = '';
+                $clientName = strtoupper(trim($getAuth['ClientName']));
+                if (str_contains($getAuth['ClientName'],' ')) {
+                    $arrInitials = explode(' ',$clientName);
+                    $initials = substr($arrInitials[0],0,1).substr($arrInitials[1],0,1);
+                } else {
+                    $initials = substr($getAuth['ClientName'],0,1);
+                }
                 
                 $query = "INSERT INTO TrTransaction
                             (IsDeleted, UserIn, DateIn, ID, TransactionNumber, ClientID, OutletID, PaymentID, TransactionDate, PaidDate, CustomerName, SubTotal, Discount, Tax, TotalPayment, PaymentAmount, Changes, Status, Notes)
@@ -137,7 +148,7 @@ class TransactionController extends Controller
                 DB::insert($query, [
                     $getAuth['UserID'],
                     $transactionID,
-                    $incrementTransaction[0]->transNumber,
+                    $initials.$incrementTransaction[0]->transNumber,
                     $getAuth['ClientID'],
                     $getAuth['OutletID'],
                     $request->paymentID,
@@ -215,9 +226,9 @@ class TransactionController extends Controller
                                     $getAuth['ClientID'],
                                     $transactionID,
                                     $transactionProductIDVariant[$i],
-                                    $variantOptionID[$i],
-                                    $variantLabel[$i],
-                                    floatval($variantPrice[$i])
+                                    explode('~',$variantOptionID[$i])[1],
+                                    explode('~',$variantLabel[$i])[2],
+                                    floatval(explode('~',$variantPrice[$i])[2])
                                 ]);
                         }
                     } else {
@@ -230,9 +241,9 @@ class TransactionController extends Controller
                                     $getAuth['ClientID'],
                                     $transactionID,
                                     $request->transactionProductIDVariant,
-                                    $request->variantOptionID,
-                                    $request->variantLabel,
-                                    floatval($request->variantPrice)
+                                    explode('~',$request->variantOptionID)[1],
+                                    explode('~',$request->variantLabel)[2],
+                                    floatval(explode('~',$request->variantPrice)[2])
                                 ]);
                     }
                 }

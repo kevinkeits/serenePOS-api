@@ -99,91 +99,95 @@ class VariantController extends Controller
                     $request->type,
                 ]);
                 
-                if (str_contains($request->optionLabel,',')) {
-                    $optionLabel = explode(',',$request->optionLabel);
-                    $optionPrice = explode(',',$request->optionPrice);
-                    for ($i=0; $i<count($optionLabel); $i++)
-                    {
-                        $query = "INSERT INTO MsVariantOption
-                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
-                                VALUES
-                                (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
-                            DB::insert($query, [
-                                $getAuth['UserID'],
-                                $getAuth['ClientID'],
-                                $variantID,
-                                $optionLabel[$i],
-                                $optionPrice[$i],
-                            ]);
-                    }
-                } else {
-                    $query = "INSERT INTO MsVariantOption
-                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
-                                VALUES
-                                (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
-                            DB::insert($query, [
-                                $getAuth['UserID'],
-                                $getAuth['ClientID'],
-                                $variantID,
-                                $request->optionLabel,
-                                $request->optionPrice
-                            ]);
-                }
-
-                $query = "SELECT ID FROM MsVariantOption WHERE ClientID=? AND VariantID=?";
-                $variantOption = DB::select($query,[$getAuth['ClientID'], $variantID]);
-
-                if (str_contains($request->productID,',')) {
-                    $productID = explode(',',$request->productID);
-                    for ($i=0; $i<count($productID); $i++)
-                    {
-                        $query = "INSERT INTO MsVariantProduct
-                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
-                                VALUES
-                                (0, ?, NOW(), UUID(), ?, ?, ?)";
-                            DB::insert($query, [
-                                $getAuth['UserID'],
-                                $getAuth['ClientID'],
-                                $variantID,
-                                $productID[$i],
-                            ]);
-
-                            for ($x=0; $x < count($variantOption); $x++) { 
-                                $query = "INSERT INTO MsProductVariantOption
-                                            (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID, IsSelected)
-                                            VALUES
-                                            (0, ?, NOW(), UUID(), ?, ?, ?, 1)";
-                                        DB::insert($query, [
-                                            $getAuth['UserID'],
-                                            $getAuth['ClientID'],
-                                            $productID[$i],
-                                            $variantOption[$x]->ID,
-                                        ]);
-                            }
-                    }
-                } else {
-                    $query = "INSERT INTO MsVariantProduct
-                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
-                                VALUES
-                                (0, ?, NOW(), UUID(), ?, ?, ?)";
-                            DB::insert($query, [
-                                $getAuth['UserID'],
-                                $getAuth['ClientID'],
-                                $variantID,
-                                $request->productID
-                            ]);
-
-                    for ($x=0; $x < count($variantOption); $x++) { 
-                        $query = "INSERT INTO MsProductVariantOption
-                                    (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID, IsSelected)
+                if ($request->optionLabel != "") {
+                    if (str_contains($request->optionLabel,',')) {
+                        $optionLabel = explode(',',$request->optionLabel);
+                        $optionPrice = explode(',',$request->optionPrice);
+                        for ($i=0; $i<count($optionLabel); $i++)
+                        {
+                            $query = "INSERT INTO MsVariantOption
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
                                     VALUES
-                                    (0, ?, NOW(), UUID(), ?, ?, ?, 1)";
+                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
                                 DB::insert($query, [
                                     $getAuth['UserID'],
                                     $getAuth['ClientID'],
-                                    $request->productID,
-                                    $variantOption[$x]->ID,
+                                    $variantID,
+                                    $optionLabel[$i],
+                                    $optionPrice[$i],
                                 ]);
+                        }
+                    } else {
+                        $query = "INSERT INTO MsVariantOption
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
+                                    VALUES
+                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?)";
+                                DB::insert($query, [
+                                    $getAuth['UserID'],
+                                    $getAuth['ClientID'],
+                                    $variantID,
+                                    $request->optionLabel,
+                                    $request->optionPrice
+                                ]);
+                    }
+                }
+                
+                if ($request->productID != "") {
+                    $query = "SELECT ID FROM MsVariantOption WHERE ClientID=? AND VariantID=?";
+                    $variantOption = DB::select($query,[$getAuth['ClientID'], $variantID]);
+
+                    if (str_contains($request->productID,',')) {
+                        $productID = explode(',',$request->productID);
+                        for ($i=0; $i<count($productID); $i++)
+                        {
+                            $query = "INSERT INTO MsVariantProduct
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
+                                    VALUES
+                                    (0, ?, NOW(), UUID(), ?, ?, ?)";
+                                DB::insert($query, [
+                                    $getAuth['UserID'],
+                                    $getAuth['ClientID'],
+                                    $variantID,
+                                    $productID[$i],
+                                ]);
+
+                                for ($x=0; $x < count($variantOption); $x++) { 
+                                    $query = "INSERT INTO MsProductVariantOption
+                                                (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID, IsSelected)
+                                                VALUES
+                                                (0, ?, NOW(), UUID(), ?, ?, ?, 1)";
+                                            DB::insert($query, [
+                                                $getAuth['UserID'],
+                                                $getAuth['ClientID'],
+                                                $productID[$i],
+                                                $variantOption[$x]->ID,
+                                            ]);
+                                }
+                        }
+                    } else {
+                        $query = "INSERT INTO MsVariantProduct
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
+                                    VALUES
+                                    (0, ?, NOW(), UUID(), ?, ?, ?)";
+                                DB::insert($query, [
+                                    $getAuth['UserID'],
+                                    $getAuth['ClientID'],
+                                    $variantID,
+                                    $request->productID
+                                ]);
+
+                        for ($x=0; $x < count($variantOption); $x++) { 
+                            $query = "INSERT INTO MsProductVariantOption
+                                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID, IsSelected)
+                                        VALUES
+                                        (0, ?, NOW(), UUID(), ?, ?, ?, 1)";
+                                    DB::insert($query, [
+                                        $getAuth['UserID'],
+                                        $getAuth['ClientID'],
+                                        $request->productID,
+                                        $variantOption[$x]->ID,
+                                    ]);
+                        }
                     }
                 }
                 $return['message'] = "Variant successfully created.";
@@ -206,48 +210,126 @@ class VariantController extends Controller
                         ]);
 
 
-                if (str_contains($request->optionIDDelete,',')) {
-                    $optionIDDelete = explode(',',$request->optionIDDelete);
-                    for ($i=0; $i<count($optionIDDelete); $i++)
-                    {
+                if ($request->optionIDDelete != '')
+                {
+                    if (str_contains($request->optionIDDelete,',')) {
+                        $optionIDDelete = explode(',',$request->optionIDDelete);
+                        for ($i=0; $i<count($optionIDDelete); $i++)
+                        {
+                            $query = "DELETE FROM MsVariantOption WHERE ClientID=? AND ID=?";
+                            DB::delete($query, [$getAuth['ClientID'],$optionIDDelete[$i]]);
+    
+                            $query = "DELETE FROM MsProductVariantOption WHERE ClientID=? AND VariantOptionID=?";
+                            DB::delete($query, [$getAuth['ClientID'],$optionIDDelete[$i]]);
+                        }
+                    } else {
                         $query = "DELETE FROM MsVariantOption WHERE ClientID=? AND ID=?";
-                        DB::delete($query, [$getAuth['ClientID'],$optionIDDelete[$i]]);
-
+                        DB::delete($query, [$getAuth['ClientID'],$request->optionIDDelete]);
+    
                         $query = "DELETE FROM MsProductVariantOption WHERE ClientID=? AND VariantOptionID=?";
-                        DB::delete($query, [$getAuth['ClientID'],$optionIDDelete[$i]]);
-                    }
-                } else {
-                    $query = "DELETE FROM MsVariantOption WHERE ClientID=? AND ID=?";
-                    DB::delete($query, [$getAuth['ClientID'],$request->optionIDDelete]);
-
-                    $query = "DELETE FROM MsProductVariantOption WHERE ClientID=? AND VariantOptionID=?";
-                    DB::delete($query, [$getAuth['ClientID'],$request->optionIDDelete]);
+                        DB::delete($query, [$getAuth['ClientID'],$request->optionIDDelete]);
+                    }    
                 }
-
-
-                if (str_contains($request->optionID,',')) {
-                    $optionID = explode(',',$request->optionID);
-                    $optionLabel = explode(',',$request->optionLabel);
-                    $optionPrice = explode(',',$request->optionPrice);
-                    for ($i=0; $i<count($optionID); $i++)
-                    {
-                        $variantOptionID = $optionID[$i];
-                        if ($optionID[$i] == "") {
+                
+                if ($request->optionID != '') {
+                    if (str_contains($request->optionID,',')) {
+                        $optionID = explode(',',$request->optionID);
+                        $optionLabel = explode(',',$request->optionLabel);
+                        $optionPrice = explode(',',$request->optionPrice);
+                        for ($i=0; $i<count($optionID); $i++)
+                        {
+                            $variantOptionID = $optionID[$i];
+                            if ($optionID[$i] == "") {
+                                $query = "SELECT UUID() GenID";
+                                $variantOptionID = DB::select($query)[0]->GenID;
+    
+                                $query = "INSERT INTO MsVariantOption
+                                        (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
+                                        VALUES
+                                        (0, ?, NOW(), ?, ?, ?, ?, ?)";
+                                DB::insert($query, [
+                                    $getAuth['UserID'],
+                                    $variantOptionID,
+                                    $getAuth['ClientID'],
+                                    $request->id,
+                                    $optionLabel[$i],
+                                    $optionPrice[$i],
+                                ]);
+                            } else {
+                                $query = "UPDATE MsVariantOption 
+                                        SET UserUp=?,
+                                            DateUp=NOW(),
+                                            Label=?,
+                                            Price=?
+                                            WHERE ClientID=? AND ID=?";
+                                        DB::update($query, [
+                                            $getAuth['UserID'],
+                                            $optionLabel[$i],
+                                            $optionPrice[$i],
+                                            $getAuth['ClientID'],
+                                            $optionID[$i]
+                                        ]);
+    
+                                if ($request->productID == '' || $request->productID == null) {
+                                    $query = "DELETE FROM MsProductVariantOption WHERE ClientID=? AND VariantOptionID=?";
+                                    DB::delete($query, [$getAuth['ClientID'],$optionID[$i]]);
+                                }
+                            }
+    
+                            if (str_contains($request->productID,',')) {
+                                $productID = explode(',',$request->productID);
+                                for ($x=0; $x<count($productID); $x++)
+                                {
+                                    $query = "SELECT ID FROM MsProductVariantOption WHERE ClientID=? AND VariantOptionID=? AND ProductID=?";
+                                    $isExist = DB::select($query,[$getAuth['ClientID'],$variantOptionID,$productID[$x]]);
+                                    if (count($isExist) == 0) {
+                                        $query = "INSERT INTO MsProductVariantOption
+                                                (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID, IsSelected)
+                                                VALUES
+                                                (0, ?, NOW(), UUID(), ?, ?, ?, 1)";
+                                        DB::insert($query, [
+                                                $getAuth['UserID'],
+                                                $getAuth['ClientID'],
+                                                $productID[$x],
+                                                $variantOptionID
+                                        ]);
+                                    }
+                                }
+                            } else {
+                                $query = "SELECT ID FROM MsProductVariantOption WHERE ClientID=? AND VariantOptionID=? AND ProductID=?";
+                                $isExist = DB::select($query,[$getAuth['ClientID'],$variantOptionID,$request->productID]);
+                                if (count($isExist) == 0) {
+                                    $query = "INSERT INTO MsProductVariantOption
+                                            (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID, IsSelected)
+                                            VALUES
+                                            (0, ?, NOW(), UUID(), ?, ?, ?, 1)";
+                                    DB::insert($query, [
+                                            $getAuth['UserID'],
+                                            $getAuth['ClientID'],
+                                            $request->productID,
+                                            $variantOptionID
+                                        ]);
+                                    }
+                            }
+                        }
+                    } else {
+                        $variantOptionID = $request->optionID;
+                        if ($request->optionID == "") {
                             $query = "SELECT UUID() GenID";
                             $variantOptionID = DB::select($query)[0]->GenID;
-
+    
                             $query = "INSERT INTO MsVariantOption
-                                    (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
-                                    VALUES
-                                    (0, ?, NOW(), ?, ?, ?, ?, ?)";
-                            DB::insert($query, [
-                                $getAuth['UserID'],
-                                $variantOptionID,
-                                $getAuth['ClientID'],
-                                $request->id,
-                                $optionLabel[$i],
-                                $optionPrice[$i],
-                            ]);
+                                        (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
+                                        VALUES
+                                        (0, ?, NOW(), ?, ?, ?, ?, ?)";
+                                DB::insert($query, [
+                                    $getAuth['UserID'],
+                                    $variantOptionID,
+                                    $getAuth['ClientID'],
+                                    $request->id,
+                                    $request->optionLabel,
+                                    $request->optionPrice
+                                ]);
                         } else {
                             $query = "UPDATE MsVariantOption 
                                     SET UserUp=?,
@@ -257,18 +339,18 @@ class VariantController extends Controller
                                         WHERE ClientID=? AND ID=?";
                                     DB::update($query, [
                                         $getAuth['UserID'],
-                                        $optionLabel[$i],
-                                        $optionPrice[$i],
+                                        $request->optionLabel,
+                                        $request->optionPrice,
                                         $getAuth['ClientID'],
-                                        $optionID[$i]
+                                        $request->optionID
                                     ]);
-
+    
                             if ($request->productID == '' || $request->productID == null) {
                                 $query = "DELETE FROM MsProductVariantOption WHERE ClientID=? AND VariantOptionID=?";
-                                DB::delete($query, [$getAuth['ClientID'],$optionID[$i]]);
+                                DB::delete($query, [$getAuth['ClientID'],$request->optionID]);
                             }
                         }
-
+    
                         if (str_contains($request->productID,',')) {
                             $productID = explode(',',$request->productID);
                             for ($x=0; $x<count($productID); $x++)
@@ -302,115 +384,46 @@ class VariantController extends Controller
                                         $request->productID,
                                         $variantOptionID
                                     ]);
-                                }
-                        }
-                    }
-                } else {
-                    $variantOptionID = $request->optionID;
-                    if ($request->optionID == "") {
-                        $query = "SELECT UUID() GenID";
-                        $variantOptionID = DB::select($query)[0]->GenID;
-
-                        $query = "INSERT INTO MsVariantOption
-                                    (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, Label, Price)
-                                    VALUES
-                                    (0, ?, NOW(), ?, ?, ?, ?, ?)";
-                            DB::insert($query, [
-                                $getAuth['UserID'],
-                                $variantOptionID,
-                                $getAuth['ClientID'],
-                                $request->id,
-                                $request->optionLabel,
-                                $request->optionPrice
-                            ]);
-                    } else {
-                        $query = "UPDATE MsVariantOption 
-                                SET UserUp=?,
-                                    DateUp=NOW(),
-                                    Label=?,
-                                    Price=?
-                                    WHERE ClientID=? AND ID=?";
-                                DB::update($query, [
-                                    $getAuth['UserID'],
-                                    $request->optionLabel,
-                                    $request->optionPrice,
-                                    $getAuth['ClientID'],
-                                    $request->optionID
-                                ]);
-
-                        if ($request->productID == '' || $request->productID == null) {
-                            $query = "DELETE FROM MsProductVariantOption WHERE ClientID=? AND VariantOptionID=?";
-                            DB::delete($query, [$getAuth['ClientID'],$request->optionID]);
-                        }
-                    }
-
-                    if (str_contains($request->productID,',')) {
-                        $productID = explode(',',$request->productID);
-                        for ($x=0; $x<count($productID); $x++)
-                        {
-                            $query = "SELECT ID FROM MsProductVariantOption WHERE ClientID=? AND VariantOptionID=? AND ProductID=?";
-                            $isExist = DB::select($query,[$getAuth['ClientID'],$variantOptionID,$productID[$x]]);
-                            if (count($isExist) == 0) {
-                                $query = "INSERT INTO MsProductVariantOption
-                                        (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID, IsSelected)
-                                        VALUES
-                                        (0, ?, NOW(), UUID(), ?, ?, ?, 1)";
-                                DB::insert($query, [
-                                        $getAuth['UserID'],
-                                        $getAuth['ClientID'],
-                                        $productID[$x],
-                                        $variantOptionID
-                                ]);
                             }
-                        }
-                    } else {
-                        $query = "SELECT ID FROM MsProductVariantOption WHERE ClientID=? AND VariantOptionID=? AND ProductID=?";
-                        $isExist = DB::select($query,[$getAuth['ClientID'],$variantOptionID,$request->productID]);
-                        if (count($isExist) == 0) {
-                            $query = "INSERT INTO MsProductVariantOption
-                                    (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, VariantOptionID, IsSelected)
-                                    VALUES
-                                    (0, ?, NOW(), UUID(), ?, ?, ?, 1)";
-                            DB::insert($query, [
-                                    $getAuth['UserID'],
-                                    $getAuth['ClientID'],
-                                    $request->productID,
-                                    $variantOptionID
-                                ]);
                         }
                     }
                 }
                 
-                $query = "DELETE FROM MsVariantProduct WHERE ClientID=? AND VariantID=?";
-                DB::delete($query, [$getAuth['ClientID'],$request->id]);
+                
+                if ($request->productID != '') 
+                {
+                    $query = "DELETE FROM MsVariantProduct WHERE ClientID=? AND VariantID=?";
+                    DB::delete($query, [$getAuth['ClientID'],$request->id]);
 
-                if (str_contains($request->productID,',')) {
-                    $productID = explode(',',$request->productID);
-                    for ($i=0; $i<count($productID); $i++)
-                    {
+                    if (str_contains($request->productID,',')) {
+                        $productID = explode(',',$request->productID);
+                        for ($i=0; $i<count($productID); $i++)
+                        {
+                            $query = "INSERT INTO MsVariantProduct
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
+                                    VALUES
+                                    (0, ?, NOW(), UUID(), ?, ?, ?)";
+                            DB::insert($query, [
+                                    $getAuth['UserID'],
+                                    $getAuth['ClientID'],
+                                    $request->id,
+                                    $productID[$i],
+                            ]);
+                        }
+                    } else {
                         $query = "INSERT INTO MsVariantProduct
-                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
-                                VALUES
-                                (0, ?, NOW(), UUID(), ?, ?, ?)";
-                        DB::insert($query, [
-                                $getAuth['UserID'],
-                                $getAuth['ClientID'],
-                                $request->id,
-                                $productID[$i],
-                        ]);
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
+                                    VALUES
+                                    (0, ?, NOW(), UUID(), ?, ?, ?)";
+                            DB::insert($query, [
+                                    $getAuth['UserID'],
+                                    $getAuth['ClientID'],
+                                    $request->id,
+                                    $request->productID,
+                            ]);
                     }
-                } else {
-                    $query = "INSERT INTO MsVariantProduct
-                                (IsDeleted, UserIn, DateIn, ID, ClientID, VariantID, ProductID)
-                                VALUES
-                                (0, ?, NOW(), UUID(), ?, ?, ?)";
-                        DB::insert($query, [
-                                $getAuth['UserID'],
-                                $getAuth['ClientID'],
-                                $request->id,
-                                $request->productID,
-                        ]);
                 }
+                
                 $return['message'] = "Variant successfully modified.";
             }
             if ($request->action == "delete") {

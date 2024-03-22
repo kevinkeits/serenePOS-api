@@ -152,6 +152,7 @@ class AuthController extends Controller
                     $return['data'] = array( 
                         'Token' => $SessionID,
                         'UserID' => $data->ID,
+                        'Email' => $data->Email,
                         'Name' => $data->Name
                     );
                     $return['status'] = true;
