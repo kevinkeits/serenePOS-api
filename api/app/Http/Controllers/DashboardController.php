@@ -160,7 +160,7 @@ class DashboardController extends Controller
             // Add profit percentage to the data
             $result[0]->profitPercentage = $profitPercentage;
             
-            $return['data'] = $result;
+            $return['data'] = $result[0];
         } else {
             $return['data'] = null;
         }
