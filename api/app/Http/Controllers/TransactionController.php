@@ -60,6 +60,7 @@ class TransactionController extends Controller
                                         FROM    TrTransaction
                                         JOIN    MsOutlet ON MsOutlet.ID = TrTransaction.OutletID
                                         WHERE   TrTransaction.ID = ?
+						AND TrTransaction.IsDeleted = 0
                                         ORDER BY TransactionDate DESC";
                             $details = DB::select($query,[$request->ID])[0];
 
@@ -104,6 +105,7 @@ class TransactionController extends Controller
                                         FROM    TrTransaction
                                         LEFT JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
                                         WHERE   TrTransaction.ClientID = ?
+						AND TrTransaction.IsDeleted = 0
                                         ORDER BY TransactionDate DESC";
                             $data = DB::select($query, [$getAuth['ClientID']]);
                             if ($data) $return['data'] = $data;
@@ -170,10 +172,10 @@ class TransactionController extends Controller
                         $query = "INSERT INTO TrTransactionProduct
                                 (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, TransactionID, Qty, UnitPrice, Discount, UnitPriceAfterDiscount, Notes)
                                 VALUES
-                                (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?, ?)";
+                                (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                             DB::insert($query, [
                                 $getAuth['UserID'],
-                                //$transactionProductID[$i],
+                                $transactionID."~".$productID[$i],
                                 $getAuth['ClientID'],
                                 $productID[$i],
                                 $transactionID,
@@ -188,10 +190,10 @@ class TransactionController extends Controller
                     $query = "INSERT INTO TrTransactionProduct
                                 (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, TransactionID, Qty, UnitPrice, Discount, UnitPriceAfterDiscount, Notes)
                                 VALUES
-                                (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?, ?)";
+                                (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                             DB::insert($query, [
                                 $getAuth['UserID'],
-                                //$request->transactionProductID
+                                $transactionID."~".$request->productID,
                                 $getAuth['ClientID'],
                                 $request->productID,
                                 $transactionID,
@@ -201,26 +203,27 @@ class TransactionController extends Controller
                                 floatval($request->unitPrice) - floatval($request->discountProduct),
                                 $request->notesProduct,
                             ]);
-                            $return['message'] = "Transaction Product successfully created.";
                 }
 
                 if ($request->variantOptionID != '') {
                     if (str_contains($request->variantOptionID,',')) {
-                        $transactionProductIDVariant = explode(',',$request->transactionProductIDVariant);
+                        $transactionProductID = explode(',',$request->transactionProductID);
+                        $transactionProductVariantID = explode(',',$request->transactionProductIDVariant);
                         $variantOptionID = explode(',',$request->variantOptionID);
                         $variantLabel = explode(',',$request->variantLabel);
                         $variantPrice = explode(',',$request->variantPrice);
                         for ($i=0; $i<count($variantOptionID); $i++)
                         {
                             $query = "INSERT INTO TrTransactionProductVariant
-                                    (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, VariantOptionID, Label, Price)
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, TransactionProductVariantID, VariantOptionID, Label, Price)
                                     VALUES
-                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?)";
+                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?)";
                                 DB::insert($query, [
                                     $getAuth['UserID'],
                                     $getAuth['ClientID'],
                                     $transactionID,
-                                    $transactionProductIDVariant[$i],
+                                    $transactionID."~".$transactionProductID[$i],
+                                    $transactionProductVariantID[$i],
                                     explode('~',$variantOptionID[$i])[1],
                                     explode('~',$variantLabel[$i])[2],
                                     floatval(explode('~',$variantPrice[$i])[2])
@@ -228,13 +231,14 @@ class TransactionController extends Controller
                         }
                     } else {
                         $query = "INSERT INTO TrTransactionProductVariant
-                                    (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, VariantOptionID, Label, Price)
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, TransactionProductVariantID, VariantOptionID, Label, Price)
                                     VALUES
-                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?)";
+                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?)";
                                 DB::insert($query, [
                                     $getAuth['UserID'],
                                     $getAuth['ClientID'],
                                     $transactionID,
+                                    $transactionID."~".$request->transactionProductID,
                                     $request->transactionProductIDVariant,
                                     explode('~',$request->variantOptionID)[1],
                                     explode('~',$request->variantLabel)[2],
@@ -246,6 +250,7 @@ class TransactionController extends Controller
                 $return['message'] = "Transaction successfully created.";
             }
             if ($request->action == "edit") {
+                $transactionID = $request->id;
                 $query = "UPDATE TrTransaction
                             SET IsDeleted=0,
                                 UserUp=?,
@@ -261,7 +266,7 @@ class TransactionController extends Controller
                                 Changes=?,
                                 Status=?,
                                 Notes=?
-                                WHERE ID=?";
+                            WHERE ID=?";
                 DB::update($query, [
                     $getAuth['UserID'],
                     $request->paymentID,
@@ -273,11 +278,17 @@ class TransactionController extends Controller
                     $request->changes,
                     $request->isPaid == "T" ? 1 : 0,
                     $request->notes,
-                    $request->id
+                    $transactionID
                 ]);
 
+                $query = "DELETE FROM TrTransactionProduct WHERE ClientID=? AND TransactionID=?";
+                DB::delete($query, [$getAuth['ClientID'],$transactionID]);
+
+                $query = "DELETE FROM TrTransactionProductVariant WHERE ClientID=? AND TransactionID=?";
+                DB::delete($query, [$getAuth['ClientID'],$transactionID]);
+
                 if (str_contains($request->productID,',')) {
-                    $transactionProductID = explode(',',$request->transactionProductID);
+                    //$transactionProductID = explode(',',$request->transactionProductID);
                     $productID = explode(',',$request->productID);
                     $qty = explode(',',$request->qty);
                     $unitPrice = explode(',',$request->unitPrice);
@@ -285,100 +296,94 @@ class TransactionController extends Controller
                     $notesProduct = explode(',',$request->notesProduct);
                     for ($i=0; $i<count($productID); $i++)
                     {
-                        $query = "UPDATE TrTransactionProduct
-                        SET UserUp=?,
-                            DateUp=NOW(),
-                            ProductID=?,
-                            Qty=?,
-                            UnitPrice=?,
-                            Discount=?,
-                            UnitPriceAfterDiscount=?,
-                            Notes=?
-                            WHERE ID=?";
-                        DB::update($query, [
-                            $getAuth['UserID'],
-                            $productID[$i],
-                            $qty[$i],
-                            $unitPrice[$i],
-                            $discountProduct[$i],
-                            $unitPrice[$i] - $discountProduct[$i],
-                            $notesProduct[$i],
-                            $transactionProductID[$i],
-                        ]);
+                        $query = "INSERT INTO TrTransactionProduct
+                                (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, TransactionID, Qty, UnitPrice, Discount, UnitPriceAfterDiscount, Notes)
+                                VALUES
+                                (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                            DB::insert($query, [
+                                $getAuth['UserID'],
+                                $transactionID."~".$productID[$i],
+                                $getAuth['ClientID'],
+                                $productID[$i],
+                                $transactionID,
+                                intval($qty[$i]),
+                                floatval($unitPrice[$i]),
+                                floatval($discountProduct[$i]),
+                                floatval($unitPrice[$i]) - floatval($discountProduct[$i]),
+                                $notesProduct[$i],
+                            ]);
                     }
                 } else {
-                    $query = "UPDATE TrTransactionProduct 
-                    SET UserUp=?,
-                        DateUp=NOW(),
-                        ProductID=?,
-                        Qty=?,
-                        UnitPrice=?,
-                        discount=?,
-                        Discount=?
-                        UnitPriceAfterDiscount=?,
-                        Notes=?
-                        WHERE ID=?";
-                    DB::update($query, [
-                        $getAuth['UserID'],
-                        $request->productID,
-                        $request->qty,
-                        $request->unitPrice,
-                        $request->discountProduct,
-                        $request->unitPrice - $request->discountProduct,
-                        $request->notesProduct,
-                        $request->transactionProductID
-                    ]);
+                    $query = "INSERT INTO TrTransactionProduct
+                                (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, TransactionID, Qty, UnitPrice, Discount, UnitPriceAfterDiscount, Notes)
+                                VALUES
+                                (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                            DB::insert($query, [
+                                $getAuth['UserID'],
+                                $transactionID."~".$request->productID,
+                                $getAuth['ClientID'],
+                                $request->productID,
+                                $transactionID,
+                                intval($request->qty),
+                                floatval($request->unitPrice),
+                                floatval($request->discountProduct),
+                                floatval($request->unitPrice) - floatval($request->discountProduct),
+                                $request->notesProduct,
+                            ]);
                 }
 
-                if (str_contains($request->variantOptionID,',')) {
-                    $transactionProductIDVariant = explode(',',$request->transactionProductIDVariant);
-                    $variantOptionID = explode(',',$request->variantOptionID);
-                    $variantLabel = explode(',',$request->variantLabel);
-                    $variantPrice = explode(',',$request->variantPrice);
-                    for ($i=0; $i<count($variantOptionID); $i++)
-                    {
-                        $query = "UPDATE TrTransactionProductVariant
-                        SET UserUp=?,
-                            DateUp=NOW(),
-                            VariantOptionID=?,
-                            Label=?,
-                            Price=?
-                            WHERE ID=?";
-                        DB::update($query, [
-                            $getAuth['UserID'],
-                            $variantOptionID[$i],
-                            $variantLabel[$i],
-                            strval($variantPrice[$i]),
-                            $transactionProductIDVariant[$i]
-                        ]);
+                if ($request->variantOptionID != '') {
+                    if (str_contains($request->variantOptionID,',')) {
+                        $transactionProductID = explode(',',$request->transactionProductID);
+                        $transactionProductVariantID = explode(',',$request->transactionProductIDVariant);
+                        $variantOptionID = explode(',',$request->variantOptionID);
+                        $variantLabel = explode(',',$request->variantLabel);
+                        $variantPrice = explode(',',$request->variantPrice);
+                        for ($i=0; $i<count($variantOptionID); $i++)
+                        {
+                            $query = "INSERT INTO TrTransactionProductVariant
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, TransactionProductVariantID, VariantOptionID, Label, Price)
+                                    VALUES
+                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?)";
+                                DB::insert($query, [
+                                    $getAuth['UserID'],
+                                    $getAuth['ClientID'],
+                                    $transactionID,
+                                    $transactionID."~".$transactionProductID[$i],
+                                    $transactionProductVariantID[$i],
+                                    explode('~',$variantOptionID[$i])[1],
+                                    explode('~',$variantLabel[$i])[2],
+                                    floatval(explode('~',$variantPrice[$i])[2])
+                                ]);
+                        }
+                    } else {
+                        $query = "INSERT INTO TrTransactionProductVariant
+                                    (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, TransactionProductVariantID, VariantOptionID, Label, Price)
+                                    VALUES
+                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?)";
+                                DB::insert($query, [
+                                    $getAuth['UserID'],
+                                    $getAuth['ClientID'],
+                                    $transactionID,
+                                    $transactionID."~".$request->transactionProductID,
+                                    $request->transactionProductIDVariant,
+                                    explode('~',$request->variantOptionID)[1],
+                                    explode('~',$request->variantLabel)[2],
+                                    floatval(explode('~',$request->variantPrice)[2])
+                                ]);
                     }
-                } else {
-                    $query = "UPDATE TrTransactionProductVariant 
-                    SET UserUp=?,
-                        DateUp=NOW(),
-                        VariantOptionID=?,
-                        Label=?,
-                        Price=?
-                        WHERE ID=?";
-                    DB::update($query, [
-                        $getAuth['UserID'],
-                        $request->variantOptionID,
-                        $request->variantLabel,
-                        strval($request->variantPrice),
-                        $request->transactionProductIDVariant
-                    ]);
                 }
                 $return['message'] = "Transaction successfully modified.";
             }
             if ($request->action == "delete") {
-                $query = "UPDATE TrTransaction SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
-                DB::update($query, [$getAuth['UserID'],$request->id]);
+                $query = "UPDATE TrTransaction SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ClientID=? AND ID=?";
+                DB::update($query, [$getAuth['UserID'], $getAuth['ClientID'], $request->id]);
 
-                $query = "UPDATE TrTransactionProduct SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE TransactionID=?";
-                DB::update($query, [$getAuth['UserID'],$request->transactionID]);
+                $query = "UPDATE TrTransactionProduct SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ClientID=? AND TransactionID=?";
+                DB::update($query, [$getAuth['UserID'], $getAuth['ClientID'], $request->id]);
 
-                $query = "UPDATE TrTransactionProductVariant SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE TransactionID=?";
-                DB::update($query, [$getAuth['UserID'],$request->transactionID]);
+                $query = "UPDATE TrTransactionProductVariant SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ClientID=? AND TransactionID=?";
+                DB::update($query, [$getAuth['UserID'], $getAuth['ClientID'], $request->id]);
                 $return['message'] = "Transaction successfully deleted";
             }
         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
