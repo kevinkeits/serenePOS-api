@@ -78,7 +78,27 @@ class TransactionController extends Controller
                                         ORDER BY MsProduct.Name DESC";
                             $detailsProduct = DB::select($query,[$request->ID]);
 
-                            $query = "  SELECT  TrTransactionProductVariant.ID id,
+                            $query = "  SELECT MsProductVariantOption.ID productVariantOptionID, 
+                                            CASE WHEN MsProductVariantOption.IsSelected = 1 THEN 'T' ELSE 'F' END isSelected, 
+                                            MsVariant.ID variantID, 
+                                            MsVariant.Name name, 
+                                            MsVariant.Type type, 
+                                            MsVariantOption.ID variantOptionID, 
+                                            MsVariantOption.Label label, 
+                                            MsVariantOption.Price price,
+                                            IFNULL(TrTransactionProductVariant.ID,'') id,
+                                            IFNULL(TrTransactionProductVariant.TransactionProductID,'') transactionProductID,
+                                            IFNULL(TrTransactionProduct.ProductID,'') productID
+                                        FROM TrTransactionProduct 
+                                            JOIN MsVariantProduct on MsVariantProduct.ProductID = TrTransactionProduct.ProductID
+                                            JOIN MsVariant ON MsVariant.ID = MsVariantProduct.VariantID
+                                            JOIN MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
+                                            JOIN MsProductVariantOption on (MsProductVariantOption.VariantOptionID = MsVariantOption.ID AND MsProductVariantOption.ProductID = MsVariantProduct.ProductID)
+                                            LEFT JOIN TrTransactionProductVariant ON (TrTransactionProduct.ID = TrTransactionProductVariant.TransactionProductID AND TrTransactionProductVariant.VariantOptionID = MsVariantOption.ID)
+                                        WHERE MsVariant.IsDeleted=0 AND TrTransactionProduct.TransactionID = ?
+                                        ORDER BY MsVariant.Name ASC, MsVariantOption.Label ASC";
+                                        
+                            /*$query = "  SELECT  TrTransactionProductVariant.ID id,
                                                 TrTransactionProductVariant.TransactionProductID transactionProductID,
                                                 TrTransactionProduct.ProductID productID,
                                                 TrTransactionProductVariant.VariantOptionID variantOptionID,
@@ -88,7 +108,7 @@ class TransactionController extends Controller
                                         JOIN    TrTransactionProduct 
                                         ON      TrTransactionProduct.ID = TrTransactionProductVariant.TransactionProductID
                                         WHERE   TrTransactionProductVariant.TransactionID = ?
-                                        ORDER BY TrTransactionProductVariant.ID DESC";
+                                        ORDER BY TrTransactionProductVariant.ID DESC";*/
                             $detailsVariant = DB::select($query,[$request->ID]);
 
                             $return['data'] = array('details'=>$details,'detailsProduct'=>$detailsProduct,'detailsVariant'=>$detailsVariant);
@@ -207,7 +227,7 @@ class TransactionController extends Controller
 
                 if ($request->variantOptionID != '') {
                     if (str_contains($request->variantOptionID,',')) {
-                        $transactionProductID = explode(',',$request->transactionProductID);
+                        //$transactionProductID = explode(',',$request->transactionProductID);
                         $transactionProductVariantID = explode(',',$request->transactionProductIDVariant);
                         $variantOptionID = explode(',',$request->variantOptionID);
                         $variantLabel = explode(',',$request->variantLabel);
@@ -222,7 +242,7 @@ class TransactionController extends Controller
                                     $getAuth['UserID'],
                                     $getAuth['ClientID'],
                                     $transactionID,
-                                    $transactionID."~".$transactionProductID[$i],
+                                    $transactionID."~".explode('~',$variantOptionID[$i])[0],
                                     $transactionProductVariantID[$i],
                                     explode('~',$variantOptionID[$i])[1],
                                     explode('~',$variantLabel[$i])[2],
@@ -238,7 +258,7 @@ class TransactionController extends Controller
                                     $getAuth['UserID'],
                                     $getAuth['ClientID'],
                                     $transactionID,
-                                    $transactionID."~".$request->transactionProductID,
+                                    $transactionID."~".explode('~',$request->variantOptionID)[0],
                                     $request->transactionProductIDVariant,
                                     explode('~',$request->variantOptionID)[1],
                                     explode('~',$request->variantLabel)[2],
@@ -334,7 +354,7 @@ class TransactionController extends Controller
 
                 if ($request->variantOptionID != '') {
                     if (str_contains($request->variantOptionID,',')) {
-                        $transactionProductID = explode(',',$request->transactionProductID);
+                        //$transactionProductID = explode(',',$request->transactionProductID);
                         $transactionProductVariantID = explode(',',$request->transactionProductIDVariant);
                         $variantOptionID = explode(',',$request->variantOptionID);
                         $variantLabel = explode(',',$request->variantLabel);
@@ -349,7 +369,7 @@ class TransactionController extends Controller
                                     $getAuth['UserID'],
                                     $getAuth['ClientID'],
                                     $transactionID,
-                                    $transactionID."~".$transactionProductID[$i],
+                                    $transactionID."~".explode('~',$variantOptionID[$i])[0],
                                     $transactionProductVariantID[$i],
                                     explode('~',$variantOptionID[$i])[1],
                                     explode('~',$variantLabel[$i])[2],
@@ -365,7 +385,7 @@ class TransactionController extends Controller
                                     $getAuth['UserID'],
                                     $getAuth['ClientID'],
                                     $transactionID,
-                                    $transactionID."~".$request->transactionProductID,
+                                    $transactionID."~".explode('~',$request->variantOptionID)[0],
                                     $request->transactionProductIDVariant,
                                     explode('~',$request->variantOptionID)[1],
                                     explode('~',$request->variantLabel)[2],
