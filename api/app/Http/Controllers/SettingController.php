@@ -27,42 +27,84 @@ class SettingController extends Controller
         }
         return $return;
     }
-    
-    // GET ACCOUNT
-    public function getAccount(Request $request)
-    {
-        $return = array('status'=>true,'message'=>"",'data'=>array());
-        $header = $request->header('Authorization');
-        $getAuth = $this->validateAuth($header);
-        $query = "SELECT MsClient.ID id, MsUser.Name name, MsUser.Email email, MsOutlet.ID outletID, MsOutlet.Name outletName, CASE MsUser.ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('http://localhost/serenePOS-api/api/public/uploaded/user/', MsUser.ImgUrl)) END imgUrl
-        FROM MsClient
-        JOIN MsUser
-        ON MsClient.ID = MsUser.ClientID
-        JOIN MsOutlet
-        ON MsClient.ID = MsOutlet.ClientID
-        ORDER BY MsClient.ID DESC";
-        $return['data'] = DB::select($query);
-        return response()->json($return, 200);
-    }
-    // END GET ACCOUNT
 
-    // GET SETTING
-    public function getSetting(Request $request)
-    {
-        $return = array('status'=>true,'message'=>"",'data'=>array());
-        $header = $request->header('Authorization');
-        $getAuth = $this->validateAuth($header);
-        $query = "SELECT MsClient.ID id, MsClient.Name name, MsUser.Name userName, MsUser.PhoneNumber phoneNumber, MsOutlet.Name outletName, MsOutlet.Address address, CASE MsClient.ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('http://localhost/serenePOS-api/api/public/uploaded/client/', MsClient.ImgUrl)) END imgUrl
-        FROM MsClient
-        JOIN MsUser
-        ON MsClient.ID = MsUser.ClientID
-        JOIN MsOutlet
-        ON MsClient.ID = MsOutlet.ClientID
-        ORDER BY MsClient.ID DESC";
-        $return['data'] = DB::select($query);
+   // GET TRANSACTION
+   public function getSettings(Request $request)
+   {
+       $return = array('status'=>true,'message'=>"",'data'=>array());
+       $header = $request->header('Authorization');
+       $getAuth = $this->validateAuth($header);
+        if ($getAuth['status']) {
+                {
+                    $query = "SELECT  
+                                MsClient.Name storeName,
+
+                                MsUser.Name name,
+                                MsUser.PhoneNumber phoneNumber,
+                                MsUser.Email email,
+                                
+                                MsOutlet.ID outletID, 
+                                MsOutlet.Name outletName, 
+                                MsOutlet.Address address,
+                                
+                                CASE
+                                    WHEN MsUser.ImgUrl != '' THEN CONCAT('https://serenepos.temandigital.id/api/uploaded/user/', MsUser.ImgUrl)
+                                    ELSE ''
+                                END AS accountImage,
+
+                                CASE
+                                    WHEN MsClient.ImgUrl != '' THEN CONCAT('https://serenepos.temandigital.id/api/uploaded/client/', MsClient.ImgUrl)
+                                    ELSE ''
+                                END AS clientImage
+                        FROM MsClient
+                        JOIN MsUser
+                        ON MsClient.ID = MsUser.ClientID
+                        JOIN MsOutlet
+                        ON MsClient.ID = MsOutlet.ClientID
+                        ORDER BY MsClient.ID DESC";
+                    $data = DB::select($query, [$getAuth['ClientID']])[0];
+                    if ($data) $return['data'] = $data;
+                }
+           } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
-    }
-    // END GET SETTING
+   }
+   // END TRANSACTION
+    
+    // // GET ACCOUNT
+    // public function getAccount(Request $request)
+    // {
+    //     $return = array('status'=>true,'message'=>"",'data'=>array(null));
+    //     $header = $request->header('Authorization');
+    //     $getAuth = $this->validateAuth($header);
+    //     $query = "SELECT MsClient.ID id, MsUser.Name name, MsUser.Email email, MsOutlet.ID outletID, MsOutlet.Name outletName, CASE MsUser.ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('http://localhost/serenePOS-api/api/public/uploaded/user/', MsUser.ImgUrl)) END imgUrl
+    //     FROM MsClient
+    //     JOIN MsUser
+    //     ON MsClient.ID = MsUser.ClientID
+    //     JOIN MsOutlet
+    //     ON MsClient.ID = MsOutlet.ClientID
+    //     ORDER BY MsClient.ID DESC";
+    //     $return['data'] = DB::select($query);
+    //     return response()->json($return, 200);
+    // }
+    // // END GET ACCOUNT
+
+    // // GET SETTING
+    // public function getSetting(Request $request)
+    // {
+    //     $return = array('status'=>true,'message'=>"",'data'=>array());
+    //     $header = $request->header('Authorization');
+    //     $getAuth = $this->validateAuth($header);
+    //     $query = "SELECT MsClient.ID id, MsClient.Name name, MsUser.Name userName, MsUser.PhoneNumber phoneNumber, MsOutlet.Name outletName, MsOutlet.Address address, CASE MsClient.ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('http://localhost/serenePOS-api/api/public/uploaded/client/', MsClient.ImgUrl)) END imgUrl
+    //     FROM MsClient
+    //     JOIN MsUser
+    //     ON MsClient.ID = MsUser.ClientID
+    //     JOIN MsOutlet
+    //     ON MsClient.ID = MsOutlet.ClientID
+    //     ORDER BY MsClient.ID DESC";
+    //     $return['data'] = DB::select($query);
+    //     return response()->json($return, 200);
+    // }
+    // // END GET SETTING
 
     // GET OUTLET
     public function getOutlet(Request $request)
@@ -70,24 +112,15 @@ class SettingController extends Controller
        $return = array('status'=>true,'message'=>"",'data'=>array());
        $header = $request->header('Authorization');
        $getAuth = $this->validateAuth($header);
-       if ($getAuth['status']) {
-            if ($request->ID) {
-                $query = "  SELECT MsOutlet.ID id, MsOutlet.Name outletName, MsOutlet.PhoneNumber phoneNumber, MsOutlet.IsPrimary isPrimary, MsOutlet.Address address, MsOutlet.ProvinceID provinceID, MsOutlet.DistrictID districtID, MsOutlet.SubDistrictID subDistrictID, MsOutlet.PostalCode postalCode
-                            FROM MsOutlet
-                            WHERE ID = ?
-                                ORDER BY ID ASC";
-                $details = DB::select($query,[$request->ID])[0];
-
-                $return['data'] = array('details'=>$details);
-            } else {
-                $query = "  SELECT MsOutlet.ID id, MsOutlet.Name outlet, MsOutlet.IsPrimary isPrimary, MsOutlet.Address address, MsOutlet.ProvinceID provinceID, MsOutlet.DistrictID districtID, MsOutlet.SubDistrictID subDistrictID, MsOutlet.PostalCode postalCode
-                            FROM MsOutlet
-                            WHERE IsDeleted=0
-                                AND ClientID = ?
-                                ORDER BY Name ASC";
-                $data = DB::select($query, [$getAuth['ClientID']]);
-                if ($data) $return['data'] = $data;
-            }
+       if ($getAuth['status']) 
+       {
+            $query = "  SELECT MsOutlet.ID id, MsOutlet.Name outlet, MsOutlet.IsPrimary isPrimary, MsOutlet.Address address, MsOutlet.ProvinceID provinceID, MsOutlet.DistrictID districtID, MsOutlet.SubDistrictID subDistrictID, MsOutlet.PostalCode postalCode
+            FROM MsOutlet
+            WHERE IsDeleted=0
+                AND ClientID = ?
+                ORDER BY Name ASC";
+            $data = DB::select($query, [$getAuth['ClientID']]);
+            if ($data) $return['data'] = $data;
         } else $return = array('status'=>false,'message'=>"");
         return response()->json($return, 200);
     }
@@ -99,29 +132,43 @@ class SettingController extends Controller
         $return = array('status'=>true,'message'=>"",'data'=>null);
         $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($header);
+        $key = $this->randomString(10);
+        $encrypt = $this->strEncrypt($key,$request->Password);
+        
         if ($getAuth['status']) {
             if ($request->action == "edit") {
                 if ($request->fileData != "") {
+
                     $base64string = $request->fileData;
                     $mime = explode(";base64,", $base64string);
                     $mimeType = str_replace('data:', '', $mime[0]);
                     $fileData = base64_decode($mime[1]);
-                    $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/user/';
+                    // $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/user/';
+                    $uploadDirectory = base_path('public/uploaded/user');
                     $fileName = $request->fileName;
+
+                    $filePath = $uploadDirectory . $fileName;
+                    file_put_contents($filePath, $fileData);
     
                     $query = "UPDATE MsUser
                     SET IsDeleted=0,
                         UserUp=?,
                         DateUp=NOW(),
                         Name=?,
-                        Password=?,
+                        Password=?, 
+                        Salt=?, 
+                        IVssl=?, 
+                        Tagssl=?,
                         ImgUrl=?,
                         MimeType=?
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
                         $request->userName,
-                        $request->password,
+                        base64_encode($encrypt['result']),
+                        base64_encode($key),
+                        base64_encode($encrypt['iv']),
+                        base64_encode($encrypt['tag']),
                         $fileName,
                         $mimeType,
                         $request->id
@@ -134,11 +181,17 @@ class SettingController extends Controller
                         DateUp=NOW(),
                         Name=?,
                         Password=?,
+                        Salt=?, 
+                        IVssl=?, 
+                        Tagssl=?
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
                         $request->userName,
-                        $request->password,
+                        base64_encode($encrypt['result']),
+                        base64_encode($key),
+                        base64_encode($encrypt['iv']),
+                        base64_encode($encrypt['tag']),
                         $request->id
                     ]);
                     $return['message'] = "Account successfully modified without image.";
@@ -158,12 +211,17 @@ class SettingController extends Controller
         if ($getAuth['status']) {
             if ($request->action == "edit") {
                 if ($request->fileData != "") {
+
                     $base64string = $request->fileData;
                     $mime = explode(";base64,", $base64string);
                     $mimeType = str_replace('data:', '', $mime[0]);
                     $fileData = base64_decode($mime[1]);
-                    $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/user/';
+                    // $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/user/';
+                    $uploadDirectory = base_path('public/uploaded/client');
                     $fileName = $request->fileName;
+
+                    $filePath = $uploadDirectory . $fileName;
+                    file_put_contents($filePath, $fileData);
     
                     $query = "UPDATE MsClient
                     SET IsDeleted=0,
@@ -222,7 +280,7 @@ class SettingController extends Controller
                          WHERE ID=?";
                      DB::update($query, [
                          $getAuth['UserID'],
-                         $request->clientName,
+                         $request->Name,
                          $request->phoneNumber,
                          $request->address,
                          $request->subDistrict,

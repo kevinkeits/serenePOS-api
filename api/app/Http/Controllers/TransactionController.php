@@ -60,7 +60,7 @@ class TransactionController extends Controller
                                         FROM    TrTransaction
                                         JOIN    MsOutlet ON MsOutlet.ID = TrTransaction.OutletID
                                         WHERE   TrTransaction.ID = ?
-						AND TrTransaction.IsDeleted = 0
+						                AND TrTransaction.IsDeleted = 0
                                         ORDER BY TransactionDate DESC";
                             $details = DB::select($query,[$request->ID])[0];
 
