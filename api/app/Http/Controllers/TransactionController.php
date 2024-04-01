@@ -181,7 +181,6 @@ class TransactionController extends Controller
                 ]);
 
                 if (str_contains($request->productID,',')) {
-                    //$transactionProductID = explode(',',$request->transactionProductID);
                     $productID = explode(',',$request->productID);
                     $qty = explode(',',$request->qty);
                     $unitPrice = explode(',',$request->unitPrice);
@@ -227,7 +226,6 @@ class TransactionController extends Controller
 
                 if ($request->variantOptionID != '') {
                     if (str_contains($request->variantOptionID,',')) {
-                        //$transactionProductID = explode(',',$request->transactionProductID);
                         $transactionProductVariantID = explode(',',$request->transactionProductIDVariant);
                         $variantOptionID = explode(',',$request->variantOptionID);
                         $variantLabel = explode(',',$request->variantLabel);

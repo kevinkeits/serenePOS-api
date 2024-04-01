@@ -83,6 +83,15 @@ $router->group(['prefix' => 'customer'], function () use ($router) {
     $router->post('doSave',  ['uses' => 'CustomerController@doSave']);
 });
 
+$router->group(['prefix' => 'setting'], function () use ($router) {
+    $router->get('getAccount',  ['uses' => 'SettingController@getAccount']);
+    $router->get('getSetting',  ['uses' => 'SettingController@getSetting']);
+    $router->get('getOutlet',  ['uses' => 'SettingController@getOutlet']);
+    $router->post('doSaveAccount',  ['uses' => 'CustomerController@doSaveAccount']);
+    $router->post('doSaveSetting',  ['uses' => 'CustomerController@doSaveSetting']);
+    $router->post('doSaveOutlet',  ['uses' => 'CustomerController@doSaveOutlet']);
+});
+
 $router->group(['prefix' => 'report'], function () use ($router) {
     $router->get('get',  ['uses' => 'ReportController@get']);
 });
