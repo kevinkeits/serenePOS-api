@@ -86,9 +86,9 @@ class TransactionController extends Controller
                                             MsVariantOption.ID variantOptionID, 
                                             MsVariantOption.Label label, 
                                             MsVariantOption.Price price,
-                                            IFNULL(TrTransactionProductVariant.ID,'') id,
+                                            IFNULL(TrTransactionProductVariant.TransactionProductVariantID,'') id,
                                             IFNULL(TrTransactionProductVariant.TransactionProductID,'') transactionProductID,
-                                            IFNULL(TrTransactionProduct.ProductID,'') productID
+                                            MsVariantProduct.ProductID productID
                                         FROM TrTransactionProduct 
                                             JOIN MsVariantProduct on MsVariantProduct.ProductID = TrTransactionProduct.ProductID
                                             JOIN MsVariant ON MsVariant.ID = MsVariantProduct.VariantID
@@ -96,7 +96,7 @@ class TransactionController extends Controller
                                             JOIN MsProductVariantOption on (MsProductVariantOption.VariantOptionID = MsVariantOption.ID AND MsProductVariantOption.ProductID = MsVariantProduct.ProductID)
                                             LEFT JOIN TrTransactionProductVariant ON (TrTransactionProduct.ID = TrTransactionProductVariant.TransactionProductID AND TrTransactionProductVariant.VariantOptionID = MsVariantOption.ID)
                                         WHERE MsVariant.IsDeleted=0 AND TrTransactionProduct.TransactionID = ?
-                                        ORDER BY MsVariant.Name ASC, MsVariantOption.Label ASC";
+                                        ORDER BY TrTransactionProduct.ProductID ASC, MsVariant.Name ASC, MsVariantOption.Label ASC";
                                         
                             /*$query = "  SELECT  TrTransactionProductVariant.ID id,
                                                 TrTransactionProductVariant.TransactionProductID transactionProductID,
