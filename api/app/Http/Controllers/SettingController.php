@@ -88,88 +88,6 @@ class SettingController extends Controller
     }
     // END GET SETTING
 
-    // // POST ACCOUNT
-    // public function doSaveAccount(Request $request)
-    // {
-    //     $return = array('status'=>true,'message'=>"",'data'=>null);
-    //     $header = $request->header('Authorization');
-    //     $getAuth = $this->validateAuth($header);
-    //     $key = $this->randomString(10);
-    //     $encrypt = $this->strEncrypt($key,$request->Password);
-        
-    //     if ($getAuth['status']) {
-    //         if ($request->action == "edit") {
-    //             if ($request->fileData != "") {
-
-    //                 $base64string = $request->fileData;
-    //                 $mime = explode(";base64,", $base64string);
-    //                 $mimeType = str_replace('data:', '', $mime[0]);
-    //                 $fileData = base64_decode($mime[1]);
-    //                 // $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/user/';
-    //                 $uploadDirectory = base_path('public/uploaded/user');
-    //                 $fileName = $request->fileName;
-
-    //                 $filePath = $uploadDirectory . $fileName;
-    //                 file_put_contents($filePath, $fileData);
-        
-    //                 $query = "UPDATE MsUser
-    //                 SET IsDeleted=0,
-    //                     UserUp=?,
-    //                     DateUp=NOW(),
-    //                     Name=?,
-    //                     Password=?,
-    //                     Salt=?, 
-    //                     IVssl=?, 
-    //                     Tagssl=?,
-    //                     ImgUrl=?,
-    //                     MimeType=?
-    //                     WHERE ID=?";
-    //                 $params = [
-    //                     $getAuth['UserID'],
-    //                     $request->userName,
-    //                     base64_encode($encrypt['result']),
-    //                     base64_encode($key),
-    //                     base64_encode($encrypt['iv']),
-    //                     base64_encode($encrypt['tag']),
-    //                     $fileName,
-    //                     $mimeType,
-    //                     $request->id
-    //                 ];
-    //                 $return['message'] = "Account successfully modified.";
-    //             } else {
-    //                 $query = "UPDATE MsUser
-    //                 SET IsDeleted=0,
-    //                     UserUp=?,
-    //                     DateUp=NOW(),
-    //                     Name=?";
-    //                 $params = [
-    //                     $getAuth['UserID'],
-    //                     $request->userName
-    //                 ];
-
-    //                 // Only include password fields if provided
-    //                 if (!empty($request->Password)) {
-    //                     $query .= ", Password=?, Salt=?, IVssl=?, Tagssl=?";
-    //                     $params = array_merge($params, [
-    //                         base64_encode($encrypt['result']),
-    //                         base64_encode($key),
-    //                         base64_encode($encrypt['iv']),
-    //                         base64_encode($encrypt['tag'])
-    //                     ]);
-    //                 }
-    //                 $query .= " WHERE ID=?";
-    //                 $params[] = $request->id;
-
-    //                 $return['message'] = "Account successfully modified without image.";
-    //             }
-
-    //             DB::update($query, $params);
-    //         }
-    //     } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
-    //     return response()->json($return, 200);
-    // }
-    // // END POST ACCOUNT
-
     // POST ACCOUNT
     public function doSaveAccount(Request $request)
     {
@@ -284,7 +202,6 @@ class SettingController extends Controller
         return response()->json($return, 200);
     }
     // END POST ACCOUNT
-
 
     // POST SETTING
     public function doSaveSetting(Request $request)
