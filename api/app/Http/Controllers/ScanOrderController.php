@@ -39,7 +39,7 @@ class ScanOrderController extends Controller
                         ON MsClient.ID = MsProduct.ClientID
                         WHERE MsProduct.IsDeleted = 0 AND MsTable.ID = ?
                         ORDER BY Name ASC";
-            $data = DB::select($query, [$request->ID]);
+            $data = DB::select($query, [$request->TableID]);
             if ($data) {
                 $return['data'] = $data;
             }
