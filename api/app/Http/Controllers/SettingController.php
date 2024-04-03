@@ -76,7 +76,7 @@ class SettingController extends Controller
        $getAuth = $this->validateAuth($header);
        if ($getAuth['status']) 
        {
-            $query = "  SELECT MsOutlet.ID id, MsOutlet.Name outlet, MsOutlet.IsPrimary isPrimary, MsOutlet.Address address, MsOutlet.Province province, MsOutlet.District district, MsOutlet.SubDistrict subDistrict, MsOutlet.PostalCode postalCode
+            $query = "  SELECT MsOutlet.ID id, MsOutlet.Name outlet, MsOutlet.PhoneNumber phoneNumber, MsOutlet.IsPrimary isPrimary, MsOutlet.Address address, MsOutlet.SubDistrict subDistrict, MsOutlet.PostalCode postalCode
             FROM MsOutlet
             WHERE IsDeleted=0
                 AND ClientID = ?
