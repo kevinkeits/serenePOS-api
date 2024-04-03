@@ -68,7 +68,7 @@ class UserController extends Controller
                                     WHERE MsUser.ID = ?";
                     $details = DB::select($query,[$request->ID])[0];
 
-                    $query = "  SELECT MsOutlet.ID id, MsOutlet.Name outletName, MsOutlet.PhoneNumber phoneNumber, MsOutlet.Address address, MsOutlet.ProvinceID provinceID, MsOutlet.DistrictID districtID, MsOutlet.SubDistrictID subDistrictID, MsOutlet.PostalCode postalCode
+                    $query = "  SELECT MsOutlet.ID id, MsOutlet.Name outletName, MsOutlet.PhoneNumber phoneNumber, MsOutlet.Address address, MsOutlet.Province province, MsOutlet.District district, MsOutlet.SubDistrict subDistrict, MsOutlet.PostalCode postalCode
                                     FROM MsOutlet
                                     JOIN MsUser
                                     ON MsUser.OutletID = MsOutlet.ID
