@@ -16,23 +16,28 @@ class ScanOrderController extends Controller
                         FROM MsProduct
                         JOIN MsCategory
                         ON MsProduct.CategoryID = MsCategory.ID
-                        WHERE MsProduct.ID = ?";
+                        WHERE MsProduct.IsDeleted = 0 AND MsProduct.ID = ?";
             $product = DB::select($query,[$request->ID])[0];
 
             $query = "SELECT MsVariant.ID variantID, MsVariant.Name name, MsVariant.Type type, MsVariantProduct.ID variantProductID, MsVariantOption.ID variantOptionID, MsVariantOption.Label label, MsVariantOption.Price price
                         FROM MsVariant
                         JOIN MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
                         JOIN MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
-                        WHERE MsVariantProduct.ProductID = ?
+                        WHERE MsVariant.IsDeleted = 0 AND MsVariantProduct.ProductID = ?
                         ORDER BY MsVariant.Name ASC, MsVariantOption.Label ASC";
             $variant = DB::select($query,[$request->ID]);
 
             $return['data'] = array('product'=>$product, 'variant'=>$variant);
         } else {
-            $query = "SELECT MsProduct.ID id, MsProduct.Name name, MsCategory.ID idCategory, MsCategory.Name categoryName, MsProduct.Notes notes, MsProduct.Price price, CASE ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl
+            $query = "SELECT MsProduct.ID id, MsProduct.Name name, MsTable.Name tableName, MsClient.Name clientName, MsCategory.ID idCategory, MsCategory.Name categoryName, MsProduct.Notes notes, MsProduct.Price price, CASE ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl
                         FROM MsProduct
                         JOIN MsCategory
                         ON MsCategory.ID = MsProduct.CategoryID
+                        JOIN MsTable
+                        ON MsTable.ClientID = MsProduct.ClientID
+                        JOIN MsClient
+                        ON MsClient.ID = MsProduct.ClientID
+                        WHERE MsProduct.IsDeleted = 0 AND MsTable.ID = ?
                         ORDER BY Name ASC";
             $data = DB::select($query, [$request->ID]);
             if ($data) {

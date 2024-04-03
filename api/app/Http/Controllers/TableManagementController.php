@@ -36,8 +36,8 @@ class TableManagementController extends Controller
        $getAuth = $this->validateAuth($header);
        if ($getAuth['status']) {
            {
-                $query = "  SELECT MsTableManagement.ID id, MsTableManagement.ClientID clientID, MsTableManagement.OutletID outletID, MsTableManagement.TableName tableName, MsTableManagement.Capacity capacity, MsTableManagement.Status status
-                                FROM MsTableManagement
+                $query = "  SELECT MsTable.ID id, MsTable.ClientID clientID, MsTable.OutletID outletID, MsTable.TableName tableName, MsTable.Capacity capacity, MsTable.Status status
+                                FROM MsTable
                                 WHERE ClientID = ?
                                 ORDER BY tableName ASC";
                 $data = DB::select($query, [$getAuth['ClientID']]);
@@ -57,7 +57,7 @@ class TableManagementController extends Controller
             if ($request->action == "add") {
                 $query = "SELECT UUID() GenID";
                 $tableID = DB::select($query)[0]->GenID;
-                $query = "INSERT INTO MsTableManagement
+                $query = "INSERT INTO MsTable
                         (IsDeleted, UserIn, DateIn, ID, ClientID, OutletID, TableName, Capacity)
                         VALUES
                         (0, ?, NOW(), ?, ?, ?, ?, ?)";
@@ -72,7 +72,7 @@ class TableManagementController extends Controller
                 $return['message'] = "Table successfully created.";
             }
             if ($request->action == "edit") {
-                $query = "UPDATE MsTableManagement
+                $query = "UPDATE MsTable
                 SET IsDeleted=0,
                     UserUp=?,
                     DateUp=NOW(),
@@ -88,7 +88,7 @@ class TableManagementController extends Controller
                 $return['message'] = "Table successfully modified.";
             }
             if ($request->action == "delete") {
-                $query = "UPDATE MsTableManagement SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
+                $query = "UPDATE MsTable SET IsDeleted=1, UserUp=?, DateUp=NOW() WHERE ID=?";
                 DB::update($query, [$getAuth['UserID'],$request->id]);
                 $return['message'] = "Table successfully deleted.";
             }
