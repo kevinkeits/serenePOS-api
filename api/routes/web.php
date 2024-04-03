@@ -84,7 +84,6 @@ $router->group(['prefix' => 'customer'], function () use ($router) {
 });
 
 $router->group(['prefix' => 'setting'], function () use ($router) {
-    $router->get('getAccount',  ['uses' => 'SettingController@getAccount']);
     $router->get('getSettings',  ['uses' => 'SettingController@getSettings']);
     $router->get('getOutlet',  ['uses' => 'SettingController@getOutlet']);
     $router->post('doSaveAccount',  ['uses' => 'SettingController@doSaveAccount']);

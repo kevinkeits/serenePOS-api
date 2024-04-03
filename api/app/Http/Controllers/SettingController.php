@@ -267,28 +267,26 @@ class SettingController extends Controller
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
             if ($request->action == "edit") {
-                if ($request->fileData != "") {
-                    $query = "UPDATE MsOutlet
-                    SET IsDeleted=0,
-                        UserUp=?,
-                        DateUp=NOW(),
-                        Name=?,
-                        PhoneNumber=?,
-                        Address=?,
-                        SubDistrictID=?,
-                        PostalCode=?
-                        WHERE ID=?";
-                    DB::update($query, [
-                        $getAuth['UserID'],
-                        $request->name,
-                        $request->phoneNumber,
-                        $request->address,
-                        $request->subDistrict,
-                        $request->postalCode,
-                        $request->id
-                    ]);
-                    $return['message'] = "Outlet successfully modified.";
-                }
+                $query = "UPDATE MsOutlet
+                SET IsDeleted=0,
+                    UserUp=?,
+                    DateUp=NOW(),
+                    Name=?,
+                    PhoneNumber=?,
+                    Address=?,
+                    SubDistrictID=?,
+                    PostalCode=?
+                    WHERE ID=?";
+                DB::update($query, [
+                    $getAuth['UserID'],
+                    $request->name,
+                    $request->phoneNumber,
+                    $request->address,
+                    $request->subDistrict,
+                    $request->postalCode,
+                    $request->id
+                ]);
+                $return['message'] = "Outlet successfully modified.";
             }
         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
         return response()->json($return, 200);
