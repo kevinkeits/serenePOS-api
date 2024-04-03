@@ -39,7 +39,7 @@ class DashboardController extends Controller
 
         $query = "SELECT SUM(TotalPayment) AS todayIncome
                     FROM TrTransaction
-                    WHERE IsDeleted=0 AND DATE_FORMAT(TransactionDate, '%Y-%m-%d') = '$transactionDate'";
+                    WHERE IsDeleted=0 AND TrTransaction.Status = 1 AND DATE_FORMAT(TransactionDate, '%Y-%m-%d') = '$transactionDate'";
         $result = DB::select($query);
 
         if ($result) {
@@ -63,7 +63,7 @@ class DashboardController extends Controller
     
         $query = "SELECT SUM(TotalPayment) AS monthlyIncome
                   FROM TrTransaction
-                  WHERE TransactionDate AND DATE_FORMAT(TransactionDate, '%Y-%m') = '$transactionDate'" ;
+                  WHERE IsDeleted=0 AND TrTransaction.Status = 1 AND DATE_FORMAT(TransactionDate, '%Y-%m') = '$transactionDate'" ;
     
         $result = DB::select($query);
     
@@ -112,7 +112,7 @@ class DashboardController extends Controller
         $return = array('status' => true, 'message' => '', 'data' => array());
         $header = $request->header('Authorization');
         $getAuth = $this->validateAuth($header);
-        $query = "SELECT SUM(t.TotalPayment) AS totalPayment, DAYNAME(t.TransactionDate) AS transactionDay
+        $query = "SELECT SUM(t.TotalPayment) AS paymentAmount, DAYNAME(t.TransactionDate) AS transactionDay
                     FROM TrTransaction t
                     WHERE t.IsDeleted = 0 AND t.TransactionDate >= DATE_ADD(CURDATE(), INTERVAL -6 DAY) AND t.Status = 1
                     GROUP BY DAYNAME(t.TransactionDate)
@@ -144,8 +144,8 @@ class DashboardController extends Controller
         $lastWeekEndDate = date('Y-m-d', strtotime('last week Sunday'));
         
         $query = "SELECT 
-                        (SELECT SUM(TotalPayment) FROM TrTransaction WHERE IsDeleted = 0 AND TransactionDate BETWEEN '$thisWeekStartDate' AND '$thisWeekEndDate') AS thisWeekAmount,
-                        (SELECT SUM(TotalPayment) FROM TrTransaction WHERE IsDeleted = 0 AND TransactionDate BETWEEN '$lastWeekStartDate' AND '$lastWeekEndDate') AS lastWeekAmount
+                        (SELECT SUM(TotalPayment) FROM TrTransaction WHERE IsDeleted = 0 AND Status = 1 AND TransactionDate BETWEEN '$thisWeekStartDate' AND '$thisWeekEndDate') AS thisWeekAmount,
+                        (SELECT SUM(TotalPayment) FROM TrTransaction WHERE IsDeleted = 0 AND Status = 1 AND TransactionDate BETWEEN '$lastWeekStartDate' AND '$lastWeekEndDate') AS lastWeekAmount
                 LIMIT 1";
         $result = DB::select($query);
         
