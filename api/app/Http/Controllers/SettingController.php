@@ -135,7 +135,7 @@ class SettingController extends Controller
                         base64_encode($encrypt['tag']),
                         $fileName,
                         $mimeType,
-                        $request->id
+                        $getAuth['UserID']
                     ]);
                     $return['message'] = "Account successfully modified.";
                     } else {
@@ -152,7 +152,7 @@ class SettingController extends Controller
                         $request->userName,
                         $fileName,
                         $mimeType,
-                        $request->id
+                        $getAuth['UserID']
                     ]);
                     $return['message'] = "Account successfully modified.";
                     }
@@ -178,7 +178,7 @@ class SettingController extends Controller
                         base64_encode($key),
                         base64_encode($encrypt['iv']),
                         base64_encode($encrypt['tag']),
-                        $request->id
+                        $getAuth['UserID']
                     ]);
                     $return['message'] = "Account successfully modified without image.";
                     } else {
@@ -191,7 +191,7 @@ class SettingController extends Controller
                         DB::update($query, [
                             $getAuth['UserID'],
                             $request->userName,
-                            $request->id
+                            $getAuth['UserID']
                         ]);
                         $return['message'] = "Account successfully modified without image.";
                     }
@@ -236,7 +236,7 @@ class SettingController extends Controller
                         $request->userName,
                         $fileName,
                         $mimeType,
-                        $request->id
+                        $getAuth['ClientID']
                     ]);
                     $return['message'] = "Account successfully modified.";
                 } else {
@@ -249,7 +249,7 @@ class SettingController extends Controller
                     DB::update($query, [
                         $getAuth['UserID'],
                         $request->userName,
-                        $request->id
+                        $getAuth['ClientID']
                     ]);
                     $return['message'] = "Account successfully modified without image.";
                 }
