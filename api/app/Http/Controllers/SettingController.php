@@ -275,6 +275,7 @@ class SettingController extends Controller
                     PhoneNumber=?,
                     Address=?,
                     SubDistrictID=?,
+                    IsPrimary=?,
                     PostalCode=?
                     WHERE ID=?";
                 DB::update($query, [
@@ -283,6 +284,7 @@ class SettingController extends Controller
                     $request->phoneNumber,
                     $request->address,
                     $request->subDistrict,
+                    $request->isPrimary == "T" ? 1 : 0,
                     $request->postalCode,
                     $request->id
                 ]);
