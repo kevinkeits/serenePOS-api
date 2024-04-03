@@ -60,8 +60,9 @@ class SettingController extends Controller
                         ON MsClient.ID = MsUser.ClientID
                         JOIN MsOutlet
                         ON MsClient.ID = MsOutlet.ClientID
+                        WHERE MsUser.ID = ?
                         ORDER BY MsClient.ID DESC";
-                    $data = DB::select($query, [$getAuth['ClientID']])[0];
+                    $data = DB::select($query, [$getAuth['UserID']])[0];
                     if ($data) $return['data'] = $data;
                 }
            } else $return = array('status'=>false,'message'=>"");
@@ -115,46 +116,46 @@ class SettingController extends Controller
                         $encrypt = $this->strEncrypt($key,$request->Password);
 
                         $query ="UPDATE MsUser
-                        SET IsDeleted=0,
-                        UserUp=?,
-                        DateUp=NOW(),
-                        Name=?,
-                        Password=?,
-                        Salt=?, 
-                        IVssl=?, 
-                        Tagssl=?,
-                        ImgUrl=?,
-                        MimeType=?
-                        WHERE ID=?";
-                    DB::update($query, [
-                        $getAuth['UserID'],
-                        $request->userName,
-                        base64_encode($encrypt['result']),
-                        base64_encode($key),
-                        base64_encode($encrypt['iv']),
-                        base64_encode($encrypt['tag']),
-                        $fileName,
-                        $mimeType,
-                        $getAuth['UserID']
-                    ]);
-                    $return['message'] = "Account successfully modified.";
+                            SET IsDeleted=0,
+                            UserUp=?,
+                            DateUp=NOW(),
+                            Name=?,
+                            Password=?,
+                            Salt=?, 
+                            IVssl=?, 
+                            Tagssl=?,
+                            ImgUrl=?,
+                            MimeType=?
+                            WHERE ID=?";
+                        DB::update($query, [
+                            $getAuth['UserID'],
+                            $request->userName,
+                            base64_encode($encrypt['result']),
+                            base64_encode($key),
+                            base64_encode($encrypt['iv']),
+                            base64_encode($encrypt['tag']),
+                            $fileName,
+                            $mimeType,
+                            $getAuth['UserID']
+                        ]);
+                        $return['message'] = "Account successfully modified.";
                     } else {
                         $query = "UPDATE MsUser
-                        SET IsDeleted=0,
-                        UserUp=?,
-                        DateUp=NOW(),
-                        Name=?,
-                        ImgUrl=?,
-                        MimeType=?
-                        WHERE ID=?";
-                    DB::update($query, [
-                        $getAuth['UserID'],
-                        $request->userName,
-                        $fileName,
-                        $mimeType,
-                        $getAuth['UserID']
-                    ]);
-                    $return['message'] = "Account successfully modified.";
+                            SET IsDeleted=0,
+                            UserUp=?,
+                            DateUp=NOW(),
+                            Name=?,
+                            ImgUrl=?,
+                            MimeType=?
+                            WHERE ID=?";
+                        DB::update($query, [
+                            $getAuth['UserID'],
+                            $request->userName,
+                            $fileName,
+                            $mimeType,
+                            $getAuth['UserID']
+                        ]);
+                        $return['message'] = "Account successfully modified.";
                     }
                 } else {
                     if ($request->Password != "") {
@@ -162,32 +163,32 @@ class SettingController extends Controller
                         $encrypt = $this->strEncrypt($key, $request->Password);
 
                         $query = "UPDATE MsUser
-                        SET IsDeleted=0,
-                        UserUp=?,
-                        DateUp=NOW(),
-                        Name=?,
-                        Password=?,
-                        Salt=?, 
-                        IVssl=?, 
-                        Tagssl=?,
-                        WHERE ID=?";
-                    DB::update($query, [
-                        $getAuth['UserID'],
-                        $request->userName,
-                        base64_encode($encrypt['result']),
-                        base64_encode($key),
-                        base64_encode($encrypt['iv']),
-                        base64_encode($encrypt['tag']),
-                        $getAuth['UserID']
-                    ]);
-                    $return['message'] = "Account successfully modified without image.";
-                    } else {
-                        $query = "UPDATE MsUser
-                        SET IsDeleted=0,
+                            SET IsDeleted=0,
                             UserUp=?,
                             DateUp=NOW(),
                             Name=?,
+                            Password=?,
+                            Salt=?, 
+                            IVssl=?, 
+                            Tagssl=?
                             WHERE ID=?";
+                        DB::update($query, [
+                            $getAuth['UserID'],
+                            $request->userName,
+                            base64_encode($encrypt['result']),
+                            base64_encode($key),
+                            base64_encode($encrypt['iv']),
+                            base64_encode($encrypt['tag']),
+                            $getAuth['UserID']
+                        ]);
+                        $return['message'] = "Account successfully modified without image.";
+                    } else {
+                        $query = "UPDATE MsUser
+                            SET IsDeleted=0,
+                                UserUp=?,
+                                DateUp=NOW(),
+                                Name=?
+                                WHERE ID=?";
                         DB::update($query, [
                             $getAuth['UserID'],
                             $request->userName,
@@ -233,7 +234,7 @@ class SettingController extends Controller
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
-                        $request->userName,
+                        $request->clientName,
                         $fileName,
                         $mimeType,
                         $getAuth['ClientID']
@@ -244,11 +245,11 @@ class SettingController extends Controller
                     SET IsDeleted=0,
                         UserUp=?,
                         DateUp=NOW(),
-                        Name=?,
+                        Name=?
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
-                        $request->userName,
+                        $request->clientName,
                         $getAuth['ClientID']
                     ]);
                     $return['message'] = "Account successfully modified without image.";
