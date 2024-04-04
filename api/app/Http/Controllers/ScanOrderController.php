@@ -56,7 +56,7 @@ class ScanOrderController extends Controller
                 $query = "SELECT UUID() GenID";
                 $transactionID = DB::select($query)[0]->GenID;
 
-                $getID = "SELECT MsClient.ID clientID, MsUser.ID userID, MsOutlet.ID outletID, MsClient.Name clientName
+                $getID = "SELECT MsClient.ID clientID, MsUser.ID userID, MsOutlet.ID outletID, MsClient.Name clientName, MsTable.Name tableName
                 FROM MsClient
                 JOIN MsOutlet
                 ON MsOutlet.ClientID = MsClient.ID
@@ -90,15 +90,15 @@ class ScanOrderController extends Controller
                     $initials.$incrementTransaction[0]->transNumber,
                     $getDataID[0]->clientID,
                     $getDataID[0]->outletID,
-                    $request->paymentID,
-                    $request->customerName,
+                    "",
+                    $getDataID[0]->tableName,
                     $request->subTotal,
-                    $request->discount,
-                    $request->tax,
+                    0,
+                    0,
                     $request->totalPayment,
-                    $request->isPaid == "F" ? 0 : $request->paymentAmount,
-                    $request->changes,
-                    $request->isPaid == "T" ? 1 : 0,
+                    0,
+                    0,
+                    0,
                     $request->notes,
                 ]);
 
@@ -106,7 +106,6 @@ class ScanOrderController extends Controller
                     $productID = explode(',',$request->productID);
                     $qty = explode(',',$request->qty);
                     $unitPrice = explode(',',$request->unitPrice);
-                    $discountProduct = explode(',',$request->discountProduct);
                     $notesProduct = explode(',',$request->notesProduct);
                     for ($i=0; $i<count($productID); $i++)
                     {
@@ -122,8 +121,8 @@ class ScanOrderController extends Controller
                                 $transactionID,
                                 intval($qty[$i]),
                                 floatval($unitPrice[$i]),
-                                floatval($discountProduct[$i]),
-                                floatval($unitPrice[$i]) - floatval($discountProduct[$i]),
+                                0,
+                                floatval($unitPrice[$i]) - 0,
                                 $notesProduct[$i],
                             ]);
                     }
@@ -140,8 +139,8 @@ class ScanOrderController extends Controller
                                 $TransactionID,
                                 intval($request->qty),
                                 floatval($request->unitPrice),
-                                floatval($request->discountProduct),
-                                floatval($request->unitPrice) - floatval($request->discountProduct),
+                                0,
+                                floatval($request->unitPrice) - 0,
                                 $request->notesProduct,
                             ]);
                             $return['message'] = "Transaction Product successfully created.";
