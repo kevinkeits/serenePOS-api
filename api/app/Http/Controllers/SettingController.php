@@ -28,6 +28,29 @@ class SettingController extends Controller
         return $return;
     }
 
+    private function randomString($length) {
+		$characters = '123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+	    $charactersLength = strlen($characters);
+	    $randomString = '';
+	    for ($i = 0; $i < $length; $i++) {
+	        $randomString .= $characters[rand(0, $charactersLength - 1)];
+	    }
+	    return $randomString;
+	}
+
+    private function strEncrypt($salt,$string) {
+		$return = array('result'=>"",'iv'=>NULL,'tag'=>NULL);
+        $cipher = "aes-128-gcm";
+        if (in_array($cipher, openssl_get_cipher_methods())) {
+            $ivlen = openssl_cipher_iv_length($cipher);
+            $iv = openssl_random_pseudo_bytes($ivlen);
+            $return['result'] = openssl_encrypt($string, $cipher, $salt, $options=0, $iv, $tag);
+            $return['iv'] = $iv;
+            $return['tag'] = $tag;
+        }
+        return $return;
+	}
+
     // GET TRANSACTION
     public function getSettings(Request $request)
     {
@@ -77,7 +100,7 @@ class SettingController extends Controller
        $getAuth = $this->validateAuth($header);
        if ($getAuth['status']) 
        {
-            $query = "  SELECT MsOutlet.ID id, MsOutlet.Name outlet, MsOutlet.PhoneNumber phoneNumber, MsOutlet.IsPrimary isPrimary, MsOutlet.Address address, MsOutlet.SubDistrict subDistrict, MsOutlet.PostalCode postalCode
+            $query = "  SELECT MsOutlet.ID id, MsOutlet.Name outlet, MsOutlet.PhoneNumber phoneNumber, MsOutlet.IsPrimary isPrimary, MsOutlet.Address address, MsOutlet.Province province, MsOutlet.District district, MsOutlet.SubDistrict subDistrict, MsOutlet.PostalCode postalCode
             FROM MsOutlet
             WHERE IsDeleted=0
                 AND ClientID = ?
@@ -187,7 +210,7 @@ class SettingController extends Controller
                         $request->phoneNumber,
                         $getAuth['UserID']
                     ]);
-                    $return['message'] = "Account successfully modified without image.";
+                    $return['message'] = "Account successfully modified.";
                     } else {
                         $query = "UPDATE MsUser
                         SET IsDeleted=0,
@@ -202,7 +225,7 @@ class SettingController extends Controller
                             $request->phoneNumber,
                             $getAuth['UserID']
                         ]);
-                        $return['message'] = "Account successfully modified without image.";
+                        $return['message'] = "Account successfully modified.";
                     }
                 }
             }
@@ -260,7 +283,7 @@ class SettingController extends Controller
                         $request->clientName,
                         $getAuth['ClientID']
                     ]);
-                    $return['message'] = "Setting successfully modified without image.";
+                    $return['message'] = "Setting successfully modified.";
                 }
             }
         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
