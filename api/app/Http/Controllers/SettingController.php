@@ -110,9 +110,9 @@ class SettingController extends Controller
                     $filePath = $uploadDirectory . $fileName;
                     file_put_contents($filePath, $fileData);
 
-                    if ($request->Password != "") {
+                    if ($request->password != "") {
                         $key = $this->randomString(10);
-                        $encrypt = $this->strEncrypt($key,$request->Password);
+                        $encrypt = $this->strEncrypt($key,$request->password);
 
                         $query ="UPDATE MsUser
                         SET IsDeleted=0,
@@ -123,6 +123,7 @@ class SettingController extends Controller
                         Salt=?, 
                         IVssl=?, 
                         Tagssl=?,
+                        PhoneNumber=?,
                         ImgUrl=?,
                         MimeType=?
                         WHERE ID=?";
@@ -133,6 +134,7 @@ class SettingController extends Controller
                         base64_encode($key),
                         base64_encode($encrypt['iv']),
                         base64_encode($encrypt['tag']),
+                        $request->phoneNumber,
                         $fileName,
                         $mimeType,
                         $request->id
@@ -144,12 +146,14 @@ class SettingController extends Controller
                         UserUp=?,
                         DateUp=NOW(),
                         Name=?,
+                        PhoneNumber=?,
                         ImgUrl=?,
                         MimeType=?
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
                         $request->userName,
+                        $request->phoneNumber,
                         $fileName,
                         $mimeType,
                         $request->id
@@ -157,9 +161,9 @@ class SettingController extends Controller
                     $return['message'] = "Account successfully modified.";
                     }
                 } else {
-                    if ($request->Password != "") {
+                    if ($request->password != "") {
                         $key = $this->randomString(10);
-                        $encrypt = $this->strEncrypt($key, $request->Password);
+                        $encrypt = $this->strEncrypt($key, $request->password);
 
                         $query = "UPDATE MsUser
                         SET IsDeleted=0,
@@ -170,6 +174,7 @@ class SettingController extends Controller
                         Salt=?, 
                         IVssl=?, 
                         Tagssl=?,
+                        PhoneNumber=?,
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
@@ -178,6 +183,7 @@ class SettingController extends Controller
                         base64_encode($key),
                         base64_encode($encrypt['iv']),
                         base64_encode($encrypt['tag']),
+                        $request->phoneNumber,
                         $request->id
                     ]);
                     $return['message'] = "Account successfully modified without image.";
@@ -187,10 +193,12 @@ class SettingController extends Controller
                             UserUp=?,
                             DateUp=NOW(),
                             Name=?,
+                            PhoneNumber=?,
                             WHERE ID=?";
                         DB::update($query, [
                             $getAuth['UserID'],
                             $request->userName,
+                            $request->phoneNumber,
                             $request->id
                         ]);
                         $return['message'] = "Account successfully modified without image.";
@@ -238,7 +246,7 @@ class SettingController extends Controller
                         $mimeType,
                         $request->id
                     ]);
-                    $return['message'] = "Account successfully modified.";
+                    $return['message'] = "Setting successfully modified.";
                 } else {
                     $query = "UPDATE MsClient
                     SET IsDeleted=0,
@@ -251,7 +259,7 @@ class SettingController extends Controller
                         $request->userName,
                         $request->id
                     ]);
-                    $return['message'] = "Account successfully modified without image.";
+                    $return['message'] = "Setting successfully modified without image.";
                 }
             }
         } else $return = array('status'=>false,'message'=>"[403] Not Authorized",'data'=>null);
@@ -274,6 +282,8 @@ class SettingController extends Controller
                     Name=?,
                     PhoneNumber=?,
                     Address=?,
+                    Province=?,
+                    District=?,
                     SubDistrict=?,
                     IsPrimary=?,
                     PostalCode=?
@@ -283,6 +293,8 @@ class SettingController extends Controller
                     $request->name,
                     $request->phoneNumber,
                     $request->address,
+                    $request->province,
+                    $request->district,
                     $request->subDistrict,
                     $request->isPrimary == "T" ? 1 : 0,
                     $request->postalCode,
