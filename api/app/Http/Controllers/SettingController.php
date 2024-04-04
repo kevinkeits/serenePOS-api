@@ -104,7 +104,7 @@ class SettingController extends Controller
                     $mimeType = str_replace('data:', '', $mime[0]);
                     $fileData = base64_decode($mime[1]);
                     // $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/user/';
-                    $uploadDirectory = base_path('public/uploaded/user');
+                    $uploadDirectory = base_path('public/uploaded/user/');
                     $fileName = $request->fileName;
 
                     $filePath = $uploadDirectory . $fileName;
@@ -225,7 +225,7 @@ class SettingController extends Controller
                     $mimeType = str_replace('data:', '', $mime[0]);
                     $fileData = base64_decode($mime[1]);
                     // $uploadDirectory = 'C:/xampp/htdocs/serenePOS-api/api/public/uploaded/user/';
-                    $uploadDirectory = base_path('public/uploaded/client');
+                    $uploadDirectory = base_path('public/uploaded/client/');
                     $fileName = $request->fileName;
 
                     $filePath = $uploadDirectory . $fileName;
