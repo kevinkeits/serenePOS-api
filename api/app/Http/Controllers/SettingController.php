@@ -60,8 +60,9 @@ class SettingController extends Controller
                         ON MsClient.ID = MsUser.ClientID
                         JOIN MsOutlet
                         ON MsClient.ID = MsOutlet.ClientID
+                        WHERE MsUser.ID = ?
                         ORDER BY MsClient.ID DESC";
-                    $data = DB::select($query, [$getAuth['ClientID']])[0];
+                    $data = DB::select($query, [$getAuth['UserID']])[0];
                     if ($data) $return['data'] = $data;
                 }
            } else $return = array('status'=>false,'message'=>"");
@@ -137,7 +138,7 @@ class SettingController extends Controller
                         $request->phoneNumber,
                         $fileName,
                         $mimeType,
-                        $request->id
+                        $getAuth['UserID']
                     ]);
                     $return['message'] = "Account successfully modified.";
                     } else {
@@ -156,7 +157,7 @@ class SettingController extends Controller
                         $request->phoneNumber,
                         $fileName,
                         $mimeType,
-                        $request->id
+                        $getAuth['UserID']
                     ]);
                     $return['message'] = "Account successfully modified.";
                     }
@@ -174,7 +175,7 @@ class SettingController extends Controller
                         Salt=?, 
                         IVssl=?, 
                         Tagssl=?,
-                        PhoneNumber=?,
+                        PhoneNumber=?
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
@@ -184,7 +185,7 @@ class SettingController extends Controller
                         base64_encode($encrypt['iv']),
                         base64_encode($encrypt['tag']),
                         $request->phoneNumber,
-                        $request->id
+                        $getAuth['UserID']
                     ]);
                     $return['message'] = "Account successfully modified without image.";
                     } else {
@@ -193,13 +194,13 @@ class SettingController extends Controller
                             UserUp=?,
                             DateUp=NOW(),
                             Name=?,
-                            PhoneNumber=?,
+                            PhoneNumber=?
                             WHERE ID=?";
                         DB::update($query, [
                             $getAuth['UserID'],
                             $request->userName,
                             $request->phoneNumber,
-                            $request->id
+                            $getAuth['UserID']
                         ]);
                         $return['message'] = "Account successfully modified without image.";
                     }
@@ -241,10 +242,10 @@ class SettingController extends Controller
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
-                        $request->userName,
+                        $request->clientName,
                         $fileName,
                         $mimeType,
-                        $request->id
+                        $getAuth['ClientID']
                     ]);
                     $return['message'] = "Setting successfully modified.";
                 } else {
@@ -252,12 +253,12 @@ class SettingController extends Controller
                     SET IsDeleted=0,
                         UserUp=?,
                         DateUp=NOW(),
-                        Name=?,
+                        Name=?
                         WHERE ID=?";
                     DB::update($query, [
                         $getAuth['UserID'],
-                        $request->userName,
-                        $request->id
+                        $request->clientName,
+                        $getAuth['ClientID']
                     ]);
                     $return['message'] = "Setting successfully modified without image.";
                 }
