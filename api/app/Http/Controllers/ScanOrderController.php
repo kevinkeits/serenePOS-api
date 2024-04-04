@@ -56,19 +56,40 @@ class ScanOrderController extends Controller
                 $query = "SELECT UUID() GenID";
                 $transactionID = DB::select($query)[0]->GenID;
 
+                $getID = "SELECT MsClient.ID clientID, MsUser.ID userID, MsOutlet.ID outletID, MsClient.Name clientName
+                FROM MsClient
+                JOIN MsOutlet
+                ON MsOutlet.ClientID = MsClient.ID
+                JOIN MsTable 
+                ON MsTable.ClientID = MsClient.ID
+                JOIN MsUser
+                ON MsUser.ClientID = MsClient.ID
+                WHERE MsTable.ID = ?";
+                $getDataID = DB::select($getID, [$request->id]);
+
                 $countTransaction = "SELECT COUNT(TransactionNumber) +1 as transNumber FROM TrTransaction 
                 WHERE TrTransaction.ClientID = ? ";
-                $incrementTransaction = DB::select($countTransaction, [$getAuth['ClientID']]);
+                $incrementTransaction = DB::select($countTransaction, [$getDataID[0]->clientID]);
+
+                $initials = '';
+                $clientName = strtoupper(trim($getDataID[0]->clientName));
+                if (str_contains($getDataID[0]->clientName,' ')) {
+                    $arrInitials = explode(' ',$clientName);
+                    $initials = substr($arrInitials[0],0,1).substr($arrInitials[1],0,1);
+                } else {
+                    $initials = substr($getDataID[0]->clientName,0,1);
+                }
 
                 $query = "INSERT INTO TrTransaction
                             (IsDeleted, UserIn, DateIn, ID, TransactionNumber, ClientID, OutletID, PaymentID, TransactionDate, PaidDate, CustomerName, SubTotal, Discount, Tax, TotalPayment, PaymentAmount, Changes, Status, Notes)
                             VALUES
-                            (0, '7b8e8da2-cc9f-11ee-8603-ca13603aef66', NOW(), ?, ?, 'afe4146f-cc82-11ee-8603-ca13603aef66', ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+                            (0, ?, NOW(), ?, ?, ?, ?, ?, NOW(), NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                 DB::insert($query, [
+                    $getDataID[0]->userID,
                     $transactionID,
-                    $incrementTransaction[0]->transNumber,
-                    $getAuth['ClientID'],
-                    $getAuth['OutletID'],
+                    $initials.$incrementTransaction[0]->transNumber,
+                    $getDataID[0]->clientID,
+                    $getDataID[0]->outletID,
                     $request->paymentID,
                     $request->customerName,
                     $request->subTotal,
@@ -82,7 +103,6 @@ class ScanOrderController extends Controller
                 ]);
 
                 if (str_contains($request->productID,',')) {
-                    $transactionProductID = explode(',',$request->transactionProductID);
                     $productID = explode(',',$request->productID);
                     $qty = explode(',',$request->qty);
                     $unitPrice = explode(',',$request->unitPrice);
@@ -93,15 +113,17 @@ class ScanOrderController extends Controller
                         $query = "INSERT INTO TrTransactionProduct
                                 (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, TransactionID, Qty, UnitPrice, Discount, UnitPriceAfterDiscount, Notes)
                                 VALUES
-                                (0,'7b8e8da2-cc9f-11ee-8603-ca13603aef66', NOW(), ?, 'afe4146f-cc82-11ee-8603-ca13603aef66', ?, ?, ?, ?, ?, ?, ?)";
+                                (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                             DB::insert($query, [
-                                $transactionProductID[$i],
+                                $getDataID [0]->userID,
+                                $transactionID."~".$productID[$i],
+                                $getDataID [0]->clientID,
                                 $productID[$i],
                                 $transactionID,
-                                $qty[$i],
-                                $unitPrice[$i],
-                                $discountProduct[$i],
-                                $unitPrice[$i] - $discountProduct[$i],
+                                intval($qty[$i]),
+                                floatval($unitPrice[$i]),
+                                floatval($discountProduct[$i]),
+                                floatval($unitPrice[$i]) - floatval($discountProduct[$i]),
                                 $notesProduct[$i],
                             ]);
                     }
@@ -109,50 +131,58 @@ class ScanOrderController extends Controller
                     $query = "INSERT INTO TrTransactionProduct
                                 (IsDeleted, UserIn, DateIn, ID, ClientID, ProductID, TransactionID, Qty, UnitPrice, Discount, UnitPriceAfterDiscount, Notes)
                                 VALUES
-                                (0, '7b8e8da2-cc9f-11ee-8603-ca13603aef66' , NOW(), ?, 'afe4146f-cc82-11ee-8603-ca13603aef66' , ?, ?, ?, ?, ?, ?, ?)";
+                                (0, ?, NOW(), ?, ?, ?, ?, ?, ?, ?, ?, ?)";
                             DB::insert($query, [
-                                $request->transactionProductID,
+                                $getDataID [0]->userID,
+                                $transactionID."~".$request->productID,
+                                $getDataID [0]->clientID,
                                 $request->productID,
                                 $TransactionID,
-                                $request->qty,
-                                $request->unitPrice,
-                                $request->discountProduct,
-                                $request->unitPrice - $request->discountProduct,
+                                intval($request->qty),
+                                floatval($request->unitPrice),
+                                floatval($request->discountProduct),
+                                floatval($request->unitPrice) - floatval($request->discountProduct),
                                 $request->notesProduct,
                             ]);
                             $return['message'] = "Transaction Product successfully created.";
                 }
 
                 if (str_contains($request->variantOptionID,',')) {
-                    $transactionProductIDVariant = explode(',',$request->transactionProductIDVariant);
+                    $transactionProductVariantID = explode(',',$request->transactionProductIDVariant);
                     $variantOptionID = explode(',',$request->variantOptionID);
                     $variantLabel = explode(',',$request->variantLabel);
                     $variantPrice = explode(',',$request->variantPrice);
                     for ($i=0; $i<count($variantOptionID); $i++)
                     {
                         $query = "INSERT INTO TrTransactionProductVariant
-                                (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, VariantOptionID, Label, Price)
+                                (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, TransactionProductVariantID, VariantOptionID, Label, Price)
                                 VALUES
-                                (0, '7b8e8da2-cc9f-11ee-8603-ca13603aef66' , NOW(), UUID(), 'afe4146f-cc82-11ee-8603-ca13603aef66' , ?, ?, ?, ?, ?)";
+                                (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?)";
                             DB::insert($query, [
+                                $getDataID [0]->userID,
+                                $getDataID [0]->clientID,
                                 $transactionID,
-                                $transactionProductIDVariant[$i],
-                                $variantOptionID[$i],
-                                $variantLabel[$i],
-                                strval($variantPrice[$i])
+                                $transactionID."~".explode('~',$variantOptionID[$i])[0],
+                                $transactionProductVariantID[$i],
+                                explode('~',$variantOptionID[$i])[1],
+                                explode('~',$variantLabel[$i])[2],
+                                floatval(explode('~',$variantPrice[$i])[2])
                             ]);
                     }
                 } else {
                     $query = "INSERT INTO TrTransactionProductVariant
-                                (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, VariantOptionID, Label, Price)
+                                (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, TransactionProductVariantID, VariantOptionID, Label, Price)
                                 VALUES
-                                (0, '7b8e8da2-cc9f-11ee-8603-ca13603aef66', NOW(), UUID(), 'afe4146f-cc82-11ee-8603-ca13603aef66' , ?, ?, ?, ?, ?)";
+                                (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?)";
                             DB::insert($query, [
+                                $getDataID [0]->userID,
+                                $getDataID [0]->clientID,
                                 $transactionID,
+                                $transactionID."~".explode('~',$request->variantOptionID)[0],
                                 $request->transactionProductIDVariant,
-                                $request->variantOptionID,
-                                $request->variantLabel,
-                                strval($request->variantPrice)
+                                explode('~',$request->variantOptionID)[1],
+                                explode('~',$request->variantLabel)[2],
+                                floatval(explode('~',$request->variantPrice)[2])
                             ]);
                 }
                 $return['message'] = "Transaction successfully created.";

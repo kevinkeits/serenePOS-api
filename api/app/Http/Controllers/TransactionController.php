@@ -123,7 +123,7 @@ class TransactionController extends Controller
                                                 TrTransaction.TotalPayment totalPayment,
                                                 TrTransaction.Status isPaid
                                         FROM    TrTransaction
-                                        LEFT JOIN    MsPayment ON MsPayment.ID = TrTransaction.PaymentID
+                                        LEFT JOIN MsPayment ON MsPayment.ID = TrTransaction.PaymentID
                                         WHERE   TrTransaction.ClientID = ?
 						AND TrTransaction.IsDeleted = 0
                                         ORDER BY TransactionDate DESC";
