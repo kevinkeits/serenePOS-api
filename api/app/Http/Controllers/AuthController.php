@@ -132,7 +132,11 @@ class AuthController extends Controller
     public function doLogin(Request $request)
     {
         $return = array('status'=>false,'message'=>"",'data'=>null);
-        $query = "SELECT IsDeleted, ID, Name, Email, Password, Salt, IVssl, Tagssl
+        $query = "SELECT IsDeleted, ID, Name,  Email, Password, Salt, IVssl, Tagssl,
+                            CASE
+                                    WHEN ImgUrl != '' THEN CONCAT('https://serenepos.temandigital.id/api/uploaded/user/', ImgUrl)
+                                    ELSE ''
+                                END AS AccountImage
                     FROM MsUser
                     WHERE (UPPER(Email) = UPPER(?))
                         AND RegisterFrom = 'App'";
@@ -153,7 +157,8 @@ class AuthController extends Controller
                         'Token' => $SessionID,
                         'UserID' => $data->ID,
                         'Email' => $data->Email,
-                        'Name' => $data->Name
+                        'Name' => $data->Name,
+                        'AccountImage' => $data->AccountImage
                     );
                     $return['status'] = true;
                     $return['message'] = "Login success";
