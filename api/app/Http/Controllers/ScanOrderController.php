@@ -31,7 +31,6 @@ class ScanOrderController extends Controller
                             MsVariant.ID variantID, 
                             MsVariant.Name name, 
                             MsVariant.Type type, 
-                            MsVariantProduct.ID variantProductID, 
                             MsVariantOption.ID variantOptionID, 
                             MsVariantOption.Label label, 
                             MsVariantOption.Price price
