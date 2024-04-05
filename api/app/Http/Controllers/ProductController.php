@@ -35,7 +35,7 @@ class ProductController extends Controller
         $getAuth = $this->validateAuth($header);
         if ($getAuth['status']) {
                 if ($request->ID) {
-                    $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSKU, MsProduct.Name name, MsCategory.ID categoryID, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes,CASE ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl, MsProduct.MimeType mimeType
+                    $query = "  SELECT MsProduct.ID id, MsProduct.ProductSKU productSKU, MsProduct.Name name, MsCategory.ID categoryID, MsCategory.Name categoryName, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, CASE ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl, MsProduct.MimeType mimeType
                                     FROM MsProduct
                                     JOIN MsCategory
                                     ON MsProduct.CategoryID = MsCategory.ID

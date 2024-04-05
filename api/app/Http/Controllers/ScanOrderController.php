@@ -12,24 +12,48 @@ class ScanOrderController extends Controller
     {
         $return = array('status'=>true,'message'=>"",'data'=>array());
         if ($request->ID) {
-            $query = "SELECT MsProduct.ID id, MsProduct.Name name, MsCategory.ID idCategory, MsCategory.Name nameCategory, MsProduct.Qty qty, MsProduct.Price price, MsProduct.Notes notes, CASE ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl
+            $query = "SELECT MsProduct.ID id, 
+                        MsProduct.Name name, 
+                        MsCategory.ID categoryID, 
+                        MsCategory.Name categoryName, 
+                        MsProduct.Qty qty, 
+                        MsProduct.Price price, 
+                        MsProduct.Notes notes, 
+                        CASE MsProduct.ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', ImgUrl)) END imgUrl
                         FROM MsProduct
                         JOIN MsCategory
                         ON MsProduct.CategoryID = MsCategory.ID
-                        WHERE MsProduct.IsDeleted = 0 AND MsProduct.ID = ?";
+                        WHERE MsProduct.IsDeleted=0 AND MsCategory.IsDeleted=0 AND MsProduct.ID = ?";
             $product = DB::select($query,[$request->ID])[0];
 
-            $query = "SELECT MsVariant.ID variantID, MsVariant.Name name, MsVariant.Type type, MsVariantProduct.ID variantProductID, MsVariantOption.ID variantOptionID, MsVariantOption.Label label, MsVariantOption.Price price
+            $query = "  SELECT IFNULL(MsProductVariantOption.ID,'') productVariantOptionID, 
+                        CASE WHEN IFNULL(MsProductVariantOption.IsSelected,0) = 1 THEN 'T' ELSE 'F' END isSelected, 
+                            MsVariant.ID variantID, 
+                            MsVariant.Name name, 
+                            MsVariant.Type type, 
+                            MsVariantProduct.ID variantProductID, 
+                            MsVariantOption.ID variantOptionID, 
+                            MsVariantOption.Label label, 
+                            MsVariantOption.Price price
                         FROM MsVariant
                         JOIN MsVariantProduct on MsVariantProduct.VariantID = MsVariant.ID
                         JOIN MsVariantOption on MsVariantOption.VariantID = MsVariant.ID
-                        WHERE MsVariant.IsDeleted = 0 AND MsVariantProduct.ProductID = ?
+                        LEFT JOIN MsProductVariantOption on (MsProductVariantOption.VariantOptionID = MsVariantOption.ID AND MsProductVariantOption.ProductID = MsVariantProduct.ProductID)
+                        WHERE MsVariant.IsDeleted=0 AND MsVariantProduct.ProductID = ?
                         ORDER BY MsVariant.Name ASC, MsVariantOption.Label ASC";
             $variant = DB::select($query,[$request->ID]);
 
             $return['data'] = array('product'=>$product, 'variant'=>$variant);
         } else {
-            $query = "SELECT MsProduct.ID id, MsProduct.Name name, MsTable.Name tableName, MsClient.Name clientName, MsCategory.ID idCategory, MsCategory.Name categoryName, MsProduct.Notes notes, MsProduct.Price price, CASE MsProduct.ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', MsProduct.ImgUrl)) END imgUrl
+            $query = "  SELECT MsProduct.ID id, 
+                            MsProduct.Name name, 
+                            MsTable.Name tableName, 
+                            MsClient.Name clientName, 
+                            MsCategory.ID categoryID, 
+                            MsCategory.Name categoryName, 
+                            MsProduct.Notes notes, 
+                            MsProduct.Price price, 
+                            CASE MsProduct.ImgUrl WHEN '' THEN '' ELSE (SELECT CONCAT('https://serenepos.temandigital.id/api/uploaded/product/', MsProduct.ImgUrl)) END imgUrl
                         FROM MsProduct
                         JOIN MsCategory
                         ON MsCategory.ID = MsProduct.CategoryID
