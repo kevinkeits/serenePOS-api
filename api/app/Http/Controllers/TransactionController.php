@@ -45,6 +45,11 @@ class TransactionController extends Controller
                                                 TrTransaction.UserIn userIn,
                                                 TrTransaction.CustomerName customerName,
                                                 MsOutlet.Name outletName,
+                                                CASE
+                                                    WHEN MsClient.ImgUrl != '' THEN CONCAT('https://serenepos.temandigital.id/api/uploaded/client/', MsClient.ImgUrl)
+                                                    ELSE ''
+                                                END AS clientImage,
+                                                MsClient.Name clientName,
                                                 
                                                 TrTransaction.PaymentID paymentID,
                                                 (SELECT Name FROM MsPayment WHERE ID=TrTransaction.PaymentID) payment,
@@ -59,6 +64,7 @@ class TransactionController extends Controller
                                                 TrTransaction.Notes notes
                                         FROM    TrTransaction
                                         JOIN    MsOutlet ON MsOutlet.ID = TrTransaction.OutletID
+                                        JOIN    MsClient ON MsClient.ID = TrTransaction.ClientID
                                         WHERE   TrTransaction.ID = ?
 						                AND TrTransaction.IsDeleted = 0
                                         ORDER BY TransactionDate DESC";
@@ -170,7 +176,7 @@ class TransactionController extends Controller
                     $getAuth['OutletID'],
                     $request->paymentID,
                     $request->customerName,
-                    $request->subTotal,
+                    $request->subtotal,
                     $request->discount,
                     $request->tax,
                     $request->totalPayment,
@@ -264,7 +270,7 @@ class TransactionController extends Controller
                                 ]);
                     }
                 }
-                
+                $return['data'] = $transactionID;
                 $return['message'] = "Transaction successfully created.";
             }
             if ($request->action == "edit") {
@@ -289,7 +295,7 @@ class TransactionController extends Controller
                     $getAuth['UserID'],
                     $request->paymentID,
                     $request->customerName,
-                    $request->subTotal,
+                    $request->subtotal,
                     $request->discount,
                     $request->totalPayment,
                     $request->isPaid == "F" ? 0 : $request->paymentAmount,
@@ -362,7 +368,7 @@ class TransactionController extends Controller
                             $query = "INSERT INTO TrTransactionProductVariant
                                     (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, TransactionProductVariantID, VariantOptionID, Label, Price)
                                     VALUES
-                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?)";
+                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?)";
                                 DB::insert($query, [
                                     $getAuth['UserID'],
                                     $getAuth['ClientID'],
@@ -378,7 +384,7 @@ class TransactionController extends Controller
                         $query = "INSERT INTO TrTransactionProductVariant
                                     (IsDeleted, UserIn, DateIn, ID, ClientID, TransactionID, TransactionProductID, TransactionProductVariantID, VariantOptionID, Label, Price)
                                     VALUES
-                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?)";
+                                    (0, ?, NOW(), UUID(), ?, ?, ?, ?, ?, ?, ?)";
                                 DB::insert($query, [
                                     $getAuth['UserID'],
                                     $getAuth['ClientID'],
@@ -391,6 +397,7 @@ class TransactionController extends Controller
                                 ]);
                     }
                 }
+                $return['data'] = $transactionID;
                 $return['message'] = "Transaction successfully modified.";
             }
             if ($request->action == "delete") {

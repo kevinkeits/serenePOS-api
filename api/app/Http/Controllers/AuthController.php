@@ -132,14 +132,21 @@ class AuthController extends Controller
     public function doLogin(Request $request)
     {
         $return = array('status'=>false,'message'=>"",'data'=>null);
-        $query = "SELECT IsDeleted, ID, Name,  Email, Password, Salt, IVssl, Tagssl,
+        $query = "SELECT MsUser.IsDeleted, MsUser.ID, MsUser.Name,  MsUser.Email, MsUser.Password, MsUser.Salt, MsUser.IVssl, MsUser.Tagssl,
                             CASE
-                                    WHEN ImgUrl != '' THEN CONCAT('https://serenepos.temandigital.id/api/uploaded/user/', ImgUrl)
+                                    WHEN MsUser.ImgUrl != '' THEN CONCAT('https://serenepos.temandigital.id/api/uploaded/user/', MsUser.ImgUrl)
                                     ELSE ''
-                                END AS AccountImage
+                                END AS AccountImage,
+                                CASE
+                                    WHEN MsClient.ImgUrl != '' THEN CONCAT('https://serenepos.temandigital.id/api/uploaded/client/', MsClient.ImgUrl)
+                                    ELSE ''
+                                END AS ClientImage,
+                                MsClient.Name ClientName
                     FROM MsUser
-                    WHERE (UPPER(Email) = UPPER(?))
-                        AND RegisterFrom = 'App'";
+                        JOIN MsClient ON MsClient.ID = MsUser.ClientID
+                    WHERE (UPPER(MsUser.Email) = UPPER(?))
+                        AND MsUser.RegisterFrom = 'App'
+                        AND MsUser.IsDeleted = 0";
         $data = DB::select($query,[$request->Email]);
         if ($data) {
             $data = $data[0];
@@ -158,7 +165,9 @@ class AuthController extends Controller
                         'UserID' => $data->ID,
                         'Email' => $data->Email,
                         'Name' => $data->Name,
-                        'AccountImage' => $data->AccountImage
+                        'AccountImage' => $data->AccountImage,
+                        'ClientImage' => $data->ClientImage,
+                        'ClientName' => $data->ClientName
                     );
                     $return['status'] = true;
                     $return['message'] = "Login success";
