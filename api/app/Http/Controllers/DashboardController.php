@@ -39,8 +39,8 @@ class DashboardController extends Controller
 
         $query = "SELECT SUM(TotalPayment) AS todayIncome
                     FROM TrTransaction
-                    WHERE IsDeleted=0 AND TrTransaction.Status = 1 AND DATE_FORMAT(TransactionDate, '%Y-%m-%d') = '$transactionDate'";
-        $result = DB::select($query);
+                    WHERE IsDeleted=0 AND ClientID=? AND TrTransaction.Status = 1 AND DATE_FORMAT(TransactionDate, '%Y-%m-%d') = '$transactionDate'";
+        $result = DB::select($query,[$getAuth['ClientID']]);
 
         if ($result) {
             $todayIncome = $result[0]->todayIncome;
@@ -63,9 +63,9 @@ class DashboardController extends Controller
     
         $query = "SELECT SUM(TotalPayment) AS monthlyIncome
                   FROM TrTransaction
-                  WHERE IsDeleted=0 AND TrTransaction.Status = 1 AND DATE_FORMAT(TransactionDate, '%Y-%m') = '$transactionDate'" ;
+                  WHERE IsDeleted=0 AND ClientID=? AND TrTransaction.Status = 1 AND DATE_FORMAT(TransactionDate, '%Y-%m') = '$transactionDate'" ;
     
-        $result = DB::select($query);
+        $result = DB::select($query,[$getAuth['ClientID']);
     
         if ($result) {
             $monthlyIncome = $result[0]->monthlyIncome;
@@ -92,11 +92,11 @@ class DashboardController extends Controller
                         MsProduct ON MsProduct.ID = TrTransactionProduct.ProductID
                     JOIN
                         TrTransaction ON TrTransaction.ID = TrTransactionProduct.TransactionID
-                    WHERE TrTransactionProduct.IsDeleted = 0 AND TrTransaction.Status = 1
+                    WHERE TrTransactionProduct.IsDeleted = 0 AND TrTransactionProduct.ClientID = ? AND TrTransaction.Status = 1
                     GROUP BY TrTransactionProduct.ProductID, MsProduct.Name,  MsProduct.ImgUrl
                 ORDER BY totalQty DESC
                 LIMIT 5";
-        $result = DB::select($query);
+        $result = DB::select($query,[$getAuth['ClientID']);
         
         if ($result) {
             $return['data'] = $result;
@@ -114,10 +114,10 @@ class DashboardController extends Controller
         $getAuth = $this->validateAuth($header);
         $query = "SELECT SUM(t.TotalPayment) AS paymentAmount, DAYNAME(t.TransactionDate) AS transactionDay
                     FROM TrTransaction t
-                    WHERE t.IsDeleted = 0 AND t.TransactionDate >= DATE_ADD(CURDATE(), INTERVAL -6 DAY) AND t.Status = 1
+                    WHERE t.IsDeleted = 0 AND t.ClientID = ? AND t.TransactionDate >= DATE_ADD(CURDATE(), INTERVAL -6 DAY) AND t.Status = 1
                     GROUP BY DAYNAME(t.TransactionDate)
                             LIMIT 5";
-        $result = DB::select($query);
+        $result = DB::select($query,[$getAuth['ClientID']);
         
         if ($result) {
             $return['data'] = $result;
@@ -144,10 +144,10 @@ class DashboardController extends Controller
         $lastWeekEndDate = date('Y-m-d', strtotime('last week Sunday'));
         
         $query = "SELECT 
-                        (SELECT SUM(TotalPayment) FROM TrTransaction WHERE IsDeleted = 0 AND Status = 1 AND TransactionDate BETWEEN '$thisWeekStartDate' AND '$thisWeekEndDate') AS thisWeekAmount,
-                        (SELECT SUM(TotalPayment) FROM TrTransaction WHERE IsDeleted = 0 AND Status = 1 AND TransactionDate BETWEEN '$lastWeekStartDate' AND '$lastWeekEndDate') AS lastWeekAmount
+                        (SELECT SUM(TotalPayment) FROM TrTransaction WHERE IsDeleted = 0 AND ClientID = ? AND Status = 1 AND TransactionDate BETWEEN '$thisWeekStartDate' AND '$thisWeekEndDate') AS thisWeekAmount,
+                        (SELECT SUM(TotalPayment) FROM TrTransaction WHERE IsDeleted = 0 AND ClientID = ? AND Status = 1 AND TransactionDate BETWEEN '$lastWeekStartDate' AND '$lastWeekEndDate') AS lastWeekAmount
                 LIMIT 1";
-        $result = DB::select($query);
+        $result = DB::select($query,[$getAuth['ClientID'],$getAuth['ClientID']]);
         
         if ($result) {
             // Calculate profit percentage
